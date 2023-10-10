@@ -1,0 +1,24 @@
+[submodule "docs"]
+        path = docs
+        url = git@github.com:diplodoc-platform/docs.git
+[submodule "packages/components"]
+	path = packages/components
+	url = git@github.com:diplodoc-platform/components.git
+[submodule "packages/transform"]
+	path = packages/transform
+	url = git@github.com:diplodoc-platform/transform.git
+[submodule "packages/cli"]
+	path = packages/cli
+	url = git@github.com:diplodoc-platform/cli.git
+[submodule "packages/client"]
+	path = packages/client
+	url = git@github.com:diplodoc-platform/client.git
+[submodule "extensions/openapi"]
+	path = extensions/openapi
+	url = git@github.com:diplodoc-platform/openapi-extension.git
+[submodule "extensions/tabs"]
+	path = extensions/tabs
+	url = git@github.com:diplodoc-platform/tabs-extension.git
+[submodule "extensions/mermaid"]
+	path = extensions/mermaid
+	url = git@github.com:diplodoc-platform/mermaid-extension.git

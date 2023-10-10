@@ -1,0 +1,23 @@
+{
+  "name": "@diplodoc/diplodoc",
+  "version": "1.0.0",
+  "description": "Meta package for Diplodoc platform development",
+  "main": "index.js",
+  "workspaces": [
+    "packages",
+    "extensions"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diplodoc-platform/diplodoc.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/diplodoc-platform/diplodoc/issues"
+  },
+  "homepage": "https://github.com/diplodoc-platform/diplodoc#readme"
+}
