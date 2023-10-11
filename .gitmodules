@@ -22,3 +22,6 @@
 [submodule "extensions/mermaid"]
 	path = extensions/mermaid
 	url = git@github.com:diplodoc-platform/mermaid-extension.git
+[submodule "configs"]
+	path = configs
+	url =  git@github.com:diplodoc-platform/configs.git
