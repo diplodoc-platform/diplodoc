@@ -4,11 +4,13 @@
   "description": "Meta package for Diplodoc platform development",
   "main": "index.js",
   "workspaces": [
-    "packages",
-    "extensions"
+    "devops/*",
+    "packages/*",
+    "extensions/*"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "git:head": "npm run git:head --workspaces --if-present"
   },
   "repository": {
     "type": "git",
