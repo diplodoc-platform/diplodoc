@@ -4,9 +4,11 @@
 
 ---
 
-[Website](https://diplodoc.com) &nbsp;&nbsp;|&nbsp;&nbsp;
-[Documentation](https://diplodoc.com/docs) &nbsp;&nbsp;|&nbsp;&nbsp;
-[Telegram](https://t.me/diplodoc_ru)
+&nbsp;&nbsp;[Website](https://diplodoc.com) &nbsp;&nbsp;|
+&nbsp;&nbsp;[Documentation](https://diplodoc.com/docs) &nbsp;&nbsp;|
+&nbsp;&nbsp;[Telegram](https://t.me/diplodoc_ru)
+
+---
 
 Diplodoc Platform is open platform for work with your documentation in accordance with "Documentation as a Code" paradigm.
 
