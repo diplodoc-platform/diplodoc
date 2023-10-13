@@ -5,12 +5,13 @@
   "main": "index.js",
   "workspaces": [
     "devops/*",
-    "packages/*",
-    "extensions/*"
+    "extensions/*",
+    "packages/*"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "git:head": "npm run git:head --workspaces --if-present"
+    "build": "nx run-many -t build",
+    "git:init": "git submodule update --init --recursive",
+    "git:head": "git submodule foreach 'git checkout master && git pull'"
   },
   "repository": {
     "type": "git",
@@ -21,5 +22,12 @@
   "bugs": {
     "url": "https://github.com/diplodoc-platform/diplodoc/issues"
   },
-  "homepage": "https://github.com/diplodoc-platform/diplodoc#readme"
+  "homepage": "https://github.com/diplodoc-platform/diplodoc#readme",
+  "devDependencies": {
+    "@types/react": "^18.2.28",
+    "@types/react-dom": "^18.2.13",
+    "nx": "16.10.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
 }
