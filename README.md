@@ -1,4 +1,4 @@
-![logo](.githug/assets/diplodoc-logo.svg)
+![logo](.github/assets/diplodoc-logo.svg)
 
 [![Telegram](https://img.shields.io/badge/chat-on%20Telegram-2ba2d9.svg)](https://t.me/diplodoc_ru)
 
