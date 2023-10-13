@@ -1,12 +1,9 @@
 ![logo](.github/assets/diplodoc-logo.svg#gh-light-mode-only)
 ![logo](.github/assets/diplodoc-logo-dark.svg#gh-dark-mode-only)
 
-[![Telegram](https://img.shields.io/badge/chat-on%20Telegram-2ba2d9.svg)](https://t.me/diplodoc_ru)
-
-## Diplodoc
-
 [Website](https://diplodoc.com) |
 [Documentation](https://diplodoc.com/docs) |
+[Telegram](https://t.me/diplodoc_ru)
 
 Diplodoc Platform is open platform for work with your documentation in accordance with "Documentation as a Code" paradigm.
 
@@ -40,3 +37,5 @@ Simple and comfortable solution for everyone.
 ## Getting Started
 
 Try Diplodoc [locally or with your development pipelines](https://diplodoc.com/docs/ru/how-it-work) or try within [codespace](https://github.com/codespaces/new?repo=688437532) online.
+
+## Contribution
