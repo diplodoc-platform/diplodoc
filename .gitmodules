@@ -37,3 +37,6 @@
 [submodule "extensions/latex"]
 	path = extensions/latex
 	url = git@github.com:diplodoc-platform/latex-extension.git
+[submodule "devops/package-template"]
+	path = devops/package-template
+	url = git@github.com:diplodoc-platform/package-template.git
