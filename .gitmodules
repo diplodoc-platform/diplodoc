@@ -34,3 +34,6 @@
 [submodule "devops/eslint-config"]
 	path = devops/eslint-config
 	url = git@github.com:diplodoc-platform/eslint-config.git
+[submodule "extensions/latex"]
+	path = extensions/latex
+	url = git@github.com:diplodoc-platform/latex-extension.git
