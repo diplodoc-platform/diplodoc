@@ -6,12 +6,13 @@
   "workspaces": [
     "devops/*",
     "extensions/*",
+    "extensions/**/example",
     "packages/*"
   ],
   "scripts": {
     "build": "nx run-many -t build",
     "git:init": "git submodule update --init --recursive",
-    "git:head": "git submodule foreach 'git checkout master && git pull'"
+    "git:head": "git submodule foreach 'git checkout master && git pull || true'"
   },
   "repository": {
     "type": "git",
