@@ -40,3 +40,12 @@
 [submodule "devops/package-template"]
 	path = devops/package-template
 	url = git@github.com:diplodoc-platform/package-template.git
+[submodule "packages/gh-docs"]
+	path = packages/gh-docs
+	url = git@github.com:diplodoc-platform/gh-docs.git
+[submodule "packages/sentenizer"]
+	path = packages/sentenizer
+	url = git@github.com:diplodoc-platform/sentenizer.git
+[submodule "packages/translation"]
+	path = packages/translation
+	url = git@github.com:diplodoc-platform/translation.git
