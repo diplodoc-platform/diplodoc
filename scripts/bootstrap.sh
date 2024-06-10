@@ -2,9 +2,14 @@
 
 set -e
 
-. ./git-init.sh
-. ./git-head.sh
+ROOT=$(dirname $0)
+
+. $ROOT/git-init.sh
+. $ROOT/git-head.sh
 
 # maybe npm ci?
+echo "Install dependencies"
 npm install
-npx nx build
+
+echo "Build CLI"
+(cd packages/cli; npx nx build)

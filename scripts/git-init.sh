@@ -7,4 +7,6 @@ if [[ -z "$(which git)" ]]; then
     exit 1;
 fi
 
-git submodule update --init --recursive | grep "Submodule path";
+echo "Init submodules"
+
+git submodule update --init --recursive | grep "Submodule path" || true;

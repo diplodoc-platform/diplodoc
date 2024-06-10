@@ -7,4 +7,6 @@ if [[ -z "$(which git)" ]]; then
     exit 1;
 fi
 
+echo "Update submodules to master HEAD"
+
 git submodule foreach 'git checkout master && git pull || true';
