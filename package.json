@@ -11,8 +11,9 @@
   ],
   "scripts": {
     "build": "nx run-many -t build",
-    "git:init": "git submodule update --init --recursive",
-    "git:head": "git submodule foreach 'git checkout master && git pull || true'"
+    "bootstrap": "scripts/bootstrap.sh",
+    "git:init": "scripts/git-init.sh",
+    "git:head": "scripts/git-head.sh"
   },
   "repository": {
     "type": "git",
