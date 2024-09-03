@@ -52,3 +52,6 @@
 [submodule "devops/lint"]
 	path = devops/lint
 	url = git@github.com:diplodoc-platform/diplodoc.git
+[submodule "extensions/html"]
+	path = extensions/html
+	url = git@github.com:diplodoc-platform/html-extension.git
