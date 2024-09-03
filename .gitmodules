@@ -49,3 +49,6 @@
 [submodule "packages/translation"]
 	path = packages/translation
 	url = git@github.com:diplodoc-platform/translation.git
+[submodule "devops/lint"]
+	path = devops/lint
+	url = git@github.com:diplodoc-platform/diplodoc.git
