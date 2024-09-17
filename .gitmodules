@@ -55,3 +55,6 @@
 [submodule "extensions/html"]
 	path = extensions/html
 	url = git@github.com:diplodoc-platform/html-extension.git
+[submodule "extensions/cut"]
+	path = extensions/cut
+	url = git@github.com:diplodoc-platform/cut-extension.git
