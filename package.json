@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "build": "nx run-many -t build",
-    "reset": "scripts/reset.js",
+    "reset": "npm i --no-save zx && scripts/reset.js",
     "deps": "scripts/deps.js",
     "bootstrap": "scripts/bootstrap.sh",
     "git:init": "scripts/git-init.sh",
