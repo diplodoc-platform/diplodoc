@@ -69,16 +69,23 @@ async function update() {
 
             await $`
                 cd ${root} 
-                npm i ${next.join(' ')} ${mode} --no-workspaces
-                npm i ${next.join(' ')} ${mode}
+                npm i ${next} ${mode} --no-workspaces
+                npm i ${next} ${mode}
             `;
 
             if (commit) {
+                const diff = await $`cd ${root}; git status -s`;
+                const isDirty = diff.stdout.match('package.json') || diff.stdout.match('package-lock.json');
+
+                if (!isDirty) {
+                    continue;
+                }
+
                 const message = 'deps: ' + deps.map(({name, prev, next}) => `${name}[${prev}->${next}]`).join(', ');
                 await $`
                     cd ${root}
                     git add package.json package-lock.json 
-                    git commit -m "${message}"
+                    git commit -m ${message}
                 `;
             }
         }
