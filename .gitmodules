@@ -1,63 +1,63 @@
 [submodule "docs"]
         path = docs
-        url = git@github.com:diplodoc-platform/docs.git
+        url = https://github.com/diplodoc-platform/docs.git
 [submodule "packages/components"]
 	path = packages/components
-	url = git@github.com:diplodoc-platform/components.git
+	url = https://github.com/diplodoc-platform/components.git
 [submodule "packages/transform"]
 	path = packages/transform
-	url = git@github.com:diplodoc-platform/transform.git
+	url = https://github.com/diplodoc-platform/transform.git
 [submodule "packages/cli"]
 	path = packages/cli
-	url = git@github.com:diplodoc-platform/cli.git
+	url = https://github.com/diplodoc-platform/cli.git
 [submodule "packages/client"]
 	path = packages/client
-	url = git@github.com:diplodoc-platform/client.git
+	url = https://github.com/diplodoc-platform/client.git
 [submodule "extensions/openapi"]
 	path = extensions/openapi
-	url = git@github.com:diplodoc-platform/openapi-extension.git
+	url = https://github.com/diplodoc-platform/openapi-extension.git
 [submodule "extensions/tabs"]
 	path = extensions/tabs
-	url = git@github.com:diplodoc-platform/tabs-extension.git
+	url = https://github.com/diplodoc-platform/tabs-extension.git
 [submodule "extensions/mermaid"]
 	path = extensions/mermaid
-	url = git@github.com:diplodoc-platform/mermaid-extension.git
+	url = https://github.com/diplodoc-platform/mermaid-extension.git
 [submodule "devops/tsconfig"]
 	path = devops/tsconfig
-	url = git@github.com:diplodoc-platform/tsconfig.git
+	url = https://github.com/diplodoc-platform/tsconfig.git
 [submodule "devops/babel-preset"]
 	path = devops/babel-preset
-	url = git@github.com:diplodoc-platform/babel-preset.git
+	url = https://github.com/diplodoc-platform/babel-preset.git
 [submodule "devops/prettier-config"]
 	path = devops/prettier-config
-	url = git@github.com:diplodoc-platform/prettier-config.git
+	url = https://github.com/diplodoc-platform/prettier-config.git
 [submodule "devops/eslint-config"]
 	path = devops/eslint-config
 	url = https://github.com/diplodoc-platform/eslint-config.git
 [submodule "extensions/latex"]
 	path = extensions/latex
-	url = git@github.com:diplodoc-platform/latex-extension.git
+	url = https://github.com/diplodoc-platform/latex-extension.git
 [submodule "devops/package-template"]
 	path = devops/package-template
-	url = git@github.com:diplodoc-platform/package-template.git
+	url = https://github.com/diplodoc-platform/package-template.git
 [submodule "packages/gh-docs"]
 	path = packages/gh-docs
-	url = git@github.com:diplodoc-platform/gh-docs.git
+	url = https://github.com/diplodoc-platform/gh-docs.git
 [submodule "packages/sentenizer"]
 	path = packages/sentenizer
-	url = git@github.com:diplodoc-platform/sentenizer.git
+	url = https://github.com/diplodoc-platform/sentenizer.git
 [submodule "packages/translation"]
 	path = packages/translation
-	url = git@github.com:diplodoc-platform/translation.git
+	url = https://github.com/diplodoc-platform/translation.git
 [submodule "devops/lint"]
 	path = devops/lint
-	url = git@github.com:diplodoc-platform/lint.git
+	url = https://github.com/diplodoc-platform/lint.git
 [submodule "extensions/html"]
 	path = extensions/html
-	url = git@github.com:diplodoc-platform/html-extension.git
+	url = https://github.com/diplodoc-platform/html-extension.git
 [submodule "extensions/cut"]
 	path = extensions/cut
-	url = git@github.com:diplodoc-platform/cut-extension.git
+	url = https://github.com/diplodoc-platform/cut-extension.git
 [submodule "extensions/search"]
 	path = extensions/search
-	url = git@github.com:diplodoc-platform/search-extension.git
+	url = https://github.com/diplodoc-platform/search-extension.git
