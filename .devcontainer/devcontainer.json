@@ -2,14 +2,5 @@
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "features": {
   },
-  "postCreateCommand": "npm run bootstrap",
-  "customizations": {
-    "codespaces": {
-      "repositories": {
-        "diplodoc-platform/components": {
-          "permissions": "write-all"
-        }
-      }
-    }
-  }
+  "postCreateCommand": "npm run bootstrap"
 }
