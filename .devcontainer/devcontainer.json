@@ -3,4 +3,15 @@
   "features": {
   },
   "postCreateCommand": "npm run bootstrap",
+  "customizations": {
+    "codespaces": {
+      "repositories": {
+        "diplodoc-platform/eslint-config": {
+          "permissions": {
+            "contents": "read"
+          }
+        }
+      }
+    }
+  }
 }
