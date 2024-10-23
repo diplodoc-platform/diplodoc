@@ -6,9 +6,9 @@
   "customizations": {
     "codespaces": {
       "repositories": {
-        "diplodoc-platform/eslint-config": {
+        "diplodoc-platform/components": {
           "permissions": {
-            "contents": "read"
+            "permissions": "write-all"
           }
         }
       }
