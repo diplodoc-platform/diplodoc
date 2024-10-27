@@ -10,7 +10,7 @@ fi
 echo "Init submodules"
 
 if [[ "$CODESPACES" == "true" ]]; then
-    ssh -o StrictHostKeyChecking=accept-new github.com
+    ssh -o StrictHostKeyChecking=accept-new github.com || true
     git config --local url."https://github.com/".insteadOf git@github.com:
 fi
 
