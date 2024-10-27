@@ -10,8 +10,9 @@ fi
 echo "Init submodules"
 
 if [[ "$CODESPACES" == "true" ]]; then
-    ssh -o StrictHostKeyChecking=accept-new github.com || true
-    git config --local url."https://github.com/".insteadOf git@github.com:
+    echo "Modify codespaces environment"
+    git config --global url."https://".insteadOf git://
+    git config --global url."https://github.com/".insteadOf git@github.com:
 fi
 
 git submodule update --init --recursive -j 30 | grep "Submodule path" || true;
