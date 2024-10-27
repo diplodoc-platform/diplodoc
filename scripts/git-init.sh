@@ -9,4 +9,8 @@ fi
 
 echo "Init submodules"
 
-git submodule update --init --recursive | grep "Submodule path" || true;
+if [[ "$CODESPACES" -eq "true" ]]; then
+    git config --local url."https://github.com/".insteadOf git@github.com:
+fi
+
+git submodule update --init --recursive -j 8 | grep "Submodule path" || true;

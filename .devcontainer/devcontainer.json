@@ -2,65 +2,13 @@
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "features": {
   },
-  "postCreateCommand": "npm run bootstrap",
+  "postCreateCommand": ["npm run bootstrap"],
   "customizations": {
     "codespaces": {
       "repositories": {
         "diplodoc-platform/*": {
           "permissions": "read-all"
         }
-//        "diplodoc-platform/client": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/components": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/sentenizer": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/transform": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/translation": {
-//          "permissions": "read-all"
-//        },
-//
-//        "diplodoc-platform/cut-extension": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/html-extension": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/latex-extension": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/mermaid-extension": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/openapi-extension": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/search-extension": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/tabs-extension": {
-//          "permissions": "read-all"
-//        },
-//
-//
-//        "diplodoc-platform/lint": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/tsconfig": {
-//          "permissions": "read-all"
-//        },
-//        "diplodoc-platform/babel-preset": {
-//          "permissions": "read-all"
-//        },
-//
-//        "diplodoc-platform/docs": {
-//          "permissions": "read-all"
-//        }
       }
     }
   }

@@ -11,9 +11,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "nx run-many -t build",
-    "reset": "npm i --no-save zx && scripts/reset.js",
-    "deps": "scripts/deps.js",
+    "reset": "npx zx scripts/reset.js",
+    "deps": "npx zx scripts/deps.js",
     "bootstrap": "scripts/bootstrap.sh",
     "git:init": "scripts/git-init.sh",
     "git:head": "scripts/git-head.sh"
