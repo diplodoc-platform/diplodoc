@@ -9,8 +9,9 @@ fi
 
 echo "Init submodules"
 
-if [[ "$CODESPACES" -eq "true" ]]; then
+if [[ "$CODESPACES" == "true" ]]; then
+    ssh -o StrictHostKeyChecking=accept-new github.com
     git config --local url."https://github.com/".insteadOf git@github.com:
 fi
 
-git submodule update --init --recursive -j 8 | grep "Submodule path" || true;
+git submodule update --init --recursive -j 30 | grep "Submodule path" || true;
