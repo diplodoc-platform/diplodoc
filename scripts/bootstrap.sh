@@ -12,4 +12,4 @@ echo "Install dependencies"
 npm ci
 
 echo "Build CLI"
-npx nx build -t @diplodoc/cli
+npx nx build @diplodoc/cli
