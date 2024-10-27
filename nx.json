@@ -1,18 +1,13 @@
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": []
-      }
-    }
-  },
   "affected": {
     "defaultBase": "master"
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/esbuild/*", "{projectRoot}/webpack/*"],
+      "outputs": ["{projectRoot}/build", "{projectRoot}/dist", "{projectRoot}/lib"],
+      "cache": true
     }
   }
 }
