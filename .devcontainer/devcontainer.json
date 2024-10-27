@@ -2,7 +2,7 @@
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "features": {
   },
-  "postCreateCommand": ["npm run bootstrap"],
+  "postCreateCommand": "npm run bootstrap",
   "customizations": {
     "codespaces": {
       "repositories": {
