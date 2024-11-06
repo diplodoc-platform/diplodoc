@@ -7,7 +7,7 @@
     "codespaces": {
       "repositories": {
         "diplodoc-platform/*": {
-          "permissions": "read-all"
+          "permissions": "write-all"
         }
       }
     }
