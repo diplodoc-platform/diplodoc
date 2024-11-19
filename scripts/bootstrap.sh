@@ -9,7 +9,7 @@ ROOT=$(dirname $0)
 
 # maybe npm ci?
 echo "Install dependencies"
-npm ci
+npm i
 
 echo "Build CLI"
 npx nx build @diplodoc/cli
