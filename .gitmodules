@@ -67,3 +67,6 @@
 [submodule "extensions/file"]
 	path = extensions/file
 	url = git@github.com:diplodoc-platform/file-extension.git
+[submodule "extensions/folding-headings"]
+	path = extensions/folding-headings
+	url = git@github.com:diplodoc-platform/folding-headings-extension.git
