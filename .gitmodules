@@ -64,3 +64,6 @@
 [submodule "packages/directive"]
 	path = packages/directive
 	url = git@github.com:diplodoc-platform/directive.git
+[submodule "extensions/file"]
+	path = extensions/file
+	url = git@github.com:diplodoc-platform/file-extension.git
