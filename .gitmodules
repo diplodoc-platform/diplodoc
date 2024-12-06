@@ -61,3 +61,6 @@
 [submodule "extensions/search"]
 	path = extensions/search
 	url = git@github.com:diplodoc-platform/search-extension.git
+[submodule "packages/directive"]
+	path = packages/directive
+	url = git@github.com:diplodoc-platform/directive.git
