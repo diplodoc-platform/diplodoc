@@ -40,5 +40,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
+      - name: Configure git
+        run: git config --global url."https://".insteadOf git:// && git config --global url."https://github.com/".insteadOf 'git@github.com:'
+
       - name: Run npm bootstrap
         run: npm run bootstrap
