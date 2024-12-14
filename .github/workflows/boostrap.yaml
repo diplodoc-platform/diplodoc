@@ -14,7 +14,7 @@ jobs:
 
     outputs:
       any_changed: ${{ steps.changed_files.any_changed }}
-      packages: ${{ steps.split_files.outputs.build }}
+      packages: ${{ steps.changed_files.outputs.all_changed_files }}
 
     steps:
       - name: Check out code
@@ -35,7 +35,7 @@ jobs:
 
     needs: changed-files
 
-    if: needs.changed-files.outputs.packages != ''
+    if: fromJSON(needs.changed-files.outputs.packages) != ''
 
     steps:
       - name: Check out code
