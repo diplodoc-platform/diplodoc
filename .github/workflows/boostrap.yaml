@@ -18,7 +18,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Get all changed files
+      - name: Get changed directory names
         id: changed_files
         uses: tj-actions/changed-files@v45
         with:
@@ -32,9 +32,6 @@ jobs:
         with:
           str: ${{ steps.changed_files.outputs.all_changed_files }}
           separator: space
-
-      - name: Print modified files
-        run: echo ${{ toJSON(steps.changed_files.any_changed) }} -- ${{ toJSON(steps.changed_files.outputs.all_changed_files) }}
 
   run-npm-bootstrap:
     name: 'Run npm bootstrap in modified package'
@@ -64,12 +61,6 @@ jobs:
             repo: diplodoc-platform/translation
 
     steps:
-      - name: Check out ${{ matrix.module }}
-        if: contains(fromJSON(needs.changed-files.outputs.packages), matrix.module)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ matrix.repo }}
-
       - name: Run npm bootstrap
         if: contains(fromJSON(needs.changed-files.outputs.packages), matrix.module)
         run: npm run bootstrap
