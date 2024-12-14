@@ -5,6 +5,8 @@ on:
     paths:
       - 'packages/**'
 
+permissions: read-all
+
 jobs:
   changed-files:
     name: 'Get changed files'
