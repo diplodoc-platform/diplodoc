@@ -29,38 +29,13 @@ jobs:
           dir_names: "true"
           dir_names_exclude_current_dir: "true"
 
-      - uses: danyow/json-matrix-builder@main
-        id: split_files
-        with:
-          str: ${{ steps.changed_files.outputs.all_changed_files }}
-          separator: space
-
   run-npm-bootstrap:
     name: 'Run npm bootstrap in modified package'
     runs-on: ubuntu-latest
 
     needs: changed-files
 
-    strategy:
-      matrix:
-        module: ${{ fromJSON(needs.changed-files.outputs.packages) }}
-        include:
-          - module: 'packages/test'
-            repo: diplodoc-platform/transform
-          - module: 'packages/components'
-            repo: diplodoc-platform/components
-          - module: 'packages/transform'
-            repo: diplodoc-platform/transform
-          - module: 'packages/cli'
-            repo: diplodoc-platform/cli
-          - module: 'packages/client'
-            repo: diplodoc-platform/client
-          - module: 'packages/gh-docs'
-            repo: diplodoc-platform/gh-docs
-          - module: 'packages/sentenizer'
-            repo: diplodoc-platform/sentenizer
-          - module: 'packages/translation'
-            repo: diplodoc-platform/translation
+    if: needs.changed-files.outputs.packages != ''
 
     steps:
       - name: Check out code
