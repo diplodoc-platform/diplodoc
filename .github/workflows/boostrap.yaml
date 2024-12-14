@@ -61,6 +61,9 @@ jobs:
             repo: diplodoc-platform/translation
 
     steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
       - name: Run npm bootstrap
         if: contains(fromJSON(needs.changed-files.outputs.packages), matrix.module)
         run: npm run bootstrap
