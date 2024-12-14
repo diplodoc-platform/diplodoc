@@ -17,4 +17,4 @@ jobs:
       - name: Run npm bootstrap
         run: npm run bootstrap
         env:
-          USE_GIT_ENDPOINTS: 'true'
+          USE_GIT_HTTP_ENDPOINTS: 'true'
