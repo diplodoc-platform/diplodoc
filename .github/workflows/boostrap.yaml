@@ -7,7 +7,7 @@ on:
 
 jobs:
   changed-files:
-    name: 'Get changed files'
+    name: 'Get changed packages'
     runs-on: ubuntu-latest
 
     outputs:
