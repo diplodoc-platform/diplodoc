@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 
-import {$} from 'zx';
+import {$, minimist} from 'zx';
 import {roots} from './nx.js';
-import process from "node:process";
+import process from 'node:process';
 
-const FLAGS = process.argv.slice(2).filter((arg) => /^-/.test(arg));
 const ROOTS = await roots();
-
-const metapackage = FLAGS.includes('--metapackage') || FLAGS.includes('-u');
+const flags = minimist(process.argv.slice(2), {
+    boolean: 'metapackage',
+    alias: {
+        u: 'metapackage',
+    },
+});
 
 for (const root of ROOTS) {
     await $`rm -rf ${root}/node_modules`;
@@ -15,7 +18,7 @@ for (const root of ROOTS) {
 
 await $`rm -rf node_modules`;
 
-if (metapackage) {
+if (flags.metapackage) {
     await $`npm i`;
 } else {
     for (const root of ROOTS) {

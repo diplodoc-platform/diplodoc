@@ -2,26 +2,25 @@
 
 // npm run deps update
 
-import {$} from 'zx';
+import {$, minimist, path} from 'zx';
 import {roots, json} from './nx.js';
 import process from 'node:process';
 
-const not = (actor) => (...args) => !actor(...args);
-const FLAGS = (arg) => /^-/.test(arg);
-
-const command = process.argv[2];
-const args = process.argv.slice(3).filter(not(FLAGS));
-const flags = process.argv.slice(3).filter(FLAGS);
-
+const argvPos = process.argv.findIndex(a => a.endsWith(path.parse(import.meta.url).base)) + 1;
+const flags = minimist(process.argv.slice(argvPos), {
+    boolean: ['commit', 'dryrun'],
+    alias: {
+        'dry-run': 'dryrun',
+    },
+});
+const [command, ...deps] = flags._;
 switch (command) {
     case 'update': await update(); break;
     default: throw 'Unknown command ' + command;
 }
 
 async function update() {
-    const dryRun = flags.includes('--dry-run');
-    const commit = flags.includes('--commit');
-    const deps = args.slice();
+    const { dryrun, commit } = flags;
     const projects = await roots();
 
     const work = [];
@@ -39,7 +38,15 @@ async function update() {
                 const dependencies = pkg[key] || {};
 
                 if (dependencies[name] && dependencies[name] !== '*') {
-                    work.push({pkg: pkg.name, name, key, mode, root, prev: dependencies[name], next: version});
+                    work.push({
+                        pkg: pkg.name,
+                        name,
+                        key,
+                        mode,
+                        root,
+                        prev: dependencies[name],
+                        next: version
+                    });
                 }
             }
         }
@@ -63,7 +70,7 @@ async function update() {
 
             console.log(log.join('\n'));
 
-            if (dryRun) {
+            if (dryrun) {
                 continue;
             }
 
