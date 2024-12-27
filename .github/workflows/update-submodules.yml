@@ -1,0 +1,43 @@
+name: Update Submodules
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update submodules to remote HEAD
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive --remote
+
+      - name: Check if there are changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "chore: update submodules to latest"
+          else
+            echo "No changes to commit."
+          fi
+
+      - name: Push changes
+        if: always()
+        run: |
+          if [ -n "$(git log -1 --pretty=%B | grep 'chore: update submodules')" ]; then
+            git push origin HEAD:${{ github.ref_name }}
+          fi
