@@ -16,7 +16,10 @@
     "bootstrap": "scripts/bootstrap.sh",
     "codespaces": "scripts/codespaces.sh",
     "git:init": "scripts/git-init.sh",
-    "git:head": "scripts/git-head.sh"
+    "git:head": "scripts/git-head.sh",
+    "analyze-deps": "scripts/node-version-checker.sh",
+    "check-submodules": "scripts/check-submodules.sh",
+    "add-submodules": "scripts/add-submodules.sh"
   },
   "repository": {
     "type": "git",

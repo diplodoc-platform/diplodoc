@@ -1,0 +1,12 @@
+git@github.com:diplodoc-platform/.github.git # корневой, для того чтобы был readme у организации
+git@github.com:diplodoc-platform/markdownlint.git # форк, можно удалить
+git@github.com:diplodoc-platform/mdx-extension.git # не подходящая инфрастрктура
+git@github.com:diplodoc-platform/notconf-steps.git # не нужный пакет, сделать для примера
+git@github.com:diplodoc-platform/pdf-generator.git # не подходящая инфрастрктура, но хотим занести
+git@github.com:diplodoc-platform/playground.git # не подходящая инфрастрктура, перенесен в трансформ
+git@github.com:diplodoc-platform/www-quickstart.git # не подходящая инфрастрктура
+git@github.com:diplodoc-platform/documentation-template.git # шаблон
+git@github.com:diplodoc-platform/markdown-translation-action.git # не нужный мусорный пакет
+git@github.com:diplodoc-platform/static-template.git # шаблон
+git@github.com:diplodoc-platform/themes.git
+git@github.com:diplodoc-platform/utils.git

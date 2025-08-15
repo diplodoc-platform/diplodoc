@@ -1,6 +1,6 @@
 [submodule "docs"]
-        path = docs
-        url = git@github.com:diplodoc-platform/docs.git
+	path = docs
+	url = git@github.com:diplodoc-platform/docs.git
 [submodule "packages/components"]
 	path = packages/components
 	url = git@github.com:diplodoc-platform/components.git
