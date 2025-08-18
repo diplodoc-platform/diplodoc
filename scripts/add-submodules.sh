@@ -39,7 +39,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     if [[ "$action" == "+" ]]; then
         # Проверяем, существует ли уже субмодуль по указанному пути
         if submodule_exists "$path"; then
-            echo "Субмодуль $path уже существует, пропускаем."
+            printf '\e[33mСубмодуль %s уже существует, пропускаем.\e[0m\n' "$path"
             continue
         fi
 
@@ -76,17 +76,24 @@ awk 'BEGIN { I=0 ; J=0 ; K="" } ; /^\[submodule/{ N+=1 ; J=1 ; K=$2 ; gsub(/("ve
     | awk '{ $1="" ; $2="" ; $3="" ; print }' \
     | sed 's/^ *//g' \
     | awk '/^\[/{ print ; next } { print "\t" $0 }' \
-    | > .gitmodules.tmp
+    > .gitmodules.sorted
 
 # Вывод результатов
-echo "Добавленные субмодули:"
-printf '\e[32m%s\e[0m\n' "${ADDED_SUBMODULES[@]}"
+if [ "${#ADDED_SUBMODULES[@]}" -gt 0 ]; then
+  echo 'Добавленные субмодули:'
+  printf '\e[32m%s\e[0m\n' "${ADDED_SUBMODULES[@]}"
+fi
 
-echo "Удалённые субмодули:"
-printf '\e[31m%s\e[0m\n' "${REMOVED_SUBMODULES[@]}"
+if [ "${#REMOVED_SUBMODULES[@]}" -gt 0 ]; then
+  echo 'Удалённые субмодули:'
+  printf '\e[31m%s\e[0m\n' "${REMOVED_SUBMODULES[@]}"
+fi
 
-echo "Не удалось добавить субмодули:"
-printf '\e[33m%s\e[0m\n' "${FAILED_SUBMODULES[@]}"
+if [ "${#FAILED_SUBMODULES[@]}" -gt 0 ]; then
+  echo 'Не удалось добавить субмодули:'
+  printf '\e[33m%s\e[0m\n' "${FAILED_SUBMODULES[@]}"
+fi
 
-cp .gitmodules.tmp .gitmodules
 rm .gitmodules.tmp
+cp .gitmodules.sorted .gitmodules
+rm .gitmodules.sorted
