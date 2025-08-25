@@ -1,78 +1,108 @@
-[submodule "docs"]
-	path = docs
-	url = git@github.com:diplodoc-platform/docs.git
-[submodule "packages/components"]
-	path = packages/components
-	url = git@github.com:diplodoc-platform/components.git
-[submodule "packages/transform"]
-	path = packages/transform
-	url = git@github.com:diplodoc-platform/transform.git
-[submodule "packages/cli"]
-	path = packages/cli
-	url = git@github.com:diplodoc-platform/cli.git
-[submodule "packages/client"]
-	path = packages/client
-	url = git@github.com:diplodoc-platform/client.git
-[submodule "extensions/openapi"]
-	path = extensions/openapi
-	url = git@github.com:diplodoc-platform/openapi-extension.git
-[submodule "extensions/tabs"]
-	path = extensions/tabs
-	url = git@github.com:diplodoc-platform/tabs-extension.git
-[submodule "extensions/mermaid"]
-	path = extensions/mermaid
-	url = git@github.com:diplodoc-platform/mermaid-extension.git
-[submodule "devops/tsconfig"]
-	path = devops/tsconfig
-	url = git@github.com:diplodoc-platform/tsconfig.git
+[submodule "actions/docs-build"]
+	path = actions/docs-build
+	url = git@github.com:diplodoc-platform/docs-build-action.git
+[submodule "actions/docs-build-static"]
+	path = actions/docs-build-static
+	url = git@github.com:diplodoc-platform/docs-build-static-action.git
+[submodule "actions/docs-clean"]
+	path = actions/docs-clean
+	url = git@github.com:diplodoc-platform/docs-clean-action.git
+[submodule "actions/docs-message"]
+	path = actions/docs-message
+	url = git@github.com:diplodoc-platform/docs-message-action.git
+[submodule "actions/docs-release"]
+	path = actions/docs-release
+	url = git@github.com:diplodoc-platform/docs-release-action.git
+[submodule "actions/docs-upload"]
+	path = actions/docs-upload
+	url = git@github.com:diplodoc-platform/docs-upload-action.git
 [submodule "devops/babel-preset"]
 	path = devops/babel-preset
 	url = git@github.com:diplodoc-platform/babel-preset.git
-[submodule "devops/prettier-config"]
-	path = devops/prettier-config
-	url = git@github.com:diplodoc-platform/prettier-config.git
 [submodule "devops/eslint-config"]
 	path = devops/eslint-config
 	url = git@github.com:diplodoc-platform/eslint-config.git
-[submodule "extensions/latex"]
-	path = extensions/latex
-	url = git@github.com:diplodoc-platform/latex-extension.git
-[submodule "devops/package-template"]
-	path = devops/package-template
-	url = git@github.com:diplodoc-platform/package-template.git
-[submodule "packages/gh-docs"]
-	path = packages/gh-docs
-	url = git@github.com:diplodoc-platform/gh-docs.git
-[submodule "packages/sentenizer"]
-	path = packages/sentenizer
-	url = git@github.com:diplodoc-platform/sentenizer.git
-[submodule "packages/liquid"]
-	path = packages/liquid
-	url = git@github.com:diplodoc-platform/liquid.git
-[submodule "packages/yfmlint"]
-	path = packages/yfmlint
-	url = git@github.com:diplodoc-platform/yfmlint.git
-[submodule "packages/translation"]
-	path = packages/translation
-	url = git@github.com:diplodoc-platform/translation.git
 [submodule "devops/lint"]
 	path = devops/lint
 	url = git@github.com:diplodoc-platform/lint.git
-[submodule "extensions/html"]
-	path = extensions/html
-	url = git@github.com:diplodoc-platform/html-extension.git
+[submodule "devops/package-template"]
+	path = devops/package-template
+	url = git@github.com:diplodoc-platform/package-template.git
+[submodule "devops/prettier-config"]
+	path = devops/prettier-config
+	url = git@github.com:diplodoc-platform/prettier-config.git
+[submodule "devops/tsconfig"]
+	path = devops/tsconfig
+	url = git@github.com:diplodoc-platform/tsconfig.git
+[submodule "docs"]
+	path = docs
+	url = git@github.com:diplodoc-platform/docs.git
+[submodule "extensions/algolia"]
+	path = extensions/algolia
+	url = git@github.com:diplodoc-platform/algolia-extension.git
+[submodule "extensions/color"]
+	path = extensions/color
+	url = git@github.com:diplodoc-platform/color-extension.git
 [submodule "extensions/cut"]
 	path = extensions/cut
 	url = git@github.com:diplodoc-platform/cut-extension.git
-[submodule "extensions/search"]
-	path = extensions/search
-	url = git@github.com:diplodoc-platform/search-extension.git
-[submodule "packages/directive"]
-	path = packages/directive
-	url = git@github.com:diplodoc-platform/directive.git
 [submodule "extensions/file"]
 	path = extensions/file
 	url = git@github.com:diplodoc-platform/file-extension.git
 [submodule "extensions/folding-headings"]
 	path = extensions/folding-headings
 	url = git@github.com:diplodoc-platform/folding-headings-extension.git
+[submodule "extensions/html"]
+	path = extensions/html
+	url = git@github.com:diplodoc-platform/html-extension.git
+[submodule "extensions/latex"]
+	path = extensions/latex
+	url = git@github.com:diplodoc-platform/latex-extension.git
+[submodule "extensions/mermaid"]
+	path = extensions/mermaid
+	url = git@github.com:diplodoc-platform/mermaid-extension.git
+[submodule "extensions/openapi"]
+	path = extensions/openapi
+	url = git@github.com:diplodoc-platform/openapi-extension.git
+[submodule "extensions/page-constructor"]
+	path = extensions/page-constructor
+	url = git@github.com:diplodoc-platform/page-constructor-extension.git
+[submodule "extensions/quote-link"]
+	path = extensions/quote-link
+	url = git@github.com:diplodoc-platform/quote-link-extension.git
+[submodule "extensions/search"]
+	path = extensions/search
+	url = git@github.com:diplodoc-platform/search-extension.git
+[submodule "extensions/tabs"]
+	path = extensions/tabs
+	url = git@github.com:diplodoc-platform/tabs-extension.git
+[submodule "packages/cli"]
+	path = packages/cli
+	url = git@github.com:diplodoc-platform/cli.git
+[submodule "packages/client"]
+	path = packages/client
+	url = git@github.com:diplodoc-platform/client.git
+[submodule "packages/components"]
+	path = packages/components
+	url = git@github.com:diplodoc-platform/components.git
+[submodule "packages/directive"]
+	path = packages/directive
+	url = git@github.com:diplodoc-platform/directive.git
+[submodule "packages/gh-docs"]
+	path = packages/gh-docs
+	url = git@github.com:diplodoc-platform/gh-docs.git
+[submodule "packages/liquid"]
+	path = packages/liquid
+	url = git@github.com:diplodoc-platform/liquid.git
+[submodule "packages/sentenizer"]
+	path = packages/sentenizer
+	url = git@github.com:diplodoc-platform/sentenizer.git
+[submodule "packages/transform"]
+	path = packages/transform
+	url = git@github.com:diplodoc-platform/transform.git
+[submodule "packages/translation"]
+	path = packages/translation
+	url = git@github.com:diplodoc-platform/translation.git
+[submodule "packages/yfmlint"]
+	path = packages/yfmlint
+	url = git@github.com:diplodoc-platform/yfmlint.git
