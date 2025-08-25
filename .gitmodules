@@ -46,6 +46,12 @@
 [submodule "packages/sentenizer"]
 	path = packages/sentenizer
 	url = git@github.com:diplodoc-platform/sentenizer.git
+[submodule "packages/liquid"]
+	path = packages/liquid
+	url = git@github.com:diplodoc-platform/liquid.git
+[submodule "packages/yfmlint"]
+	path = packages/yfmlint
+	url = git@github.com:diplodoc-platform/yfmlint.git
 [submodule "packages/translation"]
 	path = packages/translation
 	url = git@github.com:diplodoc-platform/translation.git
