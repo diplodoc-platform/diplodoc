@@ -31,6 +31,9 @@
 [submodule "devops/prettier-config"]
 	path = devops/prettier-config
 	url = git@github.com:diplodoc-platform/prettier-config.git
+[submodule "devops/testpack"]
+	path = devops/testpack
+	url = git@github.com:diplodoc-platform/testpack.git
 [submodule "devops/tsconfig"]
 	path = devops/tsconfig
 	url = git@github.com:diplodoc-platform/tsconfig.git
