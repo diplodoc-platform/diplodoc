@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# Создаём резервную копию .gitmodules
+# Create a backup of .gitmodules
 cp .gitmodules .gitmodules.tmp
 
-# Файл со списком репозиториев в формате:
-# [+|-] [имя] [URL] [путь]
+# File with list of repositories in format:
+# [+|-] [name] [URL] [path]
 CONFIG_FILE="submodules.conf"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
@@ -12,7 +12,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     exit 1
 fi
 
-# Функция для проверки существования субмодуля по пути
+# Function to check if submodule exists at path
 submodule_exists() {
     local path="$1"
     grep -q "^\[submodule \"$path\"\]" .gitmodules
@@ -23,13 +23,13 @@ FAILED_SUBMODULES=()
 REMOVED_SUBMODULES=()
 
 while IFS= read -r line || [[ -n "$line" ]]; do
-    # Пропускаем комментарии и пустые строки
+    # Skip comments and empty lines
     [[ "$line" =~ ^# || -z "$line" ]] && continue
 
-    # Разбиваем строку на компоненты
+    # Split line into components
     read -r action name path repo <<< "$line"
 
-    # Проверяем обязательные параметры
+    # Check required parameters
     if [[ -z "$repo" || -z "$path" ]]; then
         echo "Error: Invalid entry - $line" >&2
         FAILED_SUBMODULES+=("$repo")
@@ -37,13 +37,13 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     fi
 
     if [[ "$action" == "+" ]]; then
-        # Проверяем, существует ли уже субмодуль по указанному пути
+        # Check if submodule already exists at the specified path
         if submodule_exists "$path"; then
-            printf '\e[33mСубмодуль %s уже существует, пропускаем.\e[0m\n' "$path"
+            Check if submodule already exists at the specified path
             continue
         fi
 
-        # Формируем команду
+        # Form the command
         cmd="git submodule add $repo $path"
         echo "Executing: $cmd"
         if eval "$cmd"; then
@@ -54,7 +54,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             FAILED_SUBMODULES+=("$repo")
         fi
     elif [[ "$action" == "-" ]]; then
-        # Здесь можно добавить логику для удаления субмодуля
+        # Here you can add logic for removing submodule
         if submodule_exists "$path"; then
             cmd="git submodule deinit $path && git rm $path"
             echo "Executing: $cmd"
@@ -65,12 +65,12 @@ while IFS= read -r line || [[ -n "$line" ]]; do
                 echo "❌ Failed to remove: $path" >&2
             fi
         else
-            echo "Субмодуля $path нет, удалять нечего."
+            echo "Submodule $path does not exist, nothing to remove."
         fi
     fi
 done < "$CONFIG_FILE"
 
-# Сортируем .gitmodules
+# Sort .gitmodules
 awk 'BEGIN { I=0 ; J=0 ; K="" } ; /^\[submodule/{ N+=1 ; J=1 ; K=$2 ; gsub(/("vendor\/|["\]])/, "", K) } ; { print K, N, J, $0 } ; { J+=1 }' .gitmodules \
     | sort \
     | awk '{ $1="" ; $2="" ; $3="" ; print }' \
@@ -78,19 +78,19 @@ awk 'BEGIN { I=0 ; J=0 ; K="" } ; /^\[submodule/{ N+=1 ; J=1 ; K=$2 ; gsub(/("ve
     | awk '/^\[/{ print ; next } { print "\t" $0 }' \
     > .gitmodules.sorted
 
-# Вывод результатов
+# ВOutput results
 if [ "${#ADDED_SUBMODULES[@]}" -gt 0 ]; then
-  echo 'Добавленные субмодули:'
+  echo 'Added submodules:'
   printf '\e[32m%s\e[0m\n' "${ADDED_SUBMODULES[@]}"
 fi
 
 if [ "${#REMOVED_SUBMODULES[@]}" -gt 0 ]; then
-  echo 'Удалённые субмодули:'
+  echo 'Removed submodules:'
   printf '\e[31m%s\e[0m\n' "${REMOVED_SUBMODULES[@]}"
 fi
 
 if [ "${#FAILED_SUBMODULES[@]}" -gt 0 ]; then
-  echo 'Не удалось добавить субмодули:'
+  echo 'Failed to add submodules:'
   printf '\e[33m%s\e[0m\n' "${FAILED_SUBMODULES[@]}"
 fi
 
