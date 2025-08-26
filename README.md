@@ -54,3 +54,13 @@ The most typical use case for document searching on the platform, without extra 
 Try Diplodoc [locally or with your development pipelines](https://diplodoc.com/docs/ru/how-it-work) or try within [codespace](https://github.com/codespaces/new?repo=688437532) online.
 
 ## Contribution
+
+
+## Adding/removing subrepositories in the monorepo
+
+To add/remove subrepositories in the monorepo, use the scripts `script/check-submodules.sh` and `script/add-submodules.sh`.
+1. Run the script: `script/check-submodules.sh`. It will update the `submodules.conf` file. If necessary, manually make corrections in the `submodules.conf` file by specifying the correct path.
+2. Run the script: `script/add-submodules.sh`. It will add/remove subrepositories according to the `submodules.conf` file.
+3. Push the result to the repository.
+
+As a result, you should see new subrepositories in the list of subrepositories on GitHub, and your `.gitmodules` file will be updated (and it will already be sorted)
