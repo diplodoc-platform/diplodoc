@@ -11,5 +11,7 @@ ROOT=$(dirname $0)
 echo "Install dependencies"
 npm i
 
+npm run reset -- -u
+
 echo "Build CLI"
 npx nx build @diplodoc/cli

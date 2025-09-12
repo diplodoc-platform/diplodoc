@@ -20,6 +20,9 @@ await $`rm -rf node_modules`;
 
 if (flags.metapackage) {
     await $`npm i`;
+    for (const root of ROOTS) {
+        await $`rm -rf ${root}/node_modules/@diplodoc`;
+    }
 } else {
     for (const root of ROOTS) {
         await $`cd ${root} && npm i --no-workspaces`;
