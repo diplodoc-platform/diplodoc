@@ -5,9 +5,8 @@
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/esbuild/*", "{projectRoot}/webpack/*"],
+      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/esbuild/*", "{projectRoot}/rspack/*"],
       "outputs": ["{projectRoot}/build", "{projectRoot}/dist", "{projectRoot}/lib"],
-      "cache": true
     }
   }
 }
