@@ -4,9 +4,19 @@
   },
   "targetDefaults": {
     "build": {
+      "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/esbuild/*", "{projectRoot}/rspack/*"],
-      "outputs": ["{projectRoot}/build", "{projectRoot}/dist", "{projectRoot}/lib"],
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "!{projectRoot}/src/**/?(*.)+(spec|test).ts",
+        "{projectRoot}/esbuild/*",
+        "{projectRoot}/rspack/*"
+      ],
+      "outputs": [
+        "{projectRoot}/build/**/*",
+        "{projectRoot}/dist/**/*",
+        "{projectRoot}/lib/**/*"
+      ]
     }
   }
 }
