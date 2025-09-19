@@ -10,7 +10,8 @@
         "{projectRoot}/src/**/*",
         "!{projectRoot}/src/**/?(*.)+(spec|test).ts",
         "{projectRoot}/esbuild/*",
-        "{projectRoot}/rspack/*"
+        "{projectRoot}/rspack/*",
+        {"dependentTasksOutputFiles": "**/*"}
       ],
       "outputs": [
         "{projectRoot}/build/**/*",

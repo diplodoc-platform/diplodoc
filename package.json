@@ -11,6 +11,8 @@
     "packages/*"
   ],
   "scripts": {
+    "watch": "scripts/watch.js",
+    "test": "nx test @diplodoc/testpack",
     "reset": "npx zx scripts/reset.js",
     "deps": "npx zx scripts/deps.js",
     "bootstrap": "scripts/bootstrap.sh",
