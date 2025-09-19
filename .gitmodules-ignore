@@ -9,4 +9,3 @@ git@github.com:diplodoc-platform/documentation-template.git # шаблон
 git@github.com:diplodoc-platform/markdown-translation-action.git # не нужный мусорный пакет
 git@github.com:diplodoc-platform/static-template.git # шаблон
 git@github.com:diplodoc-platform/themes.git
-git@github.com:diplodoc-platform/utils.git
