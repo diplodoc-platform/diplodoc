@@ -23,7 +23,7 @@ console.log('Build testpack documentation');
 await quiet($`docs -i ${DOCS_INPUT} -o ${DOCS_OUTPUT}`);
 
 console.log('Start documentation server');
-await wait('Documentations served', $({cwd: 'devops/testpack'})`npm start`);
+await wait('Documentation served', $({cwd: 'devops/testpack'})`npm start`);
 
 console.log('Start watching');
 await quiet($`nx watch -d -p ${PROJECT} -- nx build @diplodoc/cli --parallel=5 --verbose \\&\\& docs -i ${DOCS_INPUT} -o ${DOCS_OUTPUT}`);
