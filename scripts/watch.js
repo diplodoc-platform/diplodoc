@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import {$, minimist} from 'zx';
+import {$} from 'zx';
+import {log} from 'zx/core'
 import {roots} from './nx.js';
+import {Transform} from 'node:stream';
 
 const PROJECT = '@diplodoc/testpack';
-const DOCS_INPUT = 'devops/testpack/docs/input';
-const DOCS_OUTPUT = 'devops/testpack/docs/output';
 
 const ROOTS = await roots();
 
@@ -15,86 +15,137 @@ for (const root of ROOTS) {
 }
 
 $.stdio = ["inherit", "pipe", "pipe"];
+$.log = (entry) => {
+    if (entry.kind === 'stderr') {
+        const message = String(entry.data);
+        if (message.includes('npm warn config ignoring workspace config')) {
+            return;
+        }
+    }
+    log(entry);
+};
 
-console.log('Build CLI');
-await quiet($`nx build ${PROJECT} --parallel=5 --verbose`);
+try {
+    console.log('Build CLI');
+    await $`nx build ${PROJECT} --parallel=5 --verbose`;
+} catch (error) {
+    show(error);
+    throw error
+}
 
-console.log('Build testpack documentation');
-await quiet($`docs -i ${DOCS_INPUT} -o ${DOCS_OUTPUT}`);
+console.log('Build testpack docs');
+const docs = await Docs();
 
-console.log('Start documentation server');
-await wait('Documentation served', $({cwd: 'devops/testpack'})`npm start`);
+console.log('Serve testpack docs');
+const server = await Server(3001);
 
 console.log('Start watching');
-await quiet($`nx watch -d -p ${PROJECT} -- nx build @diplodoc/cli --parallel=5 --verbose \\&\\& docs -i ${DOCS_INPUT} -o ${DOCS_OUTPUT}`);
+const build = $`
+    nx watch -d -p ${PROJECT} -- \\
+        echo CHANGED: \\$NX_FILE_CHANGES \\&\\& \\
+        nx build @diplodoc/cli --parallel=5 --verbose \\&\\& \\
+        echo built
+`;
 
-async function wait(match, command) {
-    let resolve
-    const promise = new Promise((_resolve) => {
-        resolve = _resolve;
-    });
-
-    (async () => {
-        for await (const chunk of command.stdout) {
-            const lines = String(chunk).split('\n');
-
-            for (const line of lines) {
-                if (line.includes(match)) {
-                    console.log(line);
-                    resolve();
-                }
-            }
+watch(build, [
+    ['built', docs.restart],
+    ['> nx run @diplodoc', (line) => {
+        if (!line.includes('left as is')) {
+            console.log(line);
         }
-    })();
+    }],
+]);
 
-    (async () => {
-        for await (const chunk of command.stderr) {
-            const lines = String(chunk).split('\n');
-
-            for (const line of lines) {
-                if (line.includes(match)) {
-                    console.log(line);
-                    resolve();
-                }
-            }
-        }
-    })();
-
-    return promise;
-}
-
-async function quiet(command) {
-    (async () => {
-        for await (const chunk of command.stdout) {
-            const lines = String(chunk).split('\n');
-
-            for (const line of lines) {
-                if (line.includes('> nx run @diplodoc')) {
-                    if (!line.includes('left as is')) {
-                        console.log(line);
-                    }
-                }
-
-                if (line.match(/^Build time:/)) {
-                    console.log(line);
-                }
-            }
-        }
-    })();
-
-    (async () => {
-        for await (const chunk of command.stderr) {
-            const lines = String(chunk).split('\n');
-
-            for (const line of lines) {
-                if (line.includes('npm warn config ignoring workspace config')) {
-                    continue;
-                }
-
+async function wait(match, process) {
+    return new Promise((resolve) => {
+        process.pipe(read((line) => {
+            if (line.includes(match)) {
                 console.log(line);
+                resolve(line);
+            }
+        }));
+    });
+}
+
+async function watch(process, matchers) {
+    process.pipe(read(async (line) => {
+        for (const [match, action] of matchers) {
+            if (line.includes(match)) {
+                console.log(line);
+                await action(line);
             }
         }
-    })();
-
-    return command;
+    }));
 }
+
+function read(action) {
+    return new Transform({
+        async transform(chunk, encoding, callback) {
+            callback(null, chunk);
+            for (const line of String(chunk).split('\n')) {
+                await action(line);
+            }
+        },
+    });
+}
+
+function show(error) {
+    console.error(error.stdout);
+    if (error.stderr) {
+        console.error(error.stderr);
+    }
+}
+
+function Docs() {
+    const result = {
+        command: null,
+        restart: async function() {
+            if (result.command) {
+                await result.command.kill();
+                console.log('Restart docs watch');
+            }
+
+            result.command = $({cwd: 'devops/testpack'})`npm run docs`;
+
+            result.command.catch((error) => show(error))
+
+            await wait('Build time', result.command);
+
+            return result;
+        },
+    };
+
+    process.on('uncaughtException', () => result.command.kill());
+
+    return result.restart();
+}
+
+function Server(port) {
+    const result = {
+        command: null,
+        restart: async function() {
+            if (result.command) {
+                await result.command.kill();
+                console.log('Restart docs server');
+            }
+
+            result.command = $({cwd: 'devops/testpack'})`PORT=${port} npm run serve`;
+
+            result.command.catch((error) => show(error))
+
+            await wait('Documentation served', result.command);
+
+            return result;
+        },
+    };
+
+    process.on('uncaughtException', () => result.command.kill());
+
+    return result.restart();
+}
+
+
+// Добавить алголию
+// Добавить логирование в файл
+// Добавить вывод ошибок для свалившихся подпрограмм
+// Закрывать зависший сервер
