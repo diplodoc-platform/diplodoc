@@ -41,7 +41,7 @@ const server = await Server(3001);
 
 console.log('Start watching');
 const build = $`
-    nx watch -d -p ${PROJECT} -- \\
+    NX_DAEMON=true nx watch -d -p ${PROJECT} -- \\
         echo CHANGED: \\$NX_FILE_CHANGES \\&\\& \\
         nx build @diplodoc/cli --parallel=5 --verbose \\&\\& \\
         echo built
@@ -131,7 +131,7 @@ function Server(port) {
 
             result.command = $({cwd: 'devops/testpack'})`PORT=${port} npm run serve`;
 
-            result.command.catch((error) => show(error))
+            result.command.catch((error) => show(error));
 
             await wait('Documentation served', result.command);
 
@@ -139,7 +139,10 @@ function Server(port) {
         },
     };
 
-    process.on('uncaughtException', () => result.command.kill());
+    process.on('uncaughtException', (e) => {
+        console.error(e);
+        result.command.kill();
+    });
 
     return result.restart();
 }
