@@ -12,7 +12,6 @@ name: E2E Tests
 # 5. Runs e2e tests from @diplodoc/testpack
 
 on:
-  # Run on every push to master
   push:
     branches:
       - master
@@ -55,12 +54,10 @@ jobs:
           node-version: 22
           cache: 'npm'
 
-      - name: Display branch override
+      - name: Override active branch
         if: inputs.submodules_override != ''
         run: |
-          echo "Running with branch override:"
-          echo "Branch: ${{ inputs.submodules_override }}"
-          echo "All submodules will attempt to checkout this branch"
+          echo "All submodules will attempt to checkout branch ${{ inputs.submodules_override }}"
           npm run git:apply -- "${{ inputs.submodules_override }}"
 
       - name: Setup node_modules
