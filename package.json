@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "watch": "scripts/watch.js",
+    "build": "nx build @diplodoc/testpack",
     "test": "nx test @diplodoc/testpack",
     "reset": "npx zx scripts/reset.js",
     "deps": "npx zx scripts/deps.js",
@@ -47,6 +48,7 @@
     "eslint-plugin-prettier": "^5.0.1"
   },
   "dependencies": {
+    "@swc/helpers": "^0.5.17",
     "typescript": "^5.4.5"
   }
 }
