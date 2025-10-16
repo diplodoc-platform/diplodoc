@@ -1,0 +1,69 @@
+name: E2E Tests
+
+on:
+  # Run on every push to master
+  push:
+    branches:
+      - master
+
+  # Allow manual trigger with parameters
+  workflow_dispatch:
+    inputs:
+      submodules_override:
+        description: 'Branch name to checkout in all submodules (e.g., "feature-branch")'
+        required: false
+        type: string
+        default: ''
+
+  # Allow triggering from other repositories (child modules)
+  workflow_call:
+    inputs:
+      submodules_override:
+        description: 'Branch name to checkout in all submodules (e.g., "feature-branch")'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  e2e-tests:
+    name: 'Run E2E Tests'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Display branch override
+        if: inputs.submodules_override != ''
+        run: |
+          echo "Running with branch override:"
+          echo "Branch: ${{ inputs.submodules_override }}"
+          echo "All submodules will attempt to checkout this branch"
+
+      - name: Run E2E tests
+        run: ./scripts/test.sh
+        env:
+          SUBMODULES_OVERRIDE: ${{ inputs.submodules_override }}
+          USE_GIT_HTTP_ENDPOINTS: 'true'
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            devops/testpack/test-results/
+            devops/testpack/playwright-report/
+          retention-days: 7
+
