@@ -6,27 +6,39 @@ import process from 'node:process';
 
 const ROOTS = await roots();
 const flags = minimist(process.argv.slice(2), {
-    boolean: 'metapackage',
+    boolean: ['metapackage', 'quick'],
     alias: {
         u: 'metapackage',
+        q: 'quick',
     },
+    default: {
+        quick: false,
+        metapackage: true,
+    }
 });
 
-for (const root of ROOTS) {
-    await $`rm -rf ${root}/node_modules`;
+if (!flags.quick) {
+    for (const root of ROOTS) {
+        await $`rm -rf ${root}/node_modules`;
+    }
+
+    await $`rm -rf node_modules`;
 }
 
-await $`rm -rf node_modules`;
-
 if (flags.metapackage) {
-    await $`npm i`;
+    if (!flags.quick) {
+        await $`npm i`;
+    }
+
     for (const root of ROOTS) {
         await $`rm -rf ${root}/node_modules/@diplodoc`;
     }
 } else {
-    for (const root of ROOTS) {
-        await $`cd ${root} && npm i --no-workspaces`;
-    }
+    if (!flags.quick) {
+        for (const root of ROOTS) {
+            await $`cd ${root} && npm i --no-workspaces`;
+        }
 
-    await $`npm i --no-workspaces`;
+        await $`npm i --no-workspaces`;
+    }
 }

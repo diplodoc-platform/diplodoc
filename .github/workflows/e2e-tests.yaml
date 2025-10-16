@@ -1,5 +1,16 @@
 name: E2E Tests
 
+# E2E Test Runner for Diplodoc Metapackage
+#
+# This workflow orchestrates full end-to-end testing of the Diplodoc metapackage:
+# 1. Initializes all git submodules to master branch (via submodules: recursive)
+# 2. Applies optional branch override to all submodules (via git:apply)
+#    - If branch exists in a submodule, it will be checked out
+#    - If branch doesn't exist, submodule stays on master
+# 3. Installs all dependencies (npm i)
+# 4. Resets node_modules to ensure proper linking (npm run reset -- -u)
+# 5. Runs e2e tests from @diplodoc/testpack
+
 on:
   # Run on every push to master
   push:
@@ -50,12 +61,18 @@ jobs:
           echo "Running with branch override:"
           echo "Branch: ${{ inputs.submodules_override }}"
           echo "All submodules will attempt to checkout this branch"
+          npm run git:apply -- "${{ inputs.submodules_override }}"
+
+      - name: Setup node_modules
+        run: |
+          npm i
+          npm run reset -- -u -q
+
+      - name: Build projects
+        run: npm run build -- --verbose
 
       - name: Run E2E tests
-        run: ./scripts/test.sh
-        env:
-          SUBMODULES_OVERRIDE: ${{ inputs.submodules_override }}
-          USE_GIT_HTTP_ENDPOINTS: 'true'
+        run: npm run test
 
       - name: Upload test results
         if: always()
