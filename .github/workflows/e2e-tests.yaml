@@ -64,6 +64,8 @@ jobs:
         run: |
           npm i
           npm run reset -- -u -q
+          # Link node_modules/.bin folder
+          npm i
 
       - name: Build projects
         run: npm run build -- --verbose
