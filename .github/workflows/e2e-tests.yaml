@@ -11,6 +11,9 @@ name: E2E Tests
 # 4. Resets node_modules to ensure proper linking (npm run reset -- -u)
 # 5. Runs e2e tests from @diplodoc/testpack
 
+# Set custom run name to include trigger_id for reliable tracking
+run-name: ${{ inputs.trigger_id && format('E2E Tests [ID:{0}]', inputs.trigger_id) || 'E2E Tests' }}
+
 on:
   push:
     branches:
@@ -24,12 +27,22 @@ on:
         required: false
         type: string
         default: ''
+      trigger_id:
+        description: 'Unique identifier for this trigger (for tracking)'
+        required: false
+        type: string
+        default: ''
 
   # Allow triggering from other repositories (child modules)
   workflow_call:
     inputs:
       submodules_override:
         description: 'Branch name to checkout in all submodules (e.g., "feature-branch")'
+        required: false
+        type: string
+        default: ''
+      trigger_id:
+        description: 'Unique identifier for this trigger (for tracking)'
         required: false
         type: string
         default: ''
