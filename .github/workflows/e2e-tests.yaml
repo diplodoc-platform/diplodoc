@@ -67,6 +67,16 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-stable
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Override active branch
         if: inputs.submodules_override != ''
         run: |
