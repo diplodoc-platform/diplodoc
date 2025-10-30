@@ -20,7 +20,7 @@
     "codespaces": "scripts/codespaces.sh",
     "git:init": "scripts/git-init.sh",
     "git:apply": "scripts/git-apply.sh",
-    "git:head": "scripts/git-apply.sh master",
+    "git:head": "scripts/git-apply.sh master --unsafe",
     "analyze-deps": "scripts/node-version-checker.sh",
     "check-submodules": "scripts/check-submodules.sh",
     "add-submodules": "scripts/add-submodules.sh"
