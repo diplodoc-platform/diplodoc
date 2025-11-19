@@ -38,7 +38,7 @@ Use advantage of single source publishing, enabling the creation of multiple sim
 
 ### Page Constructor
 
-The platform natively supports [Page Constructor](https://github.com/gravity-ui/page-constructor), allowing users to enhance individual documentation pages with carousels, backgrounds, smoothly animated cards, and various other blocks, as well as create landing pages. 
+The platform natively supports [Page Constructor](https://github.com/gravity-ui/page-constructor), allowing users to enhance individual documentation pages with carousels, backgrounds, smoothly animated cards, and various other blocks, as well as create landing pages.
 
 ### Right-to-Left
 
@@ -55,6 +55,7 @@ Try Diplodoc [locally or with your development pipelines](https://diplodoc.com/d
 
 ## Contribution
 
+For development setup and contribution guidelines, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Adding/removing subrepositories in the monorepo
 
