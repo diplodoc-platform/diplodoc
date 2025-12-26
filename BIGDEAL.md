@@ -16,3 +16,17 @@ This file tracks significant improvements and major updates to the Diplodoc meta
    - Documented metapackage vs standalone usage modes
    - Added package-lock.json management guidelines for standalone mode
 
+2. **devops/package-template** — Complete overhaul and modernization
+   - Removed static configuration files (now generated via `@diplodoc/lint init`)
+   - Updated build structure to use `build/` directory with separate TypeScript config for publishing
+   - Integrated Vitest as the recommended testing framework with example tests
+   - Converted build script to ESM (`esbuild/build.mjs`)
+   - Added GitHub templates (issue templates, PR template)
+   - Added `SECURITY.md` and expanded `CONTRIBUTING.md`
+   - Integrated Dependabot for automated dependency updates
+   - Added security workflow for weekly audits
+   - Integrated release-please for automated versioning and changelog generation
+   - Added comprehensive `AGENTS.md` with template section for initialization
+   - Updated all dependency versions to latest stable
+   - Improved code examples and documentation
+

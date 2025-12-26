@@ -142,6 +142,8 @@ Husky is configured to run linting before commits:
 - Prevents commits with linting errors
 - Auto-fixes issues when possible
 
+**CRITICAL RULE**: Pre-commit checks must pass without additional flags. **Never commit with `--no-verify`**. If pre-commit hooks fail, fix the issues first, then commit. The pre-commit hook ensures code quality and should never be bypassed.
+
 ## Testing
 
 ### Testing Philosophy
