@@ -337,7 +337,8 @@ AGENTS.md files provide guidance for AI agents:
 1. **English Only**: All code, comments, and documentation must be in English
 2. **Conventional Commits**: Always use conventional commit format
 3. **Linting**: All code must pass linting before commit
-4. **Testing**: Add tests for new features and bug fixes
-5. **Documentation**: Update documentation when behavior changes
-6. **JSDoc**: Strive for comprehensive JSDoc (currently being improved)
+4. **Pre-commit Hooks**: Pre-commit checks must pass without additional flags. **Never commit with `--no-verify`**. If pre-commit hooks fail, fix the issues first, then commit.
+5. **Testing**: Add tests for new features and bug fixes
+6. **Documentation**: Update documentation when behavior changes
+7. **JSDoc**: Strive for comprehensive JSDoc (currently being improved)
 
