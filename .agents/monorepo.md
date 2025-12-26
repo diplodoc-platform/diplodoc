@@ -147,18 +147,35 @@ npm install package-name
 
 **Important: Package Lock Management for Submodules**
 
-Since all packages are submodules that can work standalone, when adding/updating dependencies in a submodule, you need to ensure `package-lock.json` is valid for standalone mode:
+Since all packages are submodules that can work standalone, when adding/updating dependencies in a submodule, you **must** use `--no-workspaces` flag to avoid workspace conflicts:
 
 ```bash
-# After installing dependencies in a submodule
-cd devops/lint  # or any submodule
-npm i --no-workspaces --package-lock-only
+# Install/update dependencies in a submodule
+cd packages/liquid  # or any submodule
+npm install --no-workspaces package-name@version
+
+# After installation, regenerate package-lock.json for standalone mode
+npm install --no-workspaces --package-lock-only
 ```
 
-This regenerates `package-lock.json` without workspace context, ensuring it's valid when the package is used as a standalone npm package (not in workspace). Always use this when:
+**Why `--no-workspaces` is critical**:
+- In workspace mode, npm may install dependencies from root `node_modules` or other packages
+- This can cause version conflicts (e.g., vitest@3.1.1 in workspace vs vitest@^2.0.0 in package.json)
+- Using `--no-workspaces` ensures dependencies are installed locally to the submodule
+- The `--package-lock-only` flag regenerates `package-lock.json` without workspace context, making it valid for standalone mode
+
+**Always use this pattern when**:
 - Adding new dependencies to a submodule
 - Updating dependencies in a submodule
 - The submodule needs to work in both metapackage and standalone modes
+- You see version conflicts between workspace and submodule dependencies
+
+**Example**: When migrating from Jest to Vitest:
+```bash
+cd packages/liquid
+npm install --no-workspaces vitest@^2.0.0 @vitest/coverage-v8@^2.0.0
+npm install --no-workspaces --package-lock-only
+```
 
 **To multiple packages** (using deps script):
 ```bash
@@ -182,6 +199,40 @@ npm run deps update lodash@^4.17.21 --dry-run
 
 # Auto-commit changes
 npm run deps update lodash@^4.17.21 --commit
+```
+
+### Updating a Package in a Submodule (Metapackage Mode)
+
+**Important**: When updating a package (especially `@diplodoc/*` packages like `@diplodoc/lint`) in a submodule while working in metapackage mode, use this procedure:
+
+```bash
+# Step 1: Install the package through workspace (in metapackage mode)
+cd packages/liquid  # or any submodule
+npm install @diplodoc/lint@latest
+
+# Step 2: Regenerate package-lock.json for standalone mode
+npm install --no-workspaces --package-lock-only
+
+# Step 3: Update configuration (if applicable, e.g., for @diplodoc/lint)
+npx @diplodoc/lint update
+```
+
+**Why this procedure?**
+- Step 1 installs through workspace, ensuring proper linking in metapackage mode
+- Step 2 regenerates `package-lock.json` without workspace context, making it valid for standalone mode
+- Step 3 updates any auto-generated configuration files (e.g., `.eslintrc.js`, `.prettierrc.js`)
+
+**This procedure is especially important for**:
+- `@diplodoc/lint` - updates linting configuration
+- `@diplodoc/tsconfig` - updates TypeScript configuration
+- Other `@diplodoc/*` infrastructure packages
+
+**Example**: Updating `@diplodoc/lint` in `packages/liquid`:
+```bash
+cd packages/liquid
+npm install @diplodoc/lint@latest
+npm install --no-workspaces --package-lock-only
+npx @diplodoc/lint update
 ```
 
 ### Workspace Dependencies
