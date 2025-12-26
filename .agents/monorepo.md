@@ -145,12 +145,29 @@ cd packages/cli
 npm install package-name
 ```
 
+**Important: Package Lock Management for Submodules**
+
+Since all packages are submodules that can work standalone, when adding/updating dependencies in a submodule, you need to ensure `package-lock.json` is valid for standalone mode:
+
+```bash
+# After installing dependencies in a submodule
+cd devops/lint  # or any submodule
+npm i --no-workspaces --package-lock-only
+```
+
+This regenerates `package-lock.json` without workspace context, ensuring it's valid when the package is used as a standalone npm package (not in workspace). Always use this when:
+- Adding new dependencies to a submodule
+- Updating dependencies in a submodule
+- The submodule needs to work in both metapackage and standalone modes
+
 **To multiple packages** (using deps script):
 ```bash
 npm run deps update package-name@version
 npm run deps update package-name@version --commit  # Auto-commit
 npm run deps update package-name@version --dry-run  # Preview only
 ```
+
+**Note**: After using `deps.js`, you may need to regenerate `package-lock.json` in affected submodules using `--no-workspaces --package-lock-only`.
 
 ### Updating Dependencies
 
