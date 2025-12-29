@@ -93,6 +93,14 @@ These packages are the foundation of the Diplodoc ecosystem and are used by exte
 - **Core packages**: Core ecosystem packages
   - Critical packages (`cli`, `transform`, `components`) are used by external systems
   - Other packages (`utils`, `directive`, `sentenizer`, `translation`, `yfmlint`) are used internally
+  - **Template processing**: `@diplodoc/liquid` – Liquid template engine for YFM documents
+    - Processes Liquid syntax (`{{ variables }}`, `{% if %}`, `{% for %}`) in YFM documents
+    - Handles frontmatter, snippets, and JSON processing
+    - Used by `transform` and `cli` for template processing
+  - **Linting**: `@diplodoc/yfmlint` – YFM syntax linter
+    - Extends markdownlint with YFM-specific rules (YFM001-YFM011)
+    - Validates inline code length, links, tables, tabs, terms
+    - Used by `cli` for documentation validation
 
 **Dependency Rules**:
 - **Extensions cannot depend on each other** (unwritten rule)
