@@ -93,14 +93,24 @@ These packages are the foundation of the Diplodoc ecosystem and are used by exte
 - **Core packages**: Core ecosystem packages
   - Critical packages (`cli`, `transform`, `components`) are used by external systems
   - Other packages (`utils`, `directive`, `sentenizer`, `translation`, `yfmlint`) are used internally
+  - **Text segmentation**: `@diplodoc/sentenizer` – rule-based sentence segmentation for Russian text
+    - Splits text into sentences using hand-crafted rule-based logic (not ML-based)
+    - Handles Russian-specific cases: abbreviations (e.g., "и т. д.", "т. п."), initials (e.g., "И. В. Иванов"), quotations, brackets
+    - Uses functional programming approach with Ramda for rule composition
+    - Window-based processing (examines 10 characters on each side of potential boundaries)
+    - Self-contained library (no external NLP dependencies)
+    - Used by `@diplodoc/translation` for text segmentation during translation
+    - Critical for translation quality - incorrect sentence boundaries affect translation context
   - **Template processing**: `@diplodoc/liquid` – Liquid template engine for YFM documents
     - Processes Liquid syntax (`{{ variables }}`, `{% if %}`, `{% for %}`) in YFM documents
     - Handles frontmatter, snippets, and JSON processing
     - Used by `transform` and `cli` for template processing
   - **Linting**: `@diplodoc/yfmlint` – YFM syntax linter
     - Extends markdownlint with YFM-specific rules (YFM001-YFM011)
+    - Uses markdown-it token stream (not micromark) for integration with `@diplodoc/transform` plugins
     - Validates inline code length, links, tables, tabs, terms
-    - Used by `cli` for documentation validation
+    - Integrates with plugins from `@diplodoc/transform` (e.g., `term` plugin) to validate YFM extensions
+    - Used by `cli` for documentation validation during build process
 
 **Dependency Rules**:
 - **Extensions cannot depend on each other** (unwritten rule)
