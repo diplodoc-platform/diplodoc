@@ -63,8 +63,8 @@ export UNSAFE_MODE
 git submodule foreach --quiet '
   # Helper function to handle errors based on unsafe mode
   handle_error() {
-    local error_msg="$1"
-    local warning_msg="$2"
+    error_msg="$1"
+    warning_msg="$2"
     
     if [ "$UNSAFE_MODE" -eq 1 ]; then
       echo "   ⚠️  WARNING: $warning_msg (unsafe mode, continuing)..."
@@ -79,7 +79,7 @@ git submodule foreach --quiet '
   # Helper function to get default branch (master or main)
   get_default_branch() {
     # Try to get default branch from remote HEAD
-    local default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed "s@^refs/remotes/origin/@@")
+    default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed "s@^refs/remotes/origin/@@")
     if [ -n "$default_branch" ]; then
       echo "$default_branch"
       return 0
@@ -92,7 +92,7 @@ git submodule foreach --quiet '
       fi
     done
     # Last resort: use current branch if it exists
-    local current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     if [ -n "$current_branch" ] && [ "$current_branch" != "HEAD" ]; then
       echo "$current_branch"
     else
@@ -103,8 +103,8 @@ git submodule foreach --quiet '
   
   # Helper function to checkout and pull a branch
   try_checkout_pull() {
-    local branch="$1"
-    local description="$2"
+    branch="$1"
+    description="$2"
     
     if git checkout "$branch" 2>/dev/null && git pull origin "$branch" 2>/dev/null; then
       echo "   ✅ Successfully checked out and pulled \"$branch\""
@@ -122,21 +122,21 @@ git submodule foreach --quiet '
   git config core.autocrlf input 2>/dev/null || true
   
   # Check for unstaged changes
-  local has_unstaged=false
+  has_unstaged=false
   if [ -n "$(git diff --name-only 2>/dev/null)" ]; then
     has_unstaged=true
   fi
   
   # Check for staged changes
-  local has_staged=false
+  has_staged=false
   if [ -n "$(git diff --cached --name-only 2>/dev/null)" ]; then
     has_staged=true
   fi
   
   if [ "$has_unstaged" = true ] || [ "$has_staged" = true ]; then
     # Check if changes are only line endings (ignore whitespace and line endings)
-    local diff_output=$(git diff --ignore-all-space --ignore-cr-at-eol 2>/dev/null)
-    local cached_diff_output=$(git diff --cached --ignore-all-space --ignore-cr-at-eol 2>/dev/null)
+    diff_output=$(git diff --ignore-all-space --ignore-cr-at-eol 2>/dev/null)
+    cached_diff_output=$(git diff --cached --ignore-all-space --ignore-cr-at-eol 2>/dev/null)
     
     if [ -z "$diff_output" ] && [ -z "$cached_diff_output" ]; then
       # Only line ending changes, normalize them automatically
@@ -177,7 +177,7 @@ git submodule foreach --quiet '
     echo "   ✅ Branch \"$BRANCH_NAME\" exists, checking out..."
     try_checkout_pull "$BRANCH_NAME" "branch"
   else
-    local default_branch=$(get_default_branch)
+    default_branch=$(get_default_branch)
     echo "   ℹ️  Branch \"$BRANCH_NAME\" not found, using default branch: $default_branch..."
     try_checkout_pull "$default_branch" "default branch ($default_branch)"
   fi
