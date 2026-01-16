@@ -97,7 +97,7 @@ jobs:
         run: npm run build -- --verbose
 
       - name: Link binaries
-        run: npm i
+        run: npm i -- --ignore-scripts
 
       - name: Run E2E tests
         run: npm run test

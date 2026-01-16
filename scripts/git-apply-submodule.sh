@@ -79,21 +79,21 @@ echo "📦 Processing: $name"
 git config core.autocrlf input 2>/dev/null || true
 
 # Check for unstaged changes
-local has_unstaged=false
+has_unstaged=false
 if [[ -n "$(git diff --name-only 2>/dev/null)" ]]; then
     has_unstaged=true
 fi
 
 # Check for staged changes
-local has_staged=false
+has_staged=false
 if [[ -n "$(git diff --cached --name-only 2>/dev/null)" ]]; then
     has_staged=true
 fi
 
 if [[ "$has_unstaged" == true || "$has_staged" == true ]]; then
     # Check if changes are only line endings (ignore whitespace and line endings)
-    local diff_output=$(git diff --ignore-all-space --ignore-cr-at-eol 2>/dev/null)
-    local cached_diff_output=$(git diff --cached --ignore-all-space --ignore-cr-at-eol 2>/dev/null)
+    diff_output=$(git diff --ignore-all-space --ignore-cr-at-eol 2>/dev/null)
+    cached_diff_output=$(git diff --cached --ignore-all-space --ignore-cr-at-eol 2>/dev/null)
     
     if [[ -z "$diff_output" && -z "$cached_diff_output" ]]; then
         # Only line ending changes, normalize them automatically
@@ -134,7 +134,7 @@ if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
     echo "   ✅ Branch \"$BRANCH_NAME\" exists, checking out..."
     try_checkout_pull "$BRANCH_NAME" "branch"
 else
-    local default_branch=$(get_default_branch)
+    default_branch=$(get_default_branch)
     echo "   ℹ️  Branch \"$BRANCH_NAME\" not found, using default branch: $default_branch..."
     try_checkout_pull "$default_branch" "default branch ($default_branch)"
 fi
