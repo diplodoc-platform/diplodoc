@@ -17,9 +17,21 @@ This directory contains documentation for AI coding agents working on the Diplod
 ## Quick Start
 
 1. Read `core.md` for platform overview
-2. Read `monorepo.md` for development workflow
+2. Read `monorepo.md` for development workflow and **workspace dependency management** (critical!)
 3. Read `style-and-testing.md` for coding standards
 4. Use `templates/` when creating documentation for new packages
+
+## Important: Workspace Dependency Management
+
+**Critical**: When working with submodules in the metapackage, always use `--no-workspaces` flag when installing dependencies:
+
+```bash
+cd packages/your-package
+npm install --no-workspaces package-name@version
+npm install --no-workspaces --package-lock-only
+```
+
+This prevents version conflicts between workspace and submodule dependencies. See `monorepo.md` for details.
 
 ## Note
 

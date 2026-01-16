@@ -40,10 +40,19 @@ This file contains instructions for AI agents working with the `[package-name]` 
 
 ## Tech Stack
 
+This package follows the standard Diplodoc platform tech stack. See `.agents/dev-infrastructure.md` and `.agents/style-and-testing.md` in the metapackage root for detailed information.
+
+**Package-specific details**:
+
 - **Language**: [TypeScript/JavaScript/etc.]
 - **Runtime**: [Node.js version requirements]
-- **Testing**: [Testing framework]
-- **Build**: [Build tool]
+- **Testing**: [Vitest (recommended) / Jest (legacy)]
+- **Build**: [Build tool - e.g., esbuild, tsc, rspack]
+- **Dependencies**: [Key dependencies]
+- **Dev Dependencies**:
+  - `@diplodoc/lint` — linting infrastructure
+  - `@diplodoc/tsconfig` — TypeScript configuration
+  - [Other dev dependencies]
 
 ## Setup Commands
 
@@ -109,7 +118,23 @@ See `.agents/monorepo.md` in the metapackage root for more details on workspace 
 
 ## Testing
 
-[Describe testing approach and patterns]
+**Testing Framework**: [Vitest (recommended) / Jest (legacy)]
+
+**Test Structure**:
+- Test files: `*.spec.ts`, `*.test.ts`
+- Test location: Next to code or in `tests/` or `test/` directory
+- Configuration: `vitest.config.mjs` (for Vitest) or `jest.config.js` (for Jest)
+
+**Running Tests**:
+```bash
+npm test              # Run tests
+npm test:watch        # Watch mode (if configured)
+```
+
+**Migration from Jest to Vitest**:
+If migrating from Jest, see `.agents/style-and-testing.md` in the metapackage root for detailed migration steps.
+
+[Describe package-specific testing patterns and approaches]
 
 ## Code Conventions
 

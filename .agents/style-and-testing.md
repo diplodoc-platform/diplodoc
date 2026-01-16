@@ -162,6 +162,87 @@ Husky is configured to run linting before commits:
 
 Existing packages using Jest should be migrated to Vitest when possible.
 
+### Migrating from Jest to Vitest
+
+**Step-by-step migration process**:
+
+1. **Remove Jest dependencies**:
+   ```bash
+   npm uninstall --no-workspaces jest @types/jest jest-environment-jsdom ts-jest esbuild-jest jest-serializer-html
+   ```
+
+2. **Install Vitest**:
+   ```bash
+   npm install --no-workspaces --save-dev vitest@^2.1.8 @vitest/ui jsdom
+   ```
+
+3. **Create `vitest.config.mjs`**:
+   ```javascript
+   import {defineConfig} from 'vitest/config';
+   
+   export default defineConfig({
+       test: {
+           include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+           exclude: ['node_modules', 'build'],
+           environment: 'jsdom',  // or 'node' for Node.js tests
+           globals: true,
+           snapshotFormat: {
+               escapeString: true,
+               printBasicPrototype: false,
+           },
+       },
+   });
+   ```
+
+4. **Update test files**:
+   - Replace imports:
+     ```typescript
+     // Before
+     import {describe, expect, it} from 'jest';
+     
+     // After
+     import {describe, expect, it, vi} from 'vitest';
+     ```
+   - Replace `jest.fn()` with `vi.fn()`
+   - Replace `jest.spyOn()` with `vi.spyOn()`
+   - Replace `jest.mock()` with `vi.mock()`
+
+5. **Update `tsconfig.json`**:
+   - Add `"vitest/globals"` to `types` array if using globals:
+     ```json
+     {
+       "compilerOptions": {
+         "types": ["vitest/globals"]
+       }
+     }
+     ```
+
+6. **Update `package.json` scripts**:
+   ```json
+   {
+     "scripts": {
+       "test": "cd tests && npm ci && npx vitest run --config ../vitest.config.mjs",
+       "test:watch": "vitest"
+     }
+   }
+   ```
+
+7. **Regenerate snapshots**:
+   - Vitest uses a different snapshot format than Jest
+   - Run tests to regenerate snapshots
+   - Review and commit new snapshot files
+
+8. **Delete Jest configuration**:
+   - Remove `jest.config.js` or `jest.config.ts`
+
+**Common issues during migration**:
+- **JSDOM differences**: Some JSDOM-specific behaviors may differ. Use `getEventTarget` helper for `composedPath()` compatibility.
+- **Snapshot format**: Vitest snapshots have different format. Regenerate all snapshots.
+- **Global types**: Ensure `vitest/globals` is in `tsconfig.json` types if using globals.
+- **Test paths**: Ensure `vitest.config.mjs` paths are correct relative to where tests are run.
+
+For complete infrastructure update process, see [Package Infrastructure Update Process](../dev-infrastructure.md#package-infrastructure-update-process) in `dev-infrastructure.md`.
+
 ### Test Frameworks
 
 Different packages may use different frameworks:
@@ -245,6 +326,50 @@ Each package should have a `README.md` with:
 - Usage examples
 - API documentation (or link to it)
 - Contributing guidelines (if applicable)
+
+**Standard README structure**:
+```markdown
+[![NPM version](https://img.shields.io/npm/v/@diplodoc/package-name.svg?style=flat)](https://www.npmjs.org/package/@diplodoc/package-name)
+
+# @diplodoc/package-name
+
+[Brief description of what the package does]
+
+## Features
+
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+
+```bash
+npm install @diplodoc/package-name
+```
+
+## Usage
+
+[Usage examples with code]
+
+## Development
+
+[Development instructions, if applicable]
+
+## Documentation
+
+[Links to additional documentation]
+
+## License
+
+[License information]
+```
+
+**Key points**:
+- Keep it user-facing (not developer-focused)
+- Include practical examples
+- Link to AGENTS.md for developer documentation
+- Follow standard markdown formatting
+- Include NPM version badge
 
 ### ADR (Architecture Decision Records)
 

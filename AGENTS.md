@@ -12,7 +12,7 @@ Most of the detailed guidance has been split into focused documents under `.agen
 - `.agents/monorepo.md` – metapackage management:
   - working with submodules;
   - workspace packages structure;
-  - dependency management;
+  - dependency management (**⚠️ CRITICAL**: See procedure for updating `@diplodoc/*` packages);
   - build and development workflows.
 - `.agents/style-and-testing.md` – style, testing, and documentation rules:
   - import organization, JSDoc style;

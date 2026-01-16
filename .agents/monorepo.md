@@ -137,6 +137,44 @@ npm run watch
 
 ## Dependency Management
 
+### ⚠️ CRITICAL: Updating @diplodoc/* Packages in Submodules
+
+**CRITICAL PROCEDURE**: When updating `@diplodoc/*` packages (like `@diplodoc/lint`, `@diplodoc/tsconfig`) in a submodule while working in metapackage mode, **ALWAYS** use this two-step procedure:
+
+```bash
+# Step 1: Install through workspace (WITHOUT --no-workspaces)
+cd packages/liquid  # or any submodule
+npm install @diplodoc/lint@latest
+
+# Step 2: Regenerate package-lock.json for standalone mode (WITH --no-workspaces)
+npm install --no-workspaces --package-lock-only
+
+# Step 3: Update configuration (if applicable)
+npx @diplodoc/lint update
+```
+
+**Why this two-step procedure?**
+- **Step 1** installs through workspace, ensuring proper linking in metapackage mode
+- **Step 2** regenerates `package-lock.json` without workspace context, making it valid for standalone mode
+- **Step 3** updates any auto-generated configuration files
+
+**Common mistake to avoid**: ❌ **DO NOT** use `npm install --no-workspaces @diplodoc/lint@latest` - this skips workspace linking and breaks metapackage mode.
+
+**This procedure is especially important for**:
+- `@diplodoc/lint` - updates linting configuration
+- `@diplodoc/tsconfig` - updates TypeScript configuration
+- Other `@diplodoc/*` infrastructure packages
+
+**Example**: Updating `@diplodoc/lint` in `packages/liquid`:
+```bash
+cd packages/liquid
+npm install @diplodoc/lint@1.7.0
+npm install --no-workspaces --package-lock-only
+npx @diplodoc/lint update
+```
+
+---
+
 ### Adding Dependencies
 
 **To a specific package**:
@@ -203,37 +241,9 @@ npm run deps update lodash@^4.17.21 --commit
 
 ### Updating a Package in a Submodule (Metapackage Mode)
 
-**Important**: When updating a package (especially `@diplodoc/*` packages like `@diplodoc/lint`) in a submodule while working in metapackage mode, use this procedure:
+**Note**: For `@diplodoc/*` packages, see the [CRITICAL procedure above](#-critical-updating-diplodoc-packages-in-submodules).
 
-```bash
-# Step 1: Install the package through workspace (in metapackage mode)
-cd packages/liquid  # or any submodule
-npm install @diplodoc/lint@latest
-
-# Step 2: Regenerate package-lock.json for standalone mode
-npm install --no-workspaces --package-lock-only
-
-# Step 3: Update configuration (if applicable, e.g., for @diplodoc/lint)
-npx @diplodoc/lint update
-```
-
-**Why this procedure?**
-- Step 1 installs through workspace, ensuring proper linking in metapackage mode
-- Step 2 regenerates `package-lock.json` without workspace context, making it valid for standalone mode
-- Step 3 updates any auto-generated configuration files (e.g., `.eslintrc.js`, `.prettierrc.js`)
-
-**This procedure is especially important for**:
-- `@diplodoc/lint` - updates linting configuration
-- `@diplodoc/tsconfig` - updates TypeScript configuration
-- Other `@diplodoc/*` infrastructure packages
-
-**Example**: Updating `@diplodoc/lint` in `packages/liquid`:
-```bash
-cd packages/liquid
-npm install @diplodoc/lint@latest
-npm install --no-workspaces --package-lock-only
-npx @diplodoc/lint update
-```
+For other packages, use the standard procedure with `--no-workspaces`:
 
 ### Workspace Dependencies
 

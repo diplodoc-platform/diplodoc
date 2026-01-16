@@ -326,10 +326,35 @@ npx nx reset
 
 ### GitHub Workflows
 
-(Note: CI/CD configuration should be analyzed separately)
+Each package should have standard workflows in `.github/workflows/`:
 
-**Known workflows**:
+**Standard workflows** (required):
+- `tests.yml` - Main test workflow (runs lint, typecheck, tests)
+- `release.yml` - Release workflow
+- `release-please.yml` - Release-please configuration
+- `package-lock.yml` - Package lock updates
+- `security.yml` - Security scanning
+- `update-deps.yml` - Dependency updates
+
+**Special workflows** (keep if needed):
+- E2E-specific workflows (e.g., `diplodoc-e2e-tests.yaml`)
+- Custom workflows for specific package needs
+
+**Workflows to remove** (duplicates):
+- `tests.yaml` (duplicate of `tests.yml`)
+- `quality.yaml` (linting covered by `tests.yml`)
+- `release.yaml` (duplicate of `release.yml`)
+
+**Workflow cleanup process**:
+1. Check existing workflows in `.github/workflows/`
+2. Remove duplicate workflows (`.yaml` vs `.yml`)
+3. Ensure standard workflows are present
+4. Keep special workflows if they serve a specific purpose
+5. Verify workflows are properly configured
+
+**Known workflows at metapackage level**:
 - Submodule synchronization (hourly)
+- E2E tests workflow
 - Build and test on PRs
 - Release management
 
@@ -473,6 +498,279 @@ npm run bootstrap
 - **`submodules.conf`**: Submodule configuration
 - **`.gitmodules`**: Git submodules (auto-generated)
 
+## Package Infrastructure Update Process
+
+When updating a package's infrastructure to align with current standards, follow this process:
+
+### 1. Update Dependencies
+
+**Update `@diplodoc/lint`**:
+```bash
+cd packages/package-name  # or extensions/package-name
+npm install @diplodoc/lint@latest
+npm install --no-workspaces --package-lock-only
+npx @diplodoc/lint update
+```
+
+**Update other infrastructure packages** (if needed):
+- `@diplodoc/tsconfig` - TypeScript configuration
+- `typescript` - TypeScript version (usually `^5.6.3`)
+- `@types/node` - Node.js types (usually `^22.19.7`)
+
+### 2. Migrate from Jest to Vitest (if applicable)
+
+**Remove Jest dependencies**:
+```bash
+npm uninstall --no-workspaces jest @types/jest jest-environment-jsdom ts-jest esbuild-jest jest-serializer-html
+```
+
+**Add Vitest dependencies**:
+```bash
+npm install --no-workspaces --save-dev vitest@^2.1.8 @vitest/ui jsdom
+```
+
+**Update test scripts in `package.json`**:
+```json
+{
+  "scripts": {
+    "test": "cd tests && npm ci && npx vitest run --config ../vitest.config.mjs",
+    "test:watch": "vitest"
+  }
+}
+```
+
+**Create `vitest.config.mjs`**:
+```javascript
+import {defineConfig} from 'vitest/config';
+
+export default defineConfig({
+    test: {
+        include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+        exclude: ['node_modules', 'build'],
+        environment: 'jsdom',
+        globals: true,
+        snapshotFormat: {
+            escapeString: true,
+            printBasicPrototype: false,
+        },
+    },
+});
+```
+
+**Update test files**:
+- Replace `jest` imports with `vitest`:
+  ```typescript
+  // Before
+  import {describe, expect, it} from 'jest';
+  
+  // After
+  import {describe, expect, it, vi} from 'vitest';
+  ```
+- Replace `jest.fn()` with `vi.fn()`
+- Replace `jest.spyOn()` with `vi.spyOn()`
+- Regenerate snapshots (Vitest uses different format)
+
+**Update `tsconfig.json`**:
+- Add `"vitest/globals"` to `types` array if using globals
+- Ensure `include` contains only `["src"]`
+- Ensure `exclude` contains `["node_modules", "build", "tests"]`
+
+**Delete Jest config**:
+- Remove `jest.config.js` or `jest.config.ts`
+
+### 3. Update TypeScript Configuration
+
+**Standard `tsconfig.json` structure**:
+```json
+{
+  "extends": "@diplodoc/tsconfig",
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "declaration": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "build", "tests"]
+}
+```
+
+**Key points**:
+- Always extend `@diplodoc/tsconfig`
+- `include` should only contain `["src"]`
+- `exclude` should include `["node_modules", "build", "tests"]`
+- Add `"vitest/globals"` to `types` if using Vitest globals
+
+### 4. Update AGENTS.md
+
+**Follow the template** in `.agents/templates/TEMPLATE-SUBMODULE.md`:
+- Include all standard sections
+- Update project description
+- Document actual structure
+- Include tech stack details
+- Add usage modes (metapackage vs standalone)
+- Document common tasks
+
+**Key sections**:
+- Common Rules and Standards (reference to metapackage `.agents/`)
+- Project Description
+- Project Structure
+- Tech Stack
+- Usage Modes
+- Development Commands
+- Testing
+- Code Conventions
+
+### 5. Update README.md
+
+**Standard structure**:
+- Badge (NPM version)
+- Package name and description
+- Features list
+- Installation
+- Usage (with examples)
+- Development (if applicable)
+- Documentation (links)
+- License
+
+**Key points**:
+- Keep it user-facing (not developer-focused)
+- Include practical examples
+- Link to AGENTS.md for developer documentation
+- Follow standard markdown formatting
+
+### 6. Update package.json Scripts
+
+**Standard scripts**:
+```json
+{
+  "scripts": {
+    "build": "run-p build:*",
+    "build:js": "node ./esbuild/build.mjs",
+    "build:declarations": "tsc -p tsconfig.publish.json --emitDeclarationOnly --outDir ./build",
+    "test": "cd tests && npm ci && npx vitest run --config ../vitest.config.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "lint": "lint update && lint",
+    "lint:fix": "lint update && lint fix",
+    "pre-commit": "lint update && lint-staged",
+    "prepare": "husky"
+  }
+}
+```
+
+**Key points**:
+- Use `node ./esbuild/build.mjs` instead of `./esbuild/build.mjs` for cross-platform compatibility
+- Add `typecheck` script
+- Ensure `prepublishOnly` runs lint, test, and build
+- Use `lint update && lint` pattern for auto-updating infrastructure
+
+### 7. Clean Up CI/CD Workflows
+
+**Standard workflows** (in `.github/workflows/`):
+- `tests.yml` - Main test workflow
+- `release.yml` - Release workflow
+- `release-please.yml` - Release-please configuration
+- `package-lock.yml` - Package lock updates
+- `security.yml` - Security scanning
+- `update-deps.yml` - Dependency updates
+
+**Remove duplicate workflows**:
+- `tests.yaml` (duplicate of `tests.yml`)
+- `quality.yaml` (linting covered by `tests.yml`)
+- `release.yaml` (duplicate of `release.yml`)
+
+**Keep special workflows**:
+- E2E-specific workflows (e.g., `diplodoc-e2e-tests.yaml`)
+
+### 8. Fix Linting Issues
+
+**Common fixes**:
+- Separate `type` imports from runtime imports:
+  ```typescript
+  // Wrong
+  import {type Mock, describe, expect, it, vi} from 'vitest';
+  
+  // Correct
+  import type {Mock} from 'vitest';
+  import {describe, expect, it, vi} from 'vitest';
+  ```
+- Remove unused variables in `catch` blocks:
+  ```typescript
+  // Wrong
+  catch (e) { /* e not used */ }
+  
+  // Correct
+  catch { /* error not needed */ }
+  ```
+- Fix stylelint issues (shorthand properties, named colors, etc.)
+- Add `.eslintignore` entries for problematic directories (e.g., `example/`)
+
+### 9. Update .eslintignore and .stylelintignore
+
+**Common entries**:
+- `example/` - Example files may have parsing errors
+- `playground/` - Playground files (if separate)
+- `e2e/` - E2E test files (if separate)
+- `build/` - Build output
+- `node_modules/` - Dependencies
+
+### 10. Verify Everything Works
+
+**Checklist**:
+- [ ] `npm run typecheck` passes
+- [ ] `npm run lint` passes
+- [ ] `npm run test` passes
+- [ ] `npm run build` succeeds
+- [ ] Package works in metapackage mode
+- [ ] Package works in standalone mode (with `--no-workspaces`)
+- [ ] All tests pass
+- [ ] No duplicate workflows
+- [ ] Documentation is up to date
+
+### Example: Complete Update Process
+
+```bash
+# 1. Navigate to package
+cd extensions/file-extension
+
+# 2. Update @diplodoc/lint
+npm install @diplodoc/lint@latest
+npm install --no-workspaces --package-lock-only
+npx @diplodoc/lint update
+
+# 3. Migrate to Vitest (if needed)
+npm uninstall --no-workspaces jest @types/jest jest-environment-jsdom
+npm install --no-workspaces --save-dev vitest@^2.1.8 jsdom
+# Update test files, create vitest.config.mjs, update tsconfig.json
+
+# 4. Update other dependencies
+npm install --no-workspaces --save-dev typescript@^5.6.3 @types/node@^22.19.7
+
+# 5. Update package.json scripts
+# (edit manually)
+
+# 6. Update tsconfig.json
+# (edit manually)
+
+# 7. Update AGENTS.md
+# (edit manually, use template)
+
+# 8. Update README.md
+# (edit manually)
+
+# 9. Clean up workflows
+# Remove duplicates, keep standard ones
+
+# 10. Fix linting
+npm run lint:fix
+
+# 11. Verify
+npm run typecheck
+npm run lint
+npm run test
+npm run build
+```
+
 ## Important Notes
 
 1. **Node.js Version**: Requires Node.js >=22
@@ -483,4 +781,5 @@ npm run bootstrap
 6. **Submodule Updates**: Should be done frequently
 7. **Nx Graph**: Always check dependency graph before major changes
 8. **Package Template**: `devops/package-template` is currently outdated and does not reflect the current infrastructure setup. Do not use it as a reference for creating new packages without updating it first.
+9. **Infrastructure Updates**: When updating package infrastructure, follow the [Package Infrastructure Update Process](#package-infrastructure-update-process) above.
 

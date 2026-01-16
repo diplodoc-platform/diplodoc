@@ -46,6 +46,35 @@ npm test
 npx nx test @diplodoc/[package-name]
 ```
 
+## Dependency Management
+
+**Important**: This package is a submodule that can work both as part of the metapackage (workspace mode) and standalone.
+
+### Installing Dependencies
+
+When adding or updating dependencies in this submodule, you **must** use `--no-workspaces` flag to avoid workspace conflicts:
+
+```bash
+# Install new dependency
+npm install --no-workspaces package-name@version
+
+# After installation, regenerate package-lock.json for standalone mode
+npm install --no-workspaces --package-lock-only
+```
+
+**Why `--no-workspaces`?**
+- In workspace mode, npm may install dependencies from root or other packages
+- This can cause version conflicts (e.g., vitest@3.1.1 in workspace vs vitest@^2.0.0 in package.json)
+- Using `--no-workspaces` ensures dependencies are installed locally to this package
+- The `--package-lock-only` flag regenerates `package-lock.json` without workspace context, making it valid for standalone mode
+
+**Always use this pattern when**:
+- Adding new dependencies
+- Updating existing dependencies
+- The package needs to work in both metapackage and standalone modes
+
+See `.agents/monorepo.md` in the metapackage root for more details on workspace dependency management.
+
 ## Development Commands
 
 ```bash
