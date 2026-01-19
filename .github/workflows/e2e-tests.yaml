@@ -96,8 +96,8 @@ jobs:
       - name: Build projects
         run: npm run build -- --verbose
 
-      - name: Link binaries
-        run: npm i --ignore-scripts
+      - name: Link CLI binaries
+        run: npm i @diplodoc/cli --ignore-scripts
 
       - name: Run E2E tests
         run: npm run test
