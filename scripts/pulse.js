@@ -25,7 +25,7 @@ const SECTIONS = {
       { path: 'packages/cli', repo: 'cli', npm: '@diplodoc/cli', coverage: 'sonar' },
       { path: 'packages/client', repo: 'client', npm: '@diplodoc/client' },
       { path: 'packages/components', repo: 'components', npm: '@diplodoc/components' },
-      { path: 'packages/directive', repo: 'directive', npm: '@diplodoc/directive' },
+      { path: 'packages/directive', repo: 'directive', npm: '@diplodoc/directive', coverage: 'sonar' },
       { path: 'packages/gh-docs', repo: 'gh-docs', npm: '@diplodoc/gh-docs' },
       { path: 'packages/liquid', repo: 'liquid', npm: '@diplodoc/liquid' },
       { path: 'packages/sentenizer', repo: 'sentenizer', npm: '@diplodoc/sentenizer' },
@@ -133,7 +133,7 @@ function cell(row, col, sectionConfig) {
       if (row.coverage === 'sonar') {
         return badge(
           `https://sonarcloud.io/api/project_badges/measure?project=${ORG}_${repo}&metric=coverage`,
-          `https://sonarcloud.io/summary/new_code?id=${ORG}_${repo}`,
+          `https://sonarcloud.io/summary/overall?id=${ORG}_${repo}`,
           'Coverage'
         );
       }
