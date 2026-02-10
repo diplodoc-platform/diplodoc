@@ -49,13 +49,13 @@ Align with **package-template**. The following are expected:
 - **SECURITY.md** — security policy and contact for vulnerabilities (see package-template).
 - **CONTRIBUTING.md** — contribution guidelines (see package-template).
 - **LICENSE** — project license.
-- **.github/workflows/** — at least: `tests.yml`, `security.yml`, release workflow(s), and optionally `release-please.yml`, `package-lock.yml`, `update-deps.yml` (from lint scaffolding).
+- **.github/workflows/** — at least: `tests.yml`, `security.yml`, release workflow(s), and optionally `release-please.yml`, `package-lock.yml`, `update-deps.yml`, `coverage.yml`, `sonarcloud.yml` (from lint scaffolding).
 - **.release-please-config.json**, **.release-please-manifest.json** — if using release-please (recommended).
 - **.gitignore**, **.npmrc**, **.nvmrc** — standard root files (lint can add/update).
 - **tsconfig.json** — TypeScript config; extend `@diplodoc/tsconfig` where appropriate.
 - **vitest.config.mjs** — Vitest config.
 
-Optional but recommended: **AGENTS.md** (for AI/agent guidance), **.github/ISSUE_TEMPLATE/**, **.github/pull_request_template.md**, **dependabot.yml**.
+Optional but recommended: **AGENTS.md** (for AI/agent guidance), **.github/ISSUE_TEMPLATE/**, **.github/pull_request_template.md**, **dependabot.yml**, **SonarCloud** (scaffolding provides `sonar-project.properties` and `.github/workflows/sonarcloud.yml`; connect the repo in SonarCloud and set **SONAR_TOKEN**; analysis runs when `test:coverage` exists).
 
 ### 5. Build tool selection
 
@@ -88,6 +88,7 @@ Use a single convention so all packages are predictable:
 - **README**: Follow the template structure (description, installation, usage, development, build output, CI, release). See `devops/package-template/README-template.md` and `README.md`.
 - **test:watch** and **test:coverage** scripts for local and CI use.
 - **AGENTS.md** and, for complex packages, docs in `docs/` or referenced from AGENTS.
+- **SonarCloud**: Use scaffolding’s `sonar-project.properties` and `.github/workflows/sonarcloud.yml` (both updated by `lint update`; `{{PACKAGE_NAME}}` is set from the unscoped package name). Connect the repo in SonarCloud, add **SONAR_TOKEN** in GitHub secrets; the analysis runs when the package has a `test:coverage` script.
 
 ---
 
@@ -109,3 +110,4 @@ Use a single convention so all packages are predictable:
 - [ ] Bundling via esbuild (preferably `@diplodoc/lint/esbuild`); declarations via tsc only
 - [ ] No Webpack
 - [ ] README and layout aligned with package-template where applicable
+- [ ] (Optional) SonarCloud: repo connected, SONAR_TOKEN set; `sonar-project.properties` and `sonarcloud.yml` from lint scaffolding

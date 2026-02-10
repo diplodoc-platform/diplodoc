@@ -8,6 +8,7 @@ This directory contains documentation for AI coding agents working on the Diplod
 - **`monorepo.md`** – Metapackage management, submodules, workspace packages
 - **`style-and-testing.md`** – Code style, testing, commit standards
 - **`dev-infrastructure.md`** – Build system, scripts, tools, CI/CD
+- **`metapackage-requirements.md`** – Requirements for a module to participate in the metapackage (lint, Vitest, scripts, files, build tool choice)
 - **`PLAN.md`** – Plan for scaling agent documentation across all packages
 - **`QUESTIONS.md`** – Questions for clarification (answered)
 - **`ANALYSIS.md`** – Analysis of metapackage structure and patterns

@@ -15,6 +15,7 @@
     "build": "nx build @diplodoc/testpack",
     "test": "nx test @diplodoc/testpack",
     "reset": "npx zx scripts/reset.js",
+    "pulse": "npx zx scripts/pulse.js",
     "deps": "npx zx scripts/deps.js",
     "bootstrap": "scripts/bootstrap.sh",
     "codespaces": "scripts/codespaces.sh",
