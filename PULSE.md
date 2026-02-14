@@ -74,30 +74,6 @@ Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bot
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepAfter", "defaultRenderer": "elk" } } }%%
 flowchart LR
-  algolia-extension["algolia-extension (0→2)"]
-  babel-preset["babel-preset (2→0)"]
-  cli["cli (3→10)"]
-  client["client (2→8)"]
-  components["components (2→0)"]
-  cut-extension["cut-extension (1→2)"]
-  directive["directive (5→0)"]
-  file-extension["file-extension (1→1)"]
-  gh-docs["gh-docs (0→1)"]
-  html-extension["html-extension (0→2)"]
-  latex-extension["latex-extension (2→0)"]
-  liquid["liquid (2→0)"]
-  mermaid-extension["mermaid-extension (2→0)"]
-  openapi-extension["openapi-extension (2→1)"]
-  page-constructor-extension["page-constructor-extension (2→3)"]
-  quote-link-extension["quote-link-extension (0→2)"]
-  search-extension["search-extension (2→2)"]
-  sentenizer["sentenizer (1→0)"]
-  tabs-extension["tabs-extension (2→0)"]
-  testpack["testpack (0→1)"]
-  transform["transform (7→5)"]
-  translation["translation (1→3)"]
-  utils["utils (4→0)"]
-  yfmlint["yfmlint (1→1)"]
   page-constructor-extension -.-> transform
   page-constructor-extension --> directive
   page-constructor-extension --> utils
