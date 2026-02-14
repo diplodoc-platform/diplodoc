@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 /**
- * Generates PULSE.md — status of metapackage submodules (badges for tests, release, security, coverage, lint).
+ * Generates PULSE.md — status of metapackage submodules (badges for tests, release, security, coverage, lint)
+ * and a Mermaid dependency graph of @diplodoc/* packages.
  * Run from repo root: node scripts/pulse.js [> PULSE.md]
  *
  * Table columns vary by section: packages/extensions include coverage and lint; devops has lint, no coverage;
  * actions have no tests/lint. The "lint" column uses shields.io Dynamic JSON badge to show @diplodoc/lint
  * version from each repo's package-lock.json. Override any cell with '-' via row config.
+ * At the end, a Mermaid flowchart is appended from the Nx project graph (`nx graph --file`), including only @diplodoc/* nodes and edges between them.
  */
 
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { execSync } from 'node:child_process';
+import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 const ORG = 'diplodoc-platform';
 const BRANCH = 'master';
@@ -176,6 +179,144 @@ function renderSection(name, sectionConfig, isLast = false) {
   return lines.join('\n');
 }
 
+/** Short id for Mermaid node: @diplodoc/foo-extension → foo-extension */
+function shortId(name) {
+  return name.startsWith('@diplodoc/') ? name.slice('@diplodoc/'.length) : name;
+}
+
+/** Run `nx graph --file` and return the graph object (same shape as nx.js graph()). */
+function getNxGraph() {
+  const file = resolve(process.cwd(), 'graph.json');
+  try {
+    execSync(`npx nx graph --file=${file}`, { stdio: 'pipe', cwd: process.cwd() });
+    const data = JSON.parse(readFileSync(file, 'utf8'));
+    return data.graph;
+  } finally {
+    try {
+      unlinkSync(file);
+    } catch {
+      // ignore
+    }
+  }
+}
+
+/** Map @diplodoc/* package name to group (packages | extensions | devops) from SECTIONS. */
+function buildPkgToGroup() {
+  const map = {};
+  for (const [section, config] of Object.entries(SECTIONS)) {
+    if (section === 'actions') continue;
+    for (const row of config.rows) {
+      if (row.npm) map[row.npm] = section;
+    }
+  }
+  return map;
+}
+
+/**
+ * Build Mermaid diagram from Nx project graph (only @diplodoc/* nodes and edges between them).
+ * Groups nodes into subgraphs: devops, packages, extensions. Node labels show (deps in → dependents out).
+ */
+function renderDepsGraph() {
+  let nxGraph;
+  try {
+    nxGraph = getNxGraph();
+  } catch {
+    return '';
+  }
+  const { nodes = {}, dependencies = [] } = nxGraph;
+  const cwd = process.cwd();
+  const pkgToGroup = buildPkgToGroup();
+
+  const nodeIdToPkg = {};
+  const nodeIdToRoot = {};
+  for (const [id, node] of Object.entries(nodes)) {
+    const root = node?.data?.root;
+    if (!root) continue;
+    nodeIdToRoot[id] = root;
+    try {
+      const pkg = JSON.parse(readFileSync(join(cwd, root, 'package.json'), 'utf8'));
+      if (pkg.name) nodeIdToPkg[id] = pkg.name;
+    } catch {
+      if (id.startsWith('@diplodoc/')) nodeIdToPkg[id] = id;
+    }
+  }
+
+  const diplodoc = new Set(Object.values(nodeIdToPkg).filter((n) => n.startsWith('@diplodoc/')));
+  const depList = Array.isArray(dependencies)
+    ? dependencies
+    : Object.values(dependencies).flat();
+
+  const edges = [];
+  const outDegree = {};
+  const inDegree = {};
+  for (const dep of depList) {
+    const source = nodeIdToPkg[dep.source];
+    const target = nodeIdToPkg[dep.target];
+    if (source && target && diplodoc.has(source) && diplodoc.has(target)) {
+      const from = shortId(source);
+      const to = shortId(target);
+      edges.push(`${from} --> ${to}`);
+      outDegree[from] = (outDegree[from] || 0) + 1;
+      inDegree[to] = (inDegree[to] || 0) + 1;
+    }
+  }
+  if (edges.length === 0) return '';
+
+  const pkgToGroupResolved = {};
+  for (const pkg of diplodoc) {
+    pkgToGroupResolved[pkg] =
+      pkgToGroup[pkg] ||
+      (() => {
+        const id = Object.entries(nodeIdToPkg).find(([, n]) => n === pkg)?.[0];
+        const root = id ? nodeIdToRoot[id] : '';
+        if (root.startsWith('packages/')) return 'packages';
+        if (root.startsWith('extensions/')) return 'extensions';
+        if (root.startsWith('devops/')) return 'devops';
+        return 'packages';
+      })();
+  }
+
+  const byGroup = { devops: [], packages: [], extensions: [] };
+  for (const pkg of diplodoc) {
+    const group = pkgToGroupResolved[pkg];
+    if (byGroup[group]) byGroup[group].push(shortId(pkg));
+  }
+  for (const arr of Object.values(byGroup)) arr.sort();
+
+  const mermaidId = (s) => (s.match(/^[a-zA-Z_][a-zA-Z0-9_-]*$/) ? s : `"${s}"`);
+  const nodeLabel = (sid) => {
+    const out = outDegree[sid] || 0;
+    const in_ = inDegree[sid] || 0;
+    return `${mermaidId(sid)}["${sid} (${in_}→${out})"]`;
+  };
+
+  const lines = [
+    'flowchart TD',
+    '  subgraph devops ["devops"]',
+    ...byGroup.devops.map((sid) => '    ' + nodeLabel(sid)),
+    '  end',
+    '  subgraph packages ["packages"]',
+    ...byGroup.packages.map((sid) => '    ' + nodeLabel(sid)),
+    '  end',
+    '  subgraph extensions ["extensions"]',
+    ...byGroup.extensions.map((sid) => '    ' + nodeLabel(sid)),
+    '  end',
+    ...edges.map((e) => '  ' + e),
+  ];
+
+  return [
+    '## Dependency graph (@diplodoc packages)',
+    '',
+    'Generated from Nx project graph (`nx graph --file`). Groups: **devops**, **packages**, **extensions**.',
+    'Node label: *(dependencies in → dependents out)*.',
+    '',
+    '```mermaid',
+    lines.join('\n'),
+    '```',
+    '',
+  ].join('\n');
+}
+
 const header = `# Pulse — status of submodules (master)
 
 Status badges for workflows created from [@diplodoc/lint](devops/lint) scaffolding (\`lint init\` / \`lint update\`).  
@@ -193,6 +334,7 @@ const body = sectionNames
   .map((name, i) => renderSection(name, SECTIONS[name], i === sectionNames.length - 1))
   .join('\n');
 
-const out = header + '\n' + body.trimEnd() + '\n';
+const depsGraph = renderDepsGraph();
+const out = header + '\n' + body.trimEnd() + (depsGraph ? '\n\n---\n\n' + depsGraph : '') + '\n';
 
 writeFileSync(join(process.cwd(), 'PULSE.md'), out, 'utf8');
