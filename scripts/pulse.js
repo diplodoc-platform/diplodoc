@@ -24,6 +24,9 @@ const LINT_VERSION_QUERY = "$['packages']['node_modules/@diplodoc/lint'].version
 /** Short ids of packages to hide in the dependency graph (e.g. lint/tsconfig — everyone depends on them). */
 const DEPENDS_GRAPH_HIDE = new Set(['lint', 'tsconfig']);
 
+/** Exclude example/demo packages from the graph (shortId ending with -example). */
+const DEPENDS_GRAPH_HIDE_EXAMPLE = true;
+
 const SECTIONS = {
   packages: {
     columns: ['version', 'tests', 'release', 'security', 'coverage', 'infra'],
@@ -206,7 +209,7 @@ function getNxGraph() {
 
 /**
  * Build Mermaid diagram from Nx project graph (only @diplodoc/* nodes and edges between them).
- * Excludes packages in DEPENDS_GRAPH_HIDE. Node labels: (deps in → dependents out). Straight edges.
+ * Excludes packages in DEPENDS_GRAPH_HIDE. Prod dependencies: solid arrow (-->), dev: dotted (-.->). Node labels: (deps in → dependents out).
  */
 function renderDepsGraph() {
   let nxGraph;
@@ -219,14 +222,31 @@ function renderDepsGraph() {
   const cwd = process.cwd();
 
   const nodeIdToPkg = {};
+  const nodeIdToRoot = {};
   for (const [id, node] of Object.entries(nodes)) {
     const root = node?.data?.root;
     if (!root) continue;
+    nodeIdToRoot[id] = root;
     try {
       const pkg = JSON.parse(readFileSync(join(cwd, root, 'package.json'), 'utf8'));
       if (pkg.name) nodeIdToPkg[id] = pkg.name;
     } catch {
       if (id.startsWith('@diplodoc/')) nodeIdToPkg[id] = id;
+    }
+  }
+
+  /** For a project (node id), return { deps: Set(pkg names), devDeps: Set(pkg names) } from its package.json. */
+  function getDepsByType(sourceNodeId) {
+    const root = nodeIdToRoot[sourceNodeId];
+    if (!root) return { deps: new Set(), devDeps: new Set() };
+    try {
+      const pkg = JSON.parse(readFileSync(join(cwd, root, 'package.json'), 'utf8'));
+      return {
+        deps: new Set(Object.keys(pkg.dependencies || {})),
+        devDeps: new Set(Object.keys(pkg.devDependencies || {})),
+      };
+    } catch {
+      return { deps: new Set(), devDeps: new Set() };
     }
   }
 
@@ -238,6 +258,7 @@ function renderDepsGraph() {
   const edges = [];
   const outDegree = {};
   const inDegree = {};
+  const sourceDepsCache = {};
   for (const dep of depList) {
     const source = nodeIdToPkg[dep.source];
     const target = nodeIdToPkg[dep.target];
@@ -245,7 +266,12 @@ function renderDepsGraph() {
     const from = shortId(source);
     const to = shortId(target);
     if (DEPENDS_GRAPH_HIDE.has(from) || DEPENDS_GRAPH_HIDE.has(to)) continue;
-    edges.push(`${from} --> ${to}`);
+    if (DEPENDS_GRAPH_HIDE_EXAMPLE && (from.endsWith('-example') || to.endsWith('-example'))) continue;
+    if (!sourceDepsCache[dep.source]) sourceDepsCache[dep.source] = getDepsByType(dep.source);
+    const { deps, devDeps } = sourceDepsCache[dep.source];
+    const targetPkgName = nodeIdToPkg[dep.target];
+    const isDev = devDeps.has(targetPkgName);
+    edges.push({ from, to, isDev });
     outDegree[from] = (outDegree[from] || 0) + 1;
     inDegree[to] = (inDegree[to] || 0) + 1;
   }
@@ -253,9 +279,8 @@ function renderDepsGraph() {
 
   const visible = new Set();
   for (const e of edges) {
-    const [from, to] = e.split(/\s*-->\s*/);
-    visible.add(from);
-    visible.add(to);
+    visible.add(e.from);
+    visible.add(e.to);
   }
   const sortedNodes = [...visible].sort();
 
@@ -266,22 +291,23 @@ function renderDepsGraph() {
     return `${mermaidId(sid)}["${sid} (${in_}→${out})"]`;
   };
 
+  const edgeLine = (e) => (e.isDev ? `${e.from} -.-> ${e.to}` : `${e.from} --> ${e.to}`);
+
   const lines = [
     '%%{ init: { "flowchart": { "curve": "linear" } } }%%',
     'flowchart TB',
     ...sortedNodes.map((sid) => '  ' + nodeLabel(sid)),
-    ...edges.map((e) => '  ' + e),
+    ...edges.map((e) => '  ' + edgeLine(e)),
   ];
 
-  const hideNote =
-    DEPENDS_GRAPH_HIDE.size > 0
-      ? ` Hidden: ${[...DEPENDS_GRAPH_HIDE].sort().join(', ')}.`
-      : '';
+  const hideParts = [...DEPENDS_GRAPH_HIDE].sort();
+  if (DEPENDS_GRAPH_HIDE_EXAMPLE) hideParts.push('*-example');
+  const hideNote = hideParts.length > 0 ? ` Hidden: ${hideParts.join(', ')}.` : '';
 
   return [
     '## Dependency graph (@diplodoc packages)',
     '',
-    `Generated from Nx project graph (\`nx graph --file\`). **Orientation:** top to bottom (\`flowchart TB\`). Node label: *(dependencies in → dependents out)*.${hideNote}`,
+    `Generated from Nx project graph (\`nx graph --file\`). **Orientation:** top to bottom (\`flowchart TB\`). **Edges:** solid = prod dependencies, dotted = dev dependencies. Node label: *(dependencies in → dependents out)*.${hideNote}`,
     '',
     '```mermaid',
     lines.join('\n'),

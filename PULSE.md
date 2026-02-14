@@ -69,11 +69,11 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 
 ## Dependency graph (@diplodoc packages)
 
-Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`). Node label: *(dependencies in → dependents out)*. Hidden: lint, tsconfig.
+Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`). **Edges:** solid = prod dependencies, dotted = dev dependencies. Node label: *(dependencies in → dependents out)*. Hidden: lint, tsconfig, *-example.
 
 ```mermaid
-%%{ init: { "flowchart": { "curve": "linear" } } }%%
-flowchart TB
+%%{ init: { "flowchart": { "curve": "stepAfter", "defaultRenderer": "elk" } } }%%
+flowchart LR
   algolia-extension["algolia-extension (0→2)"]
   babel-preset["babel-preset (2→0)"]
   cli["cli (3→10)"]
@@ -83,73 +83,61 @@ flowchart TB
   directive["directive (5→0)"]
   file-extension["file-extension (1→1)"]
   gh-docs["gh-docs (0→1)"]
-  html-extension["html-extension (1→2)"]
-  html-extension-example["html-extension-example (0→2)"]
-  latex-extension["latex-extension (3→0)"]
-  latex-extension-example["latex-extension-example (0→2)"]
+  html-extension["html-extension (0→2)"]
+  latex-extension["latex-extension (2→0)"]
   liquid["liquid (2→0)"]
-  mermaid-extension["mermaid-extension (3→0)"]
-  mermaid-extension-example["mermaid-extension-example (0→2)"]
+  mermaid-extension["mermaid-extension (2→0)"]
   openapi-extension["openapi-extension (2→1)"]
   page-constructor-extension["page-constructor-extension (2→3)"]
   quote-link-extension["quote-link-extension (0→2)"]
   search-extension["search-extension (2→2)"]
   sentenizer["sentenizer (1→0)"]
-  tabs-extension["tabs-extension (3→0)"]
-  tabs-extension-example["tabs-extension-example (0→2)"]
+  tabs-extension["tabs-extension (2→0)"]
   testpack["testpack (0→1)"]
-  transform["transform (11→5)"]
+  transform["transform (7→5)"]
   translation["translation (1→3)"]
   utils["utils (4→0)"]
   yfmlint["yfmlint (1→1)"]
-  page-constructor-extension --> transform
+  page-constructor-extension -.-> transform
   page-constructor-extension --> directive
   page-constructor-extension --> utils
-  mermaid-extension-example --> mermaid-extension
-  mermaid-extension-example --> transform
-  latex-extension-example --> latex-extension
-  latex-extension-example --> transform
-  html-extension-example --> html-extension
-  html-extension-example --> transform
-  tabs-extension-example --> tabs-extension
-  tabs-extension-example --> transform
-  quote-link-extension --> transform
+  quote-link-extension -.-> transform
   quote-link-extension --> utils
   translation --> directive
   translation --> sentenizer
   translation --> transform
-  algolia-extension --> cli
+  algolia-extension -.-> cli
   algolia-extension --> search-extension
   openapi-extension --> liquid
-  transform --> babel-preset
+  transform -.-> babel-preset
   transform --> cut-extension
   transform --> file-extension
   transform --> tabs-extension
   transform --> utils
-  search-extension --> client
-  search-extension --> components
+  search-extension -.-> client
+  search-extension -.-> components
   gh-docs --> cli
-  yfmlint --> transform
-  client --> babel-preset
-  client --> components
-  client --> latex-extension
-  client --> mermaid-extension
-  client --> openapi-extension
-  client --> page-constructor-extension
-  client --> tabs-extension
-  client --> transform
+  yfmlint -.-> transform
+  client -.-> babel-preset
+  client -.-> components
+  client -.-> latex-extension
+  client -.-> mermaid-extension
+  client -.-> openapi-extension
+  client -.-> page-constructor-extension
+  client -.-> tabs-extension
+  client -.-> transform
   file-extension --> directive
-  html-extension --> transform
+  html-extension -.-> transform
   html-extension --> directive
   testpack --> cli
   cut-extension --> directive
   cut-extension --> utils
-  cli --> latex-extension
-  cli --> mermaid-extension
-  cli --> openapi-extension
-  cli --> page-constructor-extension
-  cli --> search-extension
-  cli --> yfmlint
+  cli -.-> latex-extension
+  cli -.-> mermaid-extension
+  cli -.-> openapi-extension
+  cli -.-> page-constructor-extension
+  cli -.-> search-extension
+  cli -.-> yfmlint
   cli --> client
   cli --> liquid
   cli --> transform
