@@ -20,6 +20,9 @@ const BRANCH = 'master';
 /** JSONPath for @diplodoc/lint version in package-lock.json (npm lockfile v3) */
 const LINT_VERSION_QUERY = "$['packages']['node_modules/@diplodoc/lint'].version";
 
+/** Short ids of packages to hide in the dependency graph (e.g. lint/tsconfig — everyone depends on them). */
+const DEPENDS_GRAPH_HIDE = new Set(['lint', 'tsconfig']);
+
 const SECTIONS = {
   packages: {
     columns: ['version', 'tests', 'release', 'security', 'coverage', 'infra'],
@@ -200,21 +203,9 @@ function getNxGraph() {
   }
 }
 
-/** Map @diplodoc/* package name to group (packages | extensions | devops) from SECTIONS. */
-function buildPkgToGroup() {
-  const map = {};
-  for (const [section, config] of Object.entries(SECTIONS)) {
-    if (section === 'actions') continue;
-    for (const row of config.rows) {
-      if (row.npm) map[row.npm] = section;
-    }
-  }
-  return map;
-}
-
 /**
  * Build Mermaid diagram from Nx project graph (only @diplodoc/* nodes and edges between them).
- * Groups nodes into subgraphs: devops, packages, extensions. Node labels show (deps in → dependents out).
+ * Excludes packages in DEPENDS_GRAPH_HIDE. Node labels: (deps in → dependents out). Straight edges.
  */
 function renderDepsGraph() {
   let nxGraph;
@@ -225,14 +216,11 @@ function renderDepsGraph() {
   }
   const { nodes = {}, dependencies = [] } = nxGraph;
   const cwd = process.cwd();
-  const pkgToGroup = buildPkgToGroup();
 
   const nodeIdToPkg = {};
-  const nodeIdToRoot = {};
   for (const [id, node] of Object.entries(nodes)) {
     const root = node?.data?.root;
     if (!root) continue;
-    nodeIdToRoot[id] = root;
     try {
       const pkg = JSON.parse(readFileSync(join(cwd, root, 'package.json'), 'utf8'));
       if (pkg.name) nodeIdToPkg[id] = pkg.name;
@@ -252,36 +240,23 @@ function renderDepsGraph() {
   for (const dep of depList) {
     const source = nodeIdToPkg[dep.source];
     const target = nodeIdToPkg[dep.target];
-    if (source && target && diplodoc.has(source) && diplodoc.has(target)) {
-      const from = shortId(source);
-      const to = shortId(target);
-      edges.push(`${from} --> ${to}`);
-      outDegree[from] = (outDegree[from] || 0) + 1;
-      inDegree[to] = (inDegree[to] || 0) + 1;
-    }
+    if (!source || !target || !diplodoc.has(source) || !diplodoc.has(target)) continue;
+    const from = shortId(source);
+    const to = shortId(target);
+    if (DEPENDS_GRAPH_HIDE.has(from) || DEPENDS_GRAPH_HIDE.has(to)) continue;
+    edges.push(`${from} --> ${to}`);
+    outDegree[from] = (outDegree[from] || 0) + 1;
+    inDegree[to] = (inDegree[to] || 0) + 1;
   }
   if (edges.length === 0) return '';
 
-  const pkgToGroupResolved = {};
-  for (const pkg of diplodoc) {
-    pkgToGroupResolved[pkg] =
-      pkgToGroup[pkg] ||
-      (() => {
-        const id = Object.entries(nodeIdToPkg).find(([, n]) => n === pkg)?.[0];
-        const root = id ? nodeIdToRoot[id] : '';
-        if (root.startsWith('packages/')) return 'packages';
-        if (root.startsWith('extensions/')) return 'extensions';
-        if (root.startsWith('devops/')) return 'devops';
-        return 'packages';
-      })();
+  const visible = new Set();
+  for (const e of edges) {
+    const [from, to] = e.split(/\s*-->\s*/);
+    visible.add(from);
+    visible.add(to);
   }
-
-  const byGroup = { devops: [], packages: [], extensions: [] };
-  for (const pkg of diplodoc) {
-    const group = pkgToGroupResolved[pkg];
-    if (byGroup[group]) byGroup[group].push(shortId(pkg));
-  }
-  for (const arr of Object.values(byGroup)) arr.sort();
+  const sortedNodes = [...visible].sort();
 
   const mermaidId = (s) => (s.match(/^[a-zA-Z_][a-zA-Z0-9_-]*$/) ? s : `"${s}"`);
   const nodeLabel = (sid) => {
@@ -291,24 +266,21 @@ function renderDepsGraph() {
   };
 
   const lines = [
+    '%%{ init: { "flowchart": { "curve": "linear" } } }%%',
     'flowchart TD',
-    '  subgraph devops ["devops"]',
-    ...byGroup.devops.map((sid) => '    ' + nodeLabel(sid)),
-    '  end',
-    '  subgraph packages ["packages"]',
-    ...byGroup.packages.map((sid) => '    ' + nodeLabel(sid)),
-    '  end',
-    '  subgraph extensions ["extensions"]',
-    ...byGroup.extensions.map((sid) => '    ' + nodeLabel(sid)),
-    '  end',
+    ...sortedNodes.map((sid) => '  ' + nodeLabel(sid)),
     ...edges.map((e) => '  ' + e),
   ];
+
+  const hideNote =
+    DEPENDS_GRAPH_HIDE.size > 0
+      ? ` Hidden: ${[...DEPENDS_GRAPH_HIDE].sort().join(', ')}.`
+      : '';
 
   return [
     '## Dependency graph (@diplodoc packages)',
     '',
-    'Generated from Nx project graph (`nx graph --file`). Groups: **devops**, **packages**, **extensions**.',
-    'Node label: *(dependencies in → dependents out)*.',
+    `Generated from Nx project graph (\`nx graph --file\`). Node label: *(dependencies in → dependents out)*.${hideNote}`,
     '',
     '```mermaid',
     lines.join('\n'),

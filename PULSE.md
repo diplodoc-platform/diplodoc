@@ -69,56 +69,40 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 
 ## Dependency graph (@diplodoc packages)
 
-Generated from Nx project graph (`nx graph --file`). Groups: **devops**, **packages**, **extensions**.
-Node label: *(dependencies in → dependents out)*.
+Generated from Nx project graph (`nx graph --file`). Node label: *(dependencies in → dependents out)*. Hidden: lint, tsconfig.
 
 ```mermaid
+%%{ init: { "flowchart": { "curve": "linear" } } }%%
 flowchart TD
-  subgraph devops ["devops"]
-    babel-preset["babel-preset (2→0)"]
-    lint["lint (24→0)"]
-    package-template["package-template (0→1)"]
-    testpack["testpack (0→3)"]
-    tsconfig["tsconfig (25→0)"]
-  end
-  subgraph packages ["packages"]
-    cli["cli (3→12)"]
-    client["client (2→10)"]
-    components["components (2→2)"]
-    directive["directive (5→2)"]
-    gh-docs["gh-docs (0→1)"]
-    liquid["liquid (2→2)"]
-    sentenizer["sentenizer (1→2)"]
-    transform["transform (11→7)"]
-    translation["translation (1→5)"]
-    utils["utils (4→2)"]
-    yfmlint["yfmlint (1→3)"]
-  end
-  subgraph extensions ["extensions"]
-    algolia-extension["algolia-extension (0→4)"]
-    color-extension["color-extension (0→2)"]
-    cut-extension["cut-extension (1→4)"]
-    file-extension["file-extension (1→3)"]
-    folding-headings-extension["folding-headings-extension (0→2)"]
-    html-extension["html-extension (1→4)"]
-    html-extension-example["html-extension-example (0→2)"]
-    latex-extension["latex-extension (3→2)"]
-    latex-extension-example["latex-extension-example (0→2)"]
-    mermaid-extension["mermaid-extension (3→2)"]
-    mermaid-extension-example["mermaid-extension-example (0→2)"]
-    openapi-extension["openapi-extension (2→3)"]
-    page-constructor-extension["page-constructor-extension (2→5)"]
-    page-constructor-extension-example["page-constructor-extension-example (0→0)"]
-    quote-link-extension["quote-link-extension (0→4)"]
-    search-extension["search-extension (2→4)"]
-    tabs-extension["tabs-extension (3→2)"]
-    tabs-extension-example["tabs-extension-example (0→2)"]
-  end
-  folding-headings-extension --> lint
-  folding-headings-extension --> tsconfig
+  algolia-extension["algolia-extension (0→2)"]
+  babel-preset["babel-preset (2→0)"]
+  cli["cli (3→10)"]
+  client["client (2→8)"]
+  components["components (2→0)"]
+  cut-extension["cut-extension (1→2)"]
+  directive["directive (5→0)"]
+  file-extension["file-extension (1→1)"]
+  gh-docs["gh-docs (0→1)"]
+  html-extension["html-extension (1→2)"]
+  html-extension-example["html-extension-example (0→2)"]
+  latex-extension["latex-extension (3→0)"]
+  latex-extension-example["latex-extension-example (0→2)"]
+  liquid["liquid (2→0)"]
+  mermaid-extension["mermaid-extension (3→0)"]
+  mermaid-extension-example["mermaid-extension-example (0→2)"]
+  openapi-extension["openapi-extension (2→1)"]
+  page-constructor-extension["page-constructor-extension (2→3)"]
+  quote-link-extension["quote-link-extension (0→2)"]
+  search-extension["search-extension (2→2)"]
+  sentenizer["sentenizer (1→0)"]
+  tabs-extension["tabs-extension (3→0)"]
+  tabs-extension-example["tabs-extension-example (0→2)"]
+  testpack["testpack (0→1)"]
+  transform["transform (11→5)"]
+  translation["translation (1→3)"]
+  utils["utils (4→0)"]
+  yfmlint["yfmlint (1→1)"]
   page-constructor-extension --> transform
-  page-constructor-extension --> lint
-  page-constructor-extension --> tsconfig
   page-constructor-extension --> directive
   page-constructor-extension --> utils
   mermaid-extension-example --> mermaid-extension
@@ -127,89 +111,44 @@ flowchart TD
   latex-extension-example --> transform
   html-extension-example --> html-extension
   html-extension-example --> transform
-  package-template --> tsconfig
   tabs-extension-example --> tabs-extension
   tabs-extension-example --> transform
-  quote-link-extension --> lint
   quote-link-extension --> transform
-  quote-link-extension --> tsconfig
   quote-link-extension --> utils
-  translation --> lint
-  translation --> tsconfig
   translation --> directive
   translation --> sentenizer
   translation --> transform
-  components --> lint
-  components --> tsconfig
-  sentenizer --> lint
-  sentenizer --> tsconfig
   algolia-extension --> cli
-  algolia-extension --> lint
-  algolia-extension --> tsconfig
   algolia-extension --> search-extension
-  directive --> lint
-  directive --> tsconfig
-  mermaid-extension --> lint
-  mermaid-extension --> tsconfig
-  openapi-extension --> lint
-  openapi-extension --> tsconfig
   openapi-extension --> liquid
   transform --> babel-preset
-  transform --> lint
-  transform --> tsconfig
   transform --> cut-extension
   transform --> file-extension
   transform --> tabs-extension
   transform --> utils
   search-extension --> client
   search-extension --> components
-  search-extension --> lint
-  search-extension --> tsconfig
-  color-extension --> lint
-  color-extension --> tsconfig
   gh-docs --> cli
-  latex-extension --> lint
-  latex-extension --> tsconfig
-  yfmlint --> lint
   yfmlint --> transform
-  yfmlint --> tsconfig
   client --> babel-preset
   client --> components
   client --> latex-extension
-  client --> lint
   client --> mermaid-extension
   client --> openapi-extension
   client --> page-constructor-extension
   client --> tabs-extension
   client --> transform
-  client --> tsconfig
-  file-extension --> lint
-  file-extension --> tsconfig
   file-extension --> directive
   html-extension --> transform
-  html-extension --> lint
-  html-extension --> tsconfig
   html-extension --> directive
-  liquid --> lint
-  liquid --> tsconfig
-  tabs-extension --> lint
-  tabs-extension --> tsconfig
   testpack --> cli
-  testpack --> lint
-  testpack --> tsconfig
-  cut-extension --> lint
-  cut-extension --> tsconfig
   cut-extension --> directive
   cut-extension --> utils
-  utils --> lint
-  utils --> tsconfig
   cli --> latex-extension
-  cli --> lint
   cli --> mermaid-extension
   cli --> openapi-extension
   cli --> page-constructor-extension
   cli --> search-extension
-  cli --> tsconfig
   cli --> yfmlint
   cli --> client
   cli --> liquid
