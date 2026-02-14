@@ -209,7 +209,7 @@ function getNxGraph() {
 
 /**
  * Build Mermaid diagram from Nx project graph (only @diplodoc/* nodes and edges between them).
- * Excludes packages in DEPENDS_GRAPH_HIDE. Prod dependencies: solid arrow (-->), dev: dotted (-.->). Node labels: (deps in → dependents out).
+ * Excludes packages in DEPENDS_GRAPH_HIDE. Prod: solid (-->), dev: dotted (-.->).
  */
 function renderDepsGraph() {
   let nxGraph;
@@ -285,19 +285,27 @@ function renderDepsGraph() {
   const sortedNodes = [...visible].sort();
 
   const mermaidId = (s) => (s.match(/^[a-zA-Z_][a-zA-Z0-9_-]*$/) ? s : `"${s}"`);
-  const nodeLabel = (sid) => {
-    const out = outDegree[sid] || 0;
-    const in_ = inDegree[sid] || 0;
-    return `${mermaidId(sid)}["${sid} (${in_}→${out})"]`;
-  };
+  const nodeLabel = (sid) => `${mermaidId(sid)}["${sid}"]`;
 
   const edgeLine = (e) => (e.isDev ? `${e.from} -.-> ${e.to}` : `${e.from} --> ${e.to}`);
 
+  const repoByShortId = {};
+  for (const section of Object.values(SECTIONS)) {
+    for (const row of section.rows || []) {
+      if (row.npm) repoByShortId[shortId(row.npm)] = row.repo;
+    }
+  }
+
+  const clickLines = sortedNodes
+    .filter((sid) => repoByShortId[sid])
+    .map((sid) => `  click ${mermaidId(sid)} href "https://github.com/${ORG}/${repoByShortId[sid]}"`);
+
   const lines = [
-    '%%{ init: { "flowchart": { "curve": "linear" } } }%%',
+    '%%{ init: { "flowchart": { "curve": "stepAfter", "defaultRenderer": "elk" } } }%%',
     'flowchart TB',
     ...sortedNodes.map((sid) => '  ' + nodeLabel(sid)),
     ...edges.map((e) => '  ' + edgeLine(e)),
+    ...clickLines,
   ];
 
   const hideParts = [...DEPENDS_GRAPH_HIDE].sort();
@@ -307,7 +315,7 @@ function renderDepsGraph() {
   return [
     '## Dependency graph (@diplodoc packages)',
     '',
-    `Generated from Nx project graph (\`nx graph --file\`). **Orientation:** top to bottom (\`flowchart TB\`). **Edges:** solid = prod dependencies, dotted = dev dependencies. Node label: *(dependencies in → dependents out)*.${hideNote}`,
+    `Generated from Nx project graph (\`nx graph --file\`). **Orientation:** top to bottom (\`flowchart TB\`). **Edges:** solid = prod dependencies, dotted = dev dependencies. In viewers that run Mermaid with JS (e.g. [Mermaid Live](https://mermaid.live)), nodes are clickable and link to the GitHub repo.${hideNote}`,
     '',
     '```mermaid',
     lines.join('\n'),

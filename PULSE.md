@@ -69,11 +69,35 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 
 ## Dependency graph (@diplodoc packages)
 
-Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`). **Edges:** solid = prod dependencies, dotted = dev dependencies. Node label: *(dependencies in → dependents out)*. Hidden: lint, tsconfig, *-example.
+Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`). **Edges:** solid = prod dependencies, dotted = dev dependencies. In viewers that run Mermaid with JS (e.g. [Mermaid Live](https://mermaid.live)), nodes are clickable and link to the GitHub repo. Hidden: lint, tsconfig, *-example.
 
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepAfter", "defaultRenderer": "elk" } } }%%
-flowchart LR
+flowchart TB
+  algolia-extension["algolia-extension"]
+  babel-preset["babel-preset"]
+  cli["cli"]
+  client["client"]
+  components["components"]
+  cut-extension["cut-extension"]
+  directive["directive"]
+  file-extension["file-extension"]
+  gh-docs["gh-docs"]
+  html-extension["html-extension"]
+  latex-extension["latex-extension"]
+  liquid["liquid"]
+  mermaid-extension["mermaid-extension"]
+  openapi-extension["openapi-extension"]
+  page-constructor-extension["page-constructor-extension"]
+  quote-link-extension["quote-link-extension"]
+  search-extension["search-extension"]
+  sentenizer["sentenizer"]
+  tabs-extension["tabs-extension"]
+  testpack["testpack"]
+  transform["transform"]
+  translation["translation"]
+  utils["utils"]
+  yfmlint["yfmlint"]
   page-constructor-extension -.-> transform
   page-constructor-extension --> directive
   page-constructor-extension --> utils
@@ -118,5 +142,28 @@ flowchart LR
   cli --> liquid
   cli --> transform
   cli --> translation
+  click algolia-extension href "https://github.com/diplodoc-platform/algolia-extension"
+  click babel-preset href "https://github.com/diplodoc-platform/babel-preset"
+  click cli href "https://github.com/diplodoc-platform/cli"
+  click client href "https://github.com/diplodoc-platform/client"
+  click components href "https://github.com/diplodoc-platform/components"
+  click cut-extension href "https://github.com/diplodoc-platform/cut-extension"
+  click directive href "https://github.com/diplodoc-platform/directive"
+  click file-extension href "https://github.com/diplodoc-platform/file-extension"
+  click html-extension href "https://github.com/diplodoc-platform/html-extension"
+  click latex-extension href "https://github.com/diplodoc-platform/latex-extension"
+  click liquid href "https://github.com/diplodoc-platform/liquid"
+  click mermaid-extension href "https://github.com/diplodoc-platform/mermaid-extension"
+  click openapi-extension href "https://github.com/diplodoc-platform/openapi-extension"
+  click page-constructor-extension href "https://github.com/diplodoc-platform/page-constructor-extension"
+  click quote-link-extension href "https://github.com/diplodoc-platform/quote-link-extension"
+  click search-extension href "https://github.com/diplodoc-platform/search-extension"
+  click sentenizer href "https://github.com/diplodoc-platform/sentenizer"
+  click tabs-extension href "https://github.com/diplodoc-platform/tabs-extension"
+  click testpack href "https://github.com/diplodoc-platform/testpack"
+  click transform href "https://github.com/diplodoc-platform/transform"
+  click translation href "https://github.com/diplodoc-platform/translation"
+  click utils href "https://github.com/diplodoc-platform/utils"
+  click yfmlint href "https://github.com/diplodoc-platform/yfmlint"
 ```
 
