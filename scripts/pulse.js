@@ -8,6 +8,7 @@
  * actions have no tests/lint. The "lint" column uses shields.io Dynamic JSON badge to show @diplodoc/lint
  * version from each repo's package-lock.json. Override any cell with '-' via row config.
  * At the end, a Mermaid flowchart is appended from the Nx project graph (`nx graph --file`), including only @diplodoc/* nodes and edges between them.
+ * In Mermaid, "flowchart" is the right type for directed dependency graphs (nodes + arrows); orientation TB = top-to-bottom.
  */
 
 import { execSync } from 'node:child_process';
@@ -267,7 +268,7 @@ function renderDepsGraph() {
 
   const lines = [
     '%%{ init: { "flowchart": { "curve": "linear" } } }%%',
-    'flowchart TD',
+    'flowchart TB',
     ...sortedNodes.map((sid) => '  ' + nodeLabel(sid)),
     ...edges.map((e) => '  ' + e),
   ];
@@ -280,7 +281,7 @@ function renderDepsGraph() {
   return [
     '## Dependency graph (@diplodoc packages)',
     '',
-    `Generated from Nx project graph (\`nx graph --file\`). Node label: *(dependencies in → dependents out)*.${hideNote}`,
+    `Generated from Nx project graph (\`nx graph --file\`). **Orientation:** top to bottom (\`flowchart TB\`). Node label: *(dependencies in → dependents out)*.${hideNote}`,
     '',
     '```mermaid',
     lines.join('\n'),

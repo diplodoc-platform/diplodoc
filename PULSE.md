@@ -69,11 +69,11 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 
 ## Dependency graph (@diplodoc packages)
 
-Generated from Nx project graph (`nx graph --file`). Node label: *(dependencies in → dependents out)*. Hidden: lint, tsconfig.
+Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`). Node label: *(dependencies in → dependents out)*. Hidden: lint, tsconfig.
 
 ```mermaid
 %%{ init: { "flowchart": { "curve": "linear" } } }%%
-flowchart TD
+flowchart TB
   algolia-extension["algolia-extension (0→2)"]
   babel-preset["babel-preset (2→0)"]
   cli["cli (3→10)"]
