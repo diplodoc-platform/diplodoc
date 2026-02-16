@@ -301,7 +301,7 @@ function renderDepsGraph() {
     .map((sid) => `  click ${mermaidId(sid)} href "https://github.com/${ORG}/${repoByShortId[sid]}"`);
 
   const lines = [
-    '%%{ init: { "flowchart": { "curve": "stepAfter", "defaultRenderer": "elk" } } }%%',
+    '%%{ init: { "flowchart": { "defaultRenderer": "elk" } } }%%',
     'flowchart LR',
     ...sortedNodes.map((sid) => '  ' + nodeLabel(sid)),
     ...edges.map((e) => '  ' + edgeLine(e)),

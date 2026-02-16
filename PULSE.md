@@ -72,7 +72,7 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`).
 
 ```mermaid
-%%{ init: { "flowchart": { "curve": "stepAfter", "defaultRenderer": "elk" } } }%%
+%%{ init: { "flowchart": { "defaultRenderer": "elk" } } }%%
 flowchart LR
   algolia-extension["algolia-extension"]
   babel-preset["babel-preset"]
