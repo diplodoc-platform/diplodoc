@@ -69,11 +69,11 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 
 ## Dependency graph (@diplodoc packages)
 
-Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`). **Edges:** solid = prod dependencies, dotted = dev dependencies. In viewers that run Mermaid with JS (e.g. [Mermaid Live](https://mermaid.live)), nodes are clickable and link to the GitHub repo. Hidden: lint, tsconfig, *-example.
+Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`).
 
 ```mermaid
 %%{ init: { "flowchart": { "curve": "stepAfter", "defaultRenderer": "elk" } } }%%
-flowchart TB
+flowchart LR
   algolia-extension["algolia-extension"]
   babel-preset["babel-preset"]
   cli["cli"]

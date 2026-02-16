@@ -302,7 +302,7 @@ function renderDepsGraph() {
 
   const lines = [
     '%%{ init: { "flowchart": { "curve": "stepAfter", "defaultRenderer": "elk" } } }%%',
-    'flowchart TB',
+    'flowchart LR',
     ...sortedNodes.map((sid) => '  ' + nodeLabel(sid)),
     ...edges.map((e) => '  ' + edgeLine(e)),
     ...clickLines,
@@ -315,7 +315,7 @@ function renderDepsGraph() {
   return [
     '## Dependency graph (@diplodoc packages)',
     '',
-    `Generated from Nx project graph (\`nx graph --file\`). **Orientation:** top to bottom (\`flowchart TB\`). **Edges:** solid = prod dependencies, dotted = dev dependencies. In viewers that run Mermaid with JS (e.g. [Mermaid Live](https://mermaid.live)), nodes are clickable and link to the GitHub repo.${hideNote}`,
+    `Generated from Nx project graph (\`nx graph --file\`). **Orientation:** top to bottom (\`flowchart TB\`).`,
     '',
     '```mermaid',
     lines.join('\n'),
