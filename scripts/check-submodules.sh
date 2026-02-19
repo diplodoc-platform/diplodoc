@@ -11,7 +11,7 @@ TEMP_CONF="submodules.conf.tmp"
 
 # Get list of repositories from GitHub
 REPOS_URL="https://api.github.com/orgs/diplodoc-platform/repos?per_page=100"
-REPOS=$(curl -s $REPOS_URL | jq -r '.[] | [.name, .ssh_url] | @tsv' | sort)
+REPOS=$(curl -s $REPOS_URL | jq -r '.[] | select(.archived == false) | [.name, .ssh_url] | @tsv' | sort)
 
 # Read exceptions
 EXCEPTIONS=$(cat $EXCEPTIONS_FILE)
@@ -71,7 +71,7 @@ for submodule in $CURRENT_SUBMODULES; do
         # Add line to temporary file if it's not already there
         if ! grep -qF -- "$remove_line" $TEMP_CONF; then
             echo "$remove_line" >> $TEMP_CONF
-            printf "\e[31m%s\e[0m exists in .gitmodules but not on GitHub\n" "$submodule"
+            printf "\e[31m%s\e[0m exists in .gitmodules but not on GitHub (or is archived)\n" "$submodule"
         fi
     fi
 done

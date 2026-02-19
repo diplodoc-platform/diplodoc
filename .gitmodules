@@ -19,18 +19,12 @@
 [submodule "devops/babel-preset"]
 	path = devops/babel-preset
 	url = git@github.com:diplodoc-platform/babel-preset.git
-[submodule "devops/eslint-config"]
-	path = devops/eslint-config
-	url = git@github.com:diplodoc-platform/eslint-config.git
 [submodule "devops/lint"]
 	path = devops/lint
 	url = git@github.com:diplodoc-platform/lint.git
 [submodule "devops/package-template"]
 	path = devops/package-template
 	url = git@github.com:diplodoc-platform/package-template.git
-[submodule "devops/prettier-config"]
-	path = devops/prettier-config
-	url = git@github.com:diplodoc-platform/prettier-config.git
 [submodule "devops/testpack"]
 	path = devops/testpack
 	url = git@github.com:diplodoc-platform/testpack.git
@@ -91,9 +85,6 @@
 [submodule "packages/directive"]
 	path = packages/directive
 	url = git@github.com:diplodoc-platform/directive.git
-[submodule "packages/gh-docs"]
-	path = packages/gh-docs
-	url = git@github.com:diplodoc-platform/gh-docs.git
 [submodule "packages/liquid"]
 	path = packages/liquid
 	url = git@github.com:diplodoc-platform/liquid.git
