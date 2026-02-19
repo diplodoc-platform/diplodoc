@@ -1,0 +1,116 @@
+# This workflow automatically updates the packages list in update-deps.yml
+# when .gitmodules is changed (new packages/extensions added or removed)
+#
+# Since devops/lint is a submodule, this workflow:
+# 1. Reads .gitmodules from the main repo to get the current packages list
+# 2. Clones the devops/lint repository
+# 3. Updates the workflow file there
+# 4. Commits and pushes directly to master
+
+name: Sync Packages List
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - '.gitmodules'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-packages-list:
+    name: Update packages list in lint repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Extract packages list from .gitmodules
+        id: packages
+        run: |
+          # Extract packages (excluding cli)
+          PACKAGES=$(grep -E "path = packages/" .gitmodules | sed 's/.*path = packages\///' | grep -v "^cli$" | sort)
+          # Extract extensions
+          EXTENSIONS=$(grep -E "path = extensions/" .gitmodules | sed 's/.*path = extensions\///' | sort)
+          
+          # Build YAML options block
+          OPTIONS="          # === packages ===\n"
+          for pkg in $PACKAGES; do
+            OPTIONS+="          - '@diplodoc/$pkg'\n"
+          done
+          OPTIONS+="          # === extensions ===\n"
+          for ext in $EXTENSIONS; do
+            OPTIONS+="          - '@diplodoc/$ext-extension'\n"
+          done
+          
+          # Save to file for later use
+          echo -e "$OPTIONS" > /tmp/packages-options.txt
+          
+          echo "Packages: $PACKAGES"
+          echo "Extensions: $EXTENSIONS"
+
+      - name: Checkout lint repo
+        uses: actions/checkout@v4
+        with:
+          repository: diplodoc-platform/lint
+          token: ${{ secrets.YC_UI_BOT_GITHUB_TOKEN }}
+          path: lint-repo
+
+      - name: Update workflow file
+        run: |
+          WORKFLOW_FILE="lint-repo/scaffolding/.github/workflows/update-deps.yml"
+          
+          if [[ ! -f "$WORKFLOW_FILE" ]]; then
+            echo "::error::Workflow file not found: $WORKFLOW_FILE"
+            exit 1
+          fi
+          
+          # Create updated file using awk
+          awk '
+            /^[[:space:]]*package:/ { in_package = 1 }
+            /^[[:space:]]*version:/ { in_package = 0; in_options = 0 }
+            in_package && /^[[:space:]]*default:/ {
+              print "        default: '"'"'@diplodoc/transform'"'"'"
+              next
+            }
+            in_package && /^[[:space:]]*options:/ {
+              in_options = 1
+              print
+              while ((getline line < "/tmp/packages-options.txt") > 0) {
+                print line
+              }
+              next
+            }
+            in_package && in_options && /^[[:space:]]*-[[:space:]]/ { next }
+            in_package && in_options && /^[[:space:]]*#/ { next }
+            { print }
+          ' "$WORKFLOW_FILE" > "$WORKFLOW_FILE.new"
+          
+          mv "$WORKFLOW_FILE.new" "$WORKFLOW_FILE"
+
+      - name: Commit and push changes
+        working-directory: lint-repo
+        run: |
+          # Check if there are changes
+          if [[ -z $(git status --porcelain) ]]; then
+            echo "::notice::No changes detected in packages list"
+            exit 0
+          fi
+          
+          echo "Changes detected:"
+          git diff --stat
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Commit and push
+          git add scaffolding/.github/workflows/update-deps.yml
+          git commit -m "chore: sync packages list in update-deps workflow"
+          git push origin HEAD:master
