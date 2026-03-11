@@ -1,0 +1,6 @@
+packages:
+  - 'devops/*'
+  - 'extensions/*'
+  - 'extensions/*/example'
+  - 'packages/*'
+  - 'packages/*/tests'
