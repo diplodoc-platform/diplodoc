@@ -5,7 +5,7 @@ const GITHUB_API = 'https://api.github.com';
 const TELEGRAM_API = 'https://api.telegram.org';
 const DIGEST_LABEL = process.env.DIGEST_LABEL || 'needs-review';
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.PR_DIGEST_GITHUB_TOKEN;
+const GITHUB_TOKEN = process.env.GH_TOKEN;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -21,7 +21,7 @@ const GITHUB_TELEGRAM_MAP = (() => {
 })();
 
 if (!GITHUB_TOKEN) {
-    console.error('GITHUB_TOKEN or ORG_GITHUB_TOKEN is required');
+    console.error('GH_TOKEN is required');
     process.exit(1);
 }
 
