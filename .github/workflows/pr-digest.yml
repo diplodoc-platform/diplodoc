@@ -21,7 +21,7 @@ jobs:
 
       - name: Run PR digest
         env:
-          GITHUB_TOKEN: ${{ secrets.PR_DIGEST_GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.PR_DIGEST_GH_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.PR_DIGEST_TG_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.PR_DIGEST_TG_CHAT_ID }}
           GITHUB_TELEGRAM_MAP: ${{ secrets.PR_DIGEST_GH_TG_MAP }}
