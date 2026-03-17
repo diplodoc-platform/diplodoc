@@ -117,12 +117,19 @@ function escapeMarkdown(text) {
     return text.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, '\\$&');
 }
 
-function formatAuthor(githubLogin) {
+function formatUser(githubLogin) {
     const tgUsername = GITHUB_TELEGRAM_MAP[githubLogin];
     if (tgUsername) {
         return `@${escapeMarkdown(tgUsername)}`;
     }
     return escapeMarkdown(githubLogin);
+}
+
+function formatReviewers(reviewers) {
+    if (reviewers.length === 0) {
+        return '⚠️ никто не назначен';
+    }
+    return reviewers.map((r) => formatUser(r)).join(', ');
 }
 
 async function collectDigest() {
@@ -158,10 +165,13 @@ async function collectDigest() {
                 ['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED'].includes(r.state),
             );
 
+            const reviewers = (pr.requested_reviewers || []).map((r) => r.login);
+
             const prInfo = {
                 number: pr.number,
                 title: pr.title,
                 author: pr.user.login,
+                reviewers,
                 url: pr.html_url,
                 days: daysAgo(pr.created_at),
             };
@@ -208,7 +218,7 @@ function buildMessage({noReview, pendingApprove}) {
                 const title = escapeMarkdown(pr.title);
                 const age = escapeMarkdown(formatDays(pr.days));
                 lines.push(
-                    `  • [\\#${pr.number} ${title}](${pr.url}) — ${formatAuthor(pr.author)} \\(${age}\\)`,
+                    `  • [\\#${pr.number} ${title}](${pr.url}) — ${formatReviewers(pr.reviewers)} \\(${age}\\)`,
                 );
             }
             lines.push('');
@@ -225,7 +235,7 @@ function buildMessage({noReview, pendingApprove}) {
                 const title = escapeMarkdown(pr.title);
                 const age = escapeMarkdown(formatDays(pr.days));
                 lines.push(
-                    `  • [\\#${pr.number} ${title}](${pr.url}) — ${formatAuthor(pr.author)} \\(${age}\\)`,
+                    `  • [\\#${pr.number} ${title}](${pr.url}) — ${formatReviewers(pr.reviewers)} \\(${age}\\)`,
                 );
             }
             lines.push('');
