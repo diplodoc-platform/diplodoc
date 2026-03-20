@@ -25,4 +25,4 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.PR_DIGEST_TG_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.PR_DIGEST_TG_CHAT_ID }}
           GITHUB_TELEGRAM_MAP: ${{ secrets.PR_DIGEST_GH_TG_MAP }}
-        run: node scripts/pr-digest.mjs
+        run: node scripts/pr-digest/index.mjs
