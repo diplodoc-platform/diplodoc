@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Получаем корневую директорию проекта
-const PROJECT_ROOT = resolve(__dirname);
+const PROJECT_ROOT = resolve(__dirname, '..');
 const DOCS_DIR = resolve(PROJECT_ROOT, 'make-docs-better');
 
 /**
