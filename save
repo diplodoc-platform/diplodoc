@@ -1,3 +1,3 @@
 #!/bin/bash
 
-node ../scripts/copy-docs-and-reset.mjs $1
+node scripts/copy-docs-and-reset.mjs $1
