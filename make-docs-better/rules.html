@@ -452,14 +452,8 @@
       <summary>Если вы работаете на выданном ноутбуке</summary>
       <div class="details-body">
         <ol>
-          <li>Создайте папку <code>&lt;ваш_логин_в_телеграме&gt;</code> на рабочем столе. Для этого в терминале выполните:
-            <pre><code>mkdir ~/Desktop/&lt;ваш_логин_в_телеграме&gt;</code></pre>
-          </li>
-          <li>Скопируйте в эту папку материалы для практикума:
-            <pre><code>cp -r ~/Desktop/workshop/diplodoc/make-docs-better ~/Desktop/&lt;ваш_логин_в_телеграме&gt;</code></pre>
-          </li>
-          <li>Перейдите в папку <code>make-docs-better</code>:
-            <pre><code>cd ~/Desktop/&lt;ваш_логин_в_телеграме&gt;/make-docs-better</code></pre>
+          <li>Перейдите в папку проекта <code>make-docs-better</code>:
+            <pre><code>cd ~/Desktop/workshop/diplodoc/make-docs-better</code></pre>
             В папке <code>docs/</code> находится документация, которую вам и предстоит улучшить:
             <div class="file-tree">
               docs/<br>
@@ -468,11 +462,10 @@
               └── index.md &nbsp;<span class="comment"># драфт от разработчика</span>
             </div>
           </li>
-          <li>Попробуйте собрать документацию:
+          <li>Соберите документацию:
             <pre><code>yfm -i docs -o output</code></pre>
-            Зайдите в папку <code>output</code> и откройте в браузере страничку <code>index.html</code> — это собранная документация.
           </li>
-          <li>Теперь можно начать улучшать документацию.</li>
+          <li>Теперь можно начать ее улучшать!</li>
         </ol>
       </div>
     </details>
@@ -482,14 +475,21 @@
     <details>
       <summary>Если вы работаете на своём ноутбуке</summary>
       <div class="details-body">
-        <p>Заархивируйте папку <code>make-docs-better</code> и пришлите архив на почту:</p>
+        <p>Заархивируйте папку <code>make-docs-better</code> и пришлите архив на почту: mkoshkin@yandex-team.ru</p>
       </div>
     </details>
 
     <details>
       <summary>Если вы работаете на выданном ноутбуке</summary>
       <div class="details-body">
-        <p>Заархивируйте папку <code>make-docs-better</code> и пришлите архив на почту:</p>
+        <ol>
+          <li>Сохраните ваши изменения в файле (<kbd>cmd+S</kbd>).</li>
+          <li>В терминале запустите скрипт:
+            <pre><code>cd ~/Desktop/workshop/diplodoc/
+./save &lt;ваш_логин_в_тг&gt;</code></pre>
+            Этот скрипт скопирует вашу работу в отдельную папку и приведёт текущее состояние проекта к изначальному виду.
+          </li>
+        </ol>
       </div>
     </details>
 
