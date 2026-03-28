@@ -275,6 +275,60 @@
       color: #1b6e3e;
       border: 1px solid #b3dfc4;
     }
+    /* ─── Details / Cut ─────────────────────────────────── */
+    details {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-note);
+      margin: 8px 0 12px;
+      overflow: hidden;
+    }
+
+    details summary {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      background: var(--bg-card);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    details summary::-webkit-details-marker { display: none; }
+
+    details summary::before {
+      content: '▶';
+      font-size: 10px;
+      color: var(--accent-mint);
+      transition: transform 0.15s;
+      flex-shrink: 0;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    details summary:hover {
+      background: var(--bg-hover);
+    }
+
+    details .details-body {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-page);
+    }
+
+    details .details-body ol {
+      margin-left: 20px;
+    }
+
+    details .details-body pre {
+      margin: 8px 0 14px;
+    }
+
     /* ─── Anchor headings ────────────────────────────────── */
     h2, h3, h4 { position: relative; }
 
@@ -331,13 +385,12 @@
       <span>Улучшаем документацию</span>
     </div>
     <ul>
-      <li><a href="#суть-игры">Суть игры</a></li>
-      <li><a href="#задача">Что нужно сделать</a></li>
-      <li><a href="#кейс">Описание кейса</a></li>
+      <li><a href="#суть">В чем суть</a></li>
       <li><a href="#аудитория">Целевая аудитория</a></li>
+      <li><a href="#оценка">Как будет оцениваться результат</a></li>
       <li><a href="#материал">Как начать</a></li>
-      <li><a href="#документация">Документация Diplodoc</a></li>
-            <li><a href="#оценка">Как оценивается результат</a></li>
+      <li><a href="#отправить">Как отправить результат</a></li>
+      <li><a href="#документация">Полезные материалы</a></li>
     </ul>
   </nav>
 
@@ -347,56 +400,102 @@
     <h1>Улучшаем документацию</h1>
     <p class="page-subtitle">TechWriter Days 3 · Задание от Diplodoc</p>
 
-    <h2 id="суть-игры">Суть игры</h2>
-    <p>Добро пожаловать на практикум! Представьте себя в роли технического писателя, который только что устроился в развивающийся стартап. Ваша первая рабочая задача — навести порядок в документации, которую разработчик написал «на скорую руку».</p>
-    <p>На время этой игры вам будет предложен <strong>вымышленный сценарий</strong>. Он придуман специально для конференции, однако проблема, с которой вы столкнётесь, знакома каждому из нас: как превратить простыню текста в структурированный и удобный продукт.</p>
-
-    <h2 id="задача">Что нужно сделать</h2>
-    <p>Улучшите проект с помощью фич Diplodoc: выделите важное, структурируйте контент, добавьте навигацию. Какие именно фичи использовать и где — решайте сами.</p>
-
-    <h2 id="кейс">Описание кейса</h2>
-    <p>Некоторый стартап планирует выпустить новый облачный API для обработки изображений. Сервис называется <strong>PixelPush</strong> — он умеет сжимать картинки, менять размер, накладывать водяные знаки и обрабатывать файлы пачками. Пользователи будут подключать его, чтобы не поднимать собственную инфраструктуру.</p>
-    <p>Бэкенд-разработчик написал документацию к этому API — подробно и по делу. Весь контент есть, но оформлен как черновик: один большой файл без навигации, без структуры. Ваша задача — превратить его в удобный документационный проект, используя возможности Diplodoc.</p>
+    <h2 id="суть">В чем суть</h2>
+    <p>В рамках практикума вам предложен вымышленный кейс. Некоторый стартап планирует выпустить новый облачный API для обработки изображений. Сервис называется <strong>PixelPush</strong> — он умеет сжимать картинки, менять размер, накладывать водяные знаки и обрабатывать файлы пачками. Пользователи будут подключать его, чтобы не поднимать собственную инфраструктуру.</p>
+    <p>Бэкенд-разработчик проявил инициативу и набросал первую версию документации. Ваша задача — превратить черновик в удобный документационный проект, используя возможности <a href="https://diplodoc.com/docs/ru" target="_blank">Diplodoc</a>. Какие именно фичи использовать — решайте сами.</p>
+    <p>Работы нужно прислать сегодня, до 16 часов.</p>
 
     <h2 id="аудитория">Целевая аудитория будущей документации</h2>
     <p>Документацией по PixelPush будут пользоваться:</p>
     <ul>
-      <li><strong>Разработчики</strong> — интегрируют API в свои сервисы. Знают HTTP, JSON, умеют читать код. Им важны точные параметры, примеры на их языке и быстрый доступ к справочнику.</li>
-      <li><strong>Менеджеры продукта и маркетологи</strong> — оценивают возможности сервиса, готовят материалы для клиентов. Не пишут код, но должны понять что умеет PixelPush, какие есть тарифы и ограничения.</li>
+      <li>Разработчики — интегрируют API в свои сервисы. Знают HTTP, JSON, умеют читать код. Им важны точные параметры, примеры на их языке и быстрый доступ к справочнику.</li>
+      <li>Менеджеры продукта и маркетологи — оценивают возможности сервиса, готовят материалы для клиентов. Не пишут код, но должны понять что умеет PixelPush, какие есть тарифы и ограничения.</li>
     </ul>
 
-    <h2 id="материал">Как начать</h2>
-    <p><strong>1.</strong> Получите исходный проект:</p>
-    <ul>
-      <li><strong>Если вы работаете на выданном ноутбуке</strong> — папка <code>make-docs-better</code> уже лежит на Рабочем столе.</li>
-      <li><strong>Если у вас свой ноутбук</strong> — склонируйте репозиторий:<br>
-        <pre><code>git clone --branch techwriter-days-26 --single-branch https://github.com/ogorbacheva/diplodoc.git
-cd diplodoc/make-docs-better</code></pre>
-      </li>
-    </ul>
-    <p><strong>2.</strong> Создайте папку с вашим Telegram-логином на рабочем столе — например, <code>ivan_petrov</code> — и скопируйте туда <code>make-docs-better</code>.</p>
-    <p><strong>3.</strong> Откройте терминал, перейдите в свою папку и соберите проект:</p>
-    <pre><code>cd ~/Desktop/ivan_petrov/make-docs-better
-yfm -i docs -o output</code></pre>
-    <p>Папка <code>output</code> создастся автоматически. Откройте <code>output/index.html</code> в браузере — это ваша отправная точка.</p>
-    <p>Исходный проект в папке <code>docs/</code>:</p>
-    <div class="file-tree">
-      docs/<br>
-      ├── .yfm &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># конфиг проекта</span><br>
-      ├── toc.yaml &nbsp;<span class="comment"># навигация</span><br>
-      └── index.md &nbsp;<span class="comment"># вся документация одним файлом</span>
-    </div>
-
-    <h2 id="документация">Документация Diplodoc</h2>
-    <p>Всё необходимое есть в <a href="https://diplodoc.com/docs/ru" target="_blank">официальной документации</a>.</p>
-
-    <h2 id="оценка">Как оценивается результат</h2>
+    <h2 id="оценка">Как будет оцениваться результат</h2>
     <p>Мы будем смотреть на то, насколько удобно получившийся документ читать: логична ли структура, хорошо ли выделено важное, уместно ли использованы фичи. Чем больше возможностей Diplodoc задействовано к месту — тем лучше.</p>
     <p>Подходите к задаче творчески — здесь нет единственно правильного ответа. И пожалуйста, без ИИ-помощников: интересно посмотреть на ваше собственное решение.</p>
     <div class="note note-prize">
       <strong>🎁 Призы</strong>
       Лучшие работы не останутся без подарков.
     </div>
+
+    <h2 id="материал">Как начать</h2>
+
+    <details>
+      <summary>Если вы работаете на своём ноутбуке</summary>
+      <div class="details-body">
+        <ol>
+          <li>Склонируйте к себе репозиторий с проектом:
+            <pre><code>git clone https://github.com/ogorbacheva/diplodoc.git ~/diplodoc</code></pre>
+          </li>
+          <li>Перейдите в папку <code>make-docs-better</code>:
+            <pre><code>cd ~/diplodoc/make-docs-better</code></pre>
+            В папке <code>docs/</code> находится документация, которую вам и предстоит улучшить:
+            <div class="file-tree">
+              docs/<br>
+              ├── .yfm &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># конфиг проекта</span><br>
+              ├── toc.yaml &nbsp;<span class="comment"># навигация</span><br>
+              └── index.md &nbsp;<span class="comment"># драфт от разработчика</span>
+            </div>
+          </li>
+          <li>Соберите документацию:
+            <pre><code>yfm -i docs -o output</code></pre>
+            Зайдите в папку <code>output</code> и откройте в браузере страничку <code>index.html</code> — это собранная документация.
+          </li>
+          <li>Теперь можно начать улучшать документацию.</li>
+        </ol>
+      </div>
+    </details>
+
+    <details>
+      <summary>Если вы работаете на выданном ноутбуке</summary>
+      <div class="details-body">
+        <ol>
+          <li>Создайте папку <code>&lt;ваш_логин_в_телеграме&gt;</code> на рабочем столе. Для этого в терминале выполните:
+            <pre><code>mkdir ~/Desktop/&lt;ваш_логин_в_телеграме&gt;</code></pre>
+          </li>
+          <li>Скопируйте в эту папку материалы для практикума:
+            <pre><code>cp -r ~/Desktop/workshop/diplodoc/make-docs-better ~/Desktop/&lt;ваш_логин_в_телеграме&gt;</code></pre>
+          </li>
+          <li>Перейдите в папку <code>make-docs-better</code>:
+            <pre><code>cd ~/Desktop/&lt;ваш_логин_в_телеграме&gt;/make-docs-better</code></pre>
+            В папке <code>docs/</code> находится документация, которую вам и предстоит улучшить:
+            <div class="file-tree">
+              docs/<br>
+              ├── .yfm &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># конфиг проекта</span><br>
+              ├── toc.yaml &nbsp;<span class="comment"># навигация</span><br>
+              └── index.md &nbsp;<span class="comment"># драфт от разработчика</span>
+            </div>
+          </li>
+          <li>Попробуйте собрать документацию:
+            <pre><code>yfm -i docs -o output</code></pre>
+            Зайдите в папку <code>output</code> и откройте в браузере страничку <code>index.html</code> — это собранная документация.
+          </li>
+          <li>Теперь можно начать улучшать документацию.</li>
+        </ol>
+      </div>
+    </details>
+
+    <h2 id="отправить">Как отправить результат</h2>
+
+    <details>
+      <summary>Если вы работаете на своём ноутбуке</summary>
+      <div class="details-body">
+        <p>Заархивируйте папку <code>make-docs-better</code> и пришлите архив на почту:</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Если вы работаете на выданном ноутбуке</summary>
+      <div class="details-body">
+        <p>Заархивируйте папку <code>make-docs-better</code> и пришлите архив на почту:</p>
+      </div>
+    </details>
+
+    <h2 id="документация">Полезные материалы</h2>
+    <p>Всё необходимое есть в <a href="https://diplodoc.com/docs/ru" target="_blank">официальной документации Diplodoc</a>.</p>
+
   </main>
 </div>
 <div class="copy-toast" id="toast">Ссылка скопирована</div>
