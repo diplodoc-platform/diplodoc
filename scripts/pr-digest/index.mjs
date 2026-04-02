@@ -8,6 +8,7 @@
  *   TELEGRAM_BOT_TOKEN    — Telegram Bot API token
  *   TELEGRAM_CHAT_ID      — target chat / group id
  *   GITHUB_TELEGRAM_MAP   — (optional) JSON: { "github-login": "tg_username", … }
+ *   DIGEST_SINCE          — (optional) ISO date to filter PRs created after, default "2026-03-01"
  */
 
 import {classifyPRs, buildMessage, sendTelegram} from './core.mjs';
@@ -36,9 +37,12 @@ async function main() {
         console.warn('Failed to parse GITHUB_TELEGRAM_MAP, ignoring');
     }
 
-    console.log('Starting PR digest...');
+    const since = new Date(process.env.DIGEST_SINCE || '2026-03-01T00:00:00Z');
 
-    const prs = await collectAllPRs({org: ORG, token});
+    console.log(`Starting PR digest (since: ${since.toDateString()})...`);
+
+    const allPRs = await collectAllPRs({org: ORG, token});
+    const prs = allPRs.filter((pr) => new Date(pr.createdAt) >= since);
     const digest = classifyPRs(prs);
     const total = digest.noReview.length + digest.hasIssues.length + digest.awaitingReview.length + digest.readyToMerge.length;
 
