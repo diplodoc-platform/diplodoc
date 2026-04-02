@@ -160,6 +160,7 @@ export async function sendTelegram(text, {token, chatId}) {
             text,
             parse_mode: 'MarkdownV2',
             disable_web_page_preview: true,
+            disable_notification: true,
         }),
     });
 
