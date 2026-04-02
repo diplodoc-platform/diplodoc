@@ -39,14 +39,15 @@ export function classifyPRs(prs) {
     const noReview = [];
     const hasIssues = [];
     const awaitingReview = [];
+    const readyToMerge = [];
 
     for (const pr of prs) {
-        if (pr.hasApproval) continue;
-
         const age = daysSince(pr.createdAt);
         const entry = {...pr, age};
 
-        if (pr.reviewers.length === 0 || !pr.hasReviews) {
+        if (pr.hasApproval) {
+            readyToMerge.push(entry);
+        } else if (pr.reviewers.length === 0 || !pr.hasReviews) {
             noReview.push(entry);
         } else if (pr.hasOpenIssues) {
             hasIssues.push(entry);
@@ -58,8 +59,9 @@ export function classifyPRs(prs) {
     noReview.sort((a, b) => b.age - a.age);
     hasIssues.sort((a, b) => b.age - a.age);
     awaitingReview.sort((a, b) => b.age - a.age);
+    readyToMerge.sort((a, b) => b.age - a.age);
 
-    return {noReview, hasIssues, awaitingReview};
+    return {noReview, hasIssues, awaitingReview, readyToMerge};
 }
 
 // ─── message formatting ──────────────────────────────────────────────────────
@@ -88,10 +90,20 @@ function formatPR(pr, tgMap, showAuthor) {
     return `• ${title}\n  👤 ${author}  ·  📅 ${age}  ·  👀 ${reviewersStr}`;
 }
 
-function appendSection(lines, emoji, label, prs, tgMap, {showAuthor = false, groupByRepo = false} = {}) {
+function formatReadyToMergePR(pr, tgMap) {
+    const esc = escapeMarkdownV2;
+    const title = `[${esc(pr.title || 'no title')}](${pr.url})`;
+    const author = formatUser(pr.author, tgMap);
+    const age = formatDays(pr.age);
+    return `• ${title}\n  ${author}  ·  📅 ${age}`;
+}
+
+function appendSection(lines, emoji, label, prs, tgMap, {showAuthor = false, groupByRepo = false, formatFn = null} = {}) {
     if (!prs.length) return;
     lines.push(`${emoji} *${label} \\(${prs.length}\\):*`);
     lines.push('');
+
+    const renderPR = formatFn ?? ((pr) => formatPR(pr, tgMap, showAuthor));
 
     if (groupByRepo) {
         const byRepo = new Map();
@@ -103,21 +115,21 @@ function appendSection(lines, emoji, label, prs, tgMap, {showAuthor = false, gro
         for (const [repo, repoPrs] of [...byRepo.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
             lines.push(`*${escapeMarkdownV2(repo)}*`);
             for (const pr of repoPrs) {
-                lines.push(formatPR(pr, tgMap, showAuthor));
+                lines.push(renderPR(pr));
             }
             lines.push('');
         }
     } else {
         for (const pr of prs) {
-            lines.push(formatPR(pr, tgMap, showAuthor));
+            lines.push(renderPR(pr));
             lines.push('');
         }
     }
 }
 
 export function buildMessage({digest, title, tgMap = {}, groupByRepo = false}) {
-    const {noReview, hasIssues, awaitingReview} = digest;
-    const total = noReview.length + hasIssues.length + awaitingReview.length;
+    const {noReview, hasIssues, awaitingReview, readyToMerge} = digest;
+    const total = noReview.length + hasIssues.length + awaitingReview.length + readyToMerge.length;
     const lines = [];
 
     lines.push(`*📋 ${escapeMarkdownV2(title)}*`);
@@ -127,6 +139,10 @@ export function buildMessage({digest, title, tgMap = {}, groupByRepo = false}) {
     appendSection(lines, '🔴', 'No reviews', noReview, tgMap, opts);
     appendSection(lines, '🟠', 'Changes requested', hasIssues, tgMap, {...opts, showAuthor: true});
     appendSection(lines, '🟡', 'Awaiting review', awaitingReview, tgMap, opts);
+    appendSection(lines, '🟢', 'Ready to merge', readyToMerge, tgMap, {
+        ...opts,
+        formatFn: (pr) => formatReadyToMergePR(pr, tgMap),
+    });
 
     lines.push(`Total PRs awaiting attention: *${total}*`);
     return lines.join('\n');
@@ -144,6 +160,7 @@ export async function sendTelegram(text, {token, chatId}) {
             text,
             parse_mode: 'MarkdownV2',
             disable_web_page_preview: true,
+            disable_notification: true,
         }),
     });
 

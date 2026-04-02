@@ -51,10 +51,12 @@ async function fetchOrgRepos(org, token) {
         .map((repo) => repo.name);
 }
 
-async function fetchOpenPRs(org, repo, token, label) {
+async function fetchOpenPRs(org, repo, token) {
     try {
         const pulls = await fetchAllPages(`/repos/${org}/${repo}/pulls?state=open`, token);
-        return pulls.filter((pr) => !pr.draft && pr.labels.some((l) => l.name === label));
+        return pulls.filter(
+            (pr) => !pr.draft && pr.user.login !== 'dependabot[bot]' && pr.user.login !== 'dependabot',
+        );
     } catch {
         console.warn(`Failed to fetch PRs for ${repo}, skipping`);
         return [];
@@ -105,7 +107,7 @@ function normalizeGitHubPR(pr, reviews, repo) {
     };
 }
 
-export async function collectAllPRs({org, token, label = 'needs-review'}) {
+export async function collectAllPRs({org, token}) {
     console.log(`Fetching repos for org: ${org}`);
     const repos = await fetchOrgRepos(org, token);
     console.log(`Found ${repos.length} active repos`);
@@ -113,7 +115,7 @@ export async function collectAllPRs({org, token, label = 'needs-review'}) {
     const allPRs = [];
 
     for (const repo of repos) {
-        const prs = await fetchOpenPRs(org, repo, token, label);
+        const prs = await fetchOpenPRs(org, repo, token);
         if (prs.length === 0) continue;
 
         console.log(`${repo}: ${prs.length} open non-draft PRs`);
