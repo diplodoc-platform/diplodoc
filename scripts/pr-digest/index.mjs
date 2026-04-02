@@ -28,6 +28,7 @@ async function main() {
     const token = env('GH_TOKEN');
     const telegramToken = env('TELEGRAM_BOT_TOKEN');
     const chatId = env('TELEGRAM_CHAT_ID');
+
     let tgMap = {};
     try {
         tgMap = JSON.parse(process.env.GITHUB_TELEGRAM_MAP || '{}');
