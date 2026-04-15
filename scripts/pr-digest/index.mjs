@@ -4,14 +4,16 @@
  * PR Digest entry point for GitHub (diplodoc-platform org).
  *
  * Env variables:
- *   GH_TOKEN              — GitHub API token
- *   TELEGRAM_BOT_TOKEN    — Telegram Bot API token
- *   TELEGRAM_CHAT_ID      — target chat / group id
- *   GITHUB_TELEGRAM_MAP   — (optional) JSON: { "github-login": "tg_username", … }
- *   DIGEST_SINCE          — (optional) ISO date to filter PRs created after, default "2026-03-01"
+ *   GH_TOKEN               — GitHub API token
+ *   TELEGRAM_BOT_TOKEN     — Telegram Bot API token (optional if using Messenger)
+ *   TELEGRAM_CHAT_ID       — target chat / group id
+ *   MESSENGER_OAUTH_TOKEN  — Yandex Messenger OAuth token (optional if using Telegram)
+ *   MESSENGER_CHAT_ID      — Messenger chat ID (required if MESSENGER_OAUTH_TOKEN set)
+ *   GITHUB_TELEGRAM_MAP    — (optional) JSON: { "github-login": "tg_username", … }
+ *   DIGEST_SINCE           — (optional) ISO date to filter PRs created after, default "2026-03-01"
  */
 
-import {classifyPRs, buildMessage, sendTelegram} from './core.mjs';
+import {classifyPRs, buildMessage, sendTelegram, sendMessenger} from './core.mjs';
 import {collectAllPRs} from './github-adapter.mjs';
 
 const ORG = 'diplodoc-platform';
@@ -27,8 +29,16 @@ function env(name, required = true) {
 
 async function main() {
     const token = env('GH_TOKEN');
-    const telegramToken = env('TELEGRAM_BOT_TOKEN');
-    const chatId = env('TELEGRAM_CHAT_ID');
+
+    const tgToken = env('TELEGRAM_BOT_TOKEN', false);
+    const tgChatId = env('TELEGRAM_CHAT_ID', false);
+    const msgrToken = env('MESSENGER_OAUTH_TOKEN', false);
+    const msgrChatId = env('MESSENGER_CHAT_ID', false);
+
+    if (!tgToken && !msgrToken) {
+        console.error('No messaging transport configured. Set TELEGRAM_BOT_TOKEN and/or MESSENGER_OAUTH_TOKEN + MESSENGER_CHAT_ID.');
+        process.exit(1);
+    }
 
     let tgMap = {};
     try {
@@ -51,18 +61,49 @@ async function main() {
         return;
     }
 
-    const message = buildMessage({
-        digest,
-        title: 'PR Digest — diplodoc-platform',
-        tgMap,
-        groupByRepo: true,
-    });
+    const sends = [];
 
-    console.log('--- Message preview ---');
-    console.log(message);
-    console.log('--- End preview ---');
+    if (tgToken && tgChatId) {
+        const message = buildMessage({
+            digest,
+            title: 'PR Digest — diplodoc-platform',
+            tgMap,
+            groupByRepo: true,
+            format: 'markdownv2',
+        });
 
-    await sendTelegram(message, {token: telegramToken, chatId});
+        console.log('--- Telegram message preview ---');
+        console.log(message);
+        console.log('--- End preview ---');
+
+        sends.push(
+            sendTelegram(message, {token: tgToken, chatId: tgChatId})
+                .catch((err) => console.error('Telegram: failed:', err.message)),
+        );
+    }
+
+    if (msgrToken && msgrChatId) {
+        const message = buildMessage({
+            digest,
+            title: 'PR Digest — diplodoc-platform',
+            tgMap,
+            groupByRepo: true,
+            format: 'messenger',
+        });
+
+        if (!tgToken) {
+            console.log('--- Messenger message preview ---');
+            console.log(message);
+            console.log('--- End preview ---');
+        }
+
+        sends.push(
+            sendMessenger(message, {token: msgrToken, chatId: msgrChatId})
+                .catch((err) => console.error('Messenger: failed:', err.message)),
+        );
+    }
+
+    await Promise.all(sends);
 }
 
 main().catch((err) => {
