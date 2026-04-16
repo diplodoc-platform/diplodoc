@@ -133,21 +133,20 @@ function appendSection(lines, emoji, label, prs, tgMap, {showAuthor = false, gro
 
 // ─── message formatting (Yandex Messenger) ─────────────────────────────────
 
-function msgrFormatUser(login, userMap) {
-    const mapped = userMap[login];
-    return mapped ? `@${mapped}` : login;
+function msgrFormatUser(login) {
+    return `@${login}`;
 }
 
-function msgrFormatReviewers(reviewers, userMap) {
+function msgrFormatReviewers(reviewers) {
     if (reviewers.length === 0) return '-- no reviewers assigned --';
-    return reviewers.map((r) => msgrFormatUser(r, userMap)).join(', ');
+    return reviewers.map((r) => msgrFormatUser(r)).join(', ');
 }
 
-function msgrFormatPR(pr, userMap, showAuthor) {
+function msgrFormatPR(pr, showAuthor) {
     const title = `[${pr.title || 'no title'}](${pr.url})`;
-    const author = msgrFormatUser(pr.author, userMap);
+    const author = msgrFormatUser(pr.author);
     const age = formatDays(pr.age);
-    const reviewersStr = msgrFormatReviewers(pr.reviewers, userMap);
+    const reviewersStr = msgrFormatReviewers(pr.reviewers);
 
     if (showAuthor) {
         const issues = `${pr.openIssues} open / ${pr.resolvedIssues} resolved`;
@@ -156,19 +155,19 @@ function msgrFormatPR(pr, userMap, showAuthor) {
     return `* ${title}\n  ${author}  ·  ${age}  ·  ${reviewersStr}`;
 }
 
-function msgrFormatReadyToMergePR(pr, userMap) {
+function msgrFormatReadyToMergePR(pr) {
     const title = `[${pr.title || 'no title'}](${pr.url})`;
-    const author = msgrFormatUser(pr.author, userMap);
+    const author = msgrFormatUser(pr.author);
     const age = formatDays(pr.age);
     return `* ${title}\n  ${author}  ·  ${age}`;
 }
 
-function msgrAppendSection(lines, emoji, label, prs, userMap, {showAuthor = false, groupByRepo = false, formatFn = null} = {}) {
+function msgrAppendSection(lines, emoji, label, prs, {showAuthor = false, groupByRepo = false, formatFn = null} = {}) {
     if (!prs.length) return;
     lines.push(`${emoji} **${label} (${prs.length}):**`);
     lines.push('');
 
-    const renderPR = formatFn ?? ((pr) => msgrFormatPR(pr, userMap, showAuthor));
+    const renderPR = formatFn ?? ((pr) => msgrFormatPR(pr, showAuthor));
 
     if (groupByRepo) {
         const byRepo = new Map();
@@ -205,7 +204,7 @@ function msgrAppendSection(lines, emoji, label, prs, userMap, {showAuthor = fals
  */
 export function buildMessage({digest, title, tgMap = {}, groupByRepo = false, format = 'markdownv2'}) {
     if (format === 'messenger') {
-        return buildMessageMessenger({digest, title, userMap: tgMap, groupByRepo});
+        return buildMessageMessenger({digest, title, groupByRepo});
     }
     return buildMessageTelegram({digest, title, tgMap, groupByRepo});
 }
@@ -231,7 +230,7 @@ function buildMessageTelegram({digest, title, tgMap, groupByRepo}) {
     return lines.join('\n');
 }
 
-function buildMessageMessenger({digest, title, userMap, groupByRepo}) {
+function buildMessageMessenger({digest, title, groupByRepo}) {
     const {noReview, hasIssues, awaitingReview, readyToMerge} = digest;
     const total = noReview.length + hasIssues.length + awaitingReview.length + readyToMerge.length;
     const lines = [];
@@ -240,12 +239,12 @@ function buildMessageMessenger({digest, title, userMap, groupByRepo}) {
     lines.push('');
 
     const opts = {groupByRepo};
-    msgrAppendSection(lines, '🔴', 'No reviews', noReview, userMap, opts);
-    msgrAppendSection(lines, '🟠', 'Changes requested', hasIssues, userMap, {...opts, showAuthor: true});
-    msgrAppendSection(lines, '🟡', 'Awaiting review', awaitingReview, userMap, opts);
-    msgrAppendSection(lines, '🟢', 'Ready to merge', readyToMerge, userMap, {
+    msgrAppendSection(lines, '🔴', 'No reviews', noReview, opts);
+    msgrAppendSection(lines, '🟠', 'Changes requested', hasIssues, {...opts, showAuthor: true});
+    msgrAppendSection(lines, '🟡', 'Awaiting review', awaitingReview, opts);
+    msgrAppendSection(lines, '🟢', 'Ready to merge', readyToMerge, {
         ...opts,
-        formatFn: (pr) => msgrFormatReadyToMergePR(pr, userMap),
+        formatFn: (pr) => msgrFormatReadyToMergePR(pr),
     });
 
     lines.push(`Total PRs awaiting attention: **${total}**`);
