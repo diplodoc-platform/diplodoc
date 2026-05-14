@@ -6,7 +6,7 @@ This file tracks infrastructure improvements and maintenance tasks identified du
 
 ### 1. Update `package-template`
 - **Status**: Outdated
-- **Issue**: Does not use `@diplodoc/lint`
+- **Issue**: Does not use `@diplodoc/infra`
 - **Reference**: See `extensions/search-extension` for current infrastructure setup
 - **Action**: Update `devops/package-template` to reflect current best practices
 

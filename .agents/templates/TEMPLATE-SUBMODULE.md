@@ -50,7 +50,7 @@ This package follows the standard Diplodoc platform tech stack. See `.agents/dev
 - **Build**: [Build tool - e.g., esbuild, tsc, rspack]
 - **Dependencies**: [Key dependencies]
 - **Dev Dependencies**:
-  - `@diplodoc/lint` — linting infrastructure
+  - `@diplodoc/infra` — linting and infrastructure management
   - `@diplodoc/tsconfig` — TypeScript configuration
   - [Other dev dependencies]
 

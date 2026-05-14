@@ -102,11 +102,11 @@ import './styles.css';
 
 ### Linting Tool
 
-The platform uses `@diplodoc/lint` for linting:
+The platform uses `@diplodoc/infra` for linting:
 
 ```bash
 # Initialize linting in a package
-npx @diplodoc/lint init
+npx @diplodoc/infra init
 
 # Run linting
 npm run lint
@@ -117,7 +117,7 @@ npm run lint:fix
 
 ### Lint Configuration
 
-`@diplodoc/lint` provides:
+`@diplodoc/infra` provides:
 - ESLint configurations (common, client, node)
 - Prettier configuration
 - Stylelint configuration
@@ -127,13 +127,13 @@ npm run lint:fix
 ### Exports
 
 The lint package exports configurations:
-- `@diplodoc/lint/eslint-config` – Common ESLint config
-- `@diplodoc/lint/eslint-config/client` – Client-side ESLint config
-- `@diplodoc/lint/eslint-config/node` – Node.js ESLint config
-- `@diplodoc/lint/prettier-config` – Prettier config
-- `@diplodoc/lint/stylelint-config` – Stylelint config
+- `@diplodoc/infra/eslint-config` – Common ESLint config
+- `@diplodoc/infra/eslint-config/client` – Client-side ESLint config
+- `@diplodoc/infra/eslint-config/node` – Node.js ESLint config
+- `@diplodoc/infra/prettier-config` – Prettier config
+- `@diplodoc/infra/stylelint-config` – Stylelint config
 
-**Note**: These are exports from the `@diplodoc/lint` package, not separate packages. The deprecated `@diplodoc/eslint-config` and `@diplodoc/prettier-config` packages have been merged into `@diplodoc/lint`.
+**Note**: These are exports from the `@diplodoc/infra` package, not separate packages. The deprecated `@diplodoc/eslint-config` and `@diplodoc/prettier-config` packages have been merged into `@diplodoc/infra`.
 
 ### Pre-commit Hooks
 

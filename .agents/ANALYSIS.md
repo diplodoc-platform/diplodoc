@@ -22,7 +22,7 @@ This document contains analysis of the Diplodoc metapackage structure based on c
 ### 2. Package Dependency Hierarchy
 
 **Infrastructure Layer** (devops packages):
-- `@diplodoc/lint` – Used by all packages for linting
+- `@diplodoc/infra` – Used by all packages for infrastructure (linting, CI, scaffolding)
   - Includes ESLint, Prettier, and Stylelint configurations
   - Replaces deprecated `@diplodoc/eslint-config` and `@diplodoc/prettier-config`
 - `@diplodoc/tsconfig` – Used by all packages for TypeScript config

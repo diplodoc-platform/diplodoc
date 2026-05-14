@@ -8,11 +8,11 @@ This document defines the requirements for a package or extension to participate
 
 ## Required
 
-### 1. Infrastructure: @diplodoc/lint
+### 1. Infrastructure: @diplodoc/infra
 
-- Use **@diplodoc/lint** for shared infrastructure: ESLint, Prettier, Stylelint, Git hooks, release-please, and CI workflow templates.
+- Use **@diplodoc/infra** for shared infrastructure: ESLint, Prettier, Stylelint, Git hooks, release-please, and CI workflow templates.
 - Run `lint init` (new package) or `lint update` (existing) so that configs and workflows are generated/updated.
-- Do **not** add deprecated packages `@diplodoc/eslint-config` or `@diplodoc/prettier-config`; their functionality is provided by `@diplodoc/lint` (subpaths `@diplodoc/lint/eslint-config`, `@diplodoc/lint/prettier-config`).
+- Do **not** add deprecated packages `@diplodoc/eslint-config` or `@diplodoc/prettier-config`; their functionality is provided by `@diplodoc/infra` (subpaths `@diplodoc/infra/eslint-config`, `@diplodoc/infra/prettier-config`).
 
 ### 2. Testing: Vitest
 
@@ -63,7 +63,7 @@ Use a single convention so all packages are predictable:
 
 - **Bundling (JS output)**  
   - Use **esbuild** for bundling (browser runtimes, Node bundles, extensions).  
-  - Prefer **@diplodoc/lint/esbuild** instead of a direct `esbuild` dependency so the version is shared across the platform (see [lint README](https://github.com/diplodoc-platform/lint#pre-bundled-esbuild)).  
+  - Prefer **@diplodoc/infra/esbuild** instead of a direct `esbuild` dependency so the version is shared across the platform (see [lint README](https://github.com/diplodoc-platform/lint#pre-bundled-esbuild)).  
   - Entry: e.g. `esbuild/build.mjs` or `esbuild/build.js`, invoked as `node ./esbuild/build.mjs` (or `build.js`).
 
 - **TypeScript declarations**  
@@ -94,7 +94,7 @@ Use a single convention so all packages are predictable:
 
 ## Forbidden
 
-- **Deprecated packages**: Do not depend on `@diplodoc/eslint-config` or `@diplodoc/prettier-config`; use `@diplodoc/lint` and its subpaths.
+- **Deprecated packages**: Do not depend on `@diplodoc/eslint-config` or `@diplodoc/prettier-config`; use `@diplodoc/infra` and its subpaths.
 - **Jest**: Do not use Jest; use Vitest only.
 - **Webpack**: Do not use Webpack for package/extension builds; use esbuild (or the agreed bundler above).
 
@@ -102,12 +102,12 @@ Use a single convention so all packages are predictable:
 
 ## Checklist (quick audit)
 
-- [ ] `@diplodoc/lint` in devDependencies; no `@diplodoc/eslint-config` / `@diplodoc/prettier-config`
+- [ ] `@diplodoc/infra` in devDependencies; no `@diplodoc/eslint-config` / `@diplodoc/prettier-config`
 - [ ] Vitest for tests; no Jest
 - [ ] Unit tests next to source or in `test/`; integration tests in `test/` (directory name is `test/`, not `tests/`)
 - [ ] Scripts: `build`, `build:js` (or equivalent), `build:declarations`, `typecheck`, `test`, `lint`, `lint:fix`, `prepublishOnly`, `pre-commit`, `prepare`
 - [ ] SECURITY.md, CONTRIBUTING.md, LICENSE present; .github/workflows from lint scaffolding
-- [ ] Bundling via esbuild (preferably `@diplodoc/lint/esbuild`); declarations via tsc only
+- [ ] Bundling via esbuild (preferably `@diplodoc/infra/esbuild`); declarations via tsc only
 - [ ] No Webpack
 - [ ] README and layout aligned with package-template where applicable
 - [ ] (Optional) SonarCloud: repo connected, SONAR_TOKEN set; `sonar-project.properties` and `sonarcloud.yml` from lint scaffolding
