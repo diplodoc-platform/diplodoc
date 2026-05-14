@@ -104,7 +104,7 @@
 
 **Приоритет 6** (devops):
 31. ⏳ `devops/testpack` - системные тесты
-32. ⏳ `devops/lint` - линтинг
+32. ⏳ `devops/infra` - инфраструктура (ранее devops/lint)
 33. ⏳ `devops/tsconfig` - TypeScript конфиги
 34. ⏳ Остальные devops пакеты (по необходимости)
 

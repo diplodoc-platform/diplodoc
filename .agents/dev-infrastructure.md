@@ -218,11 +218,11 @@ When `npm run watch` is running:
 
 ### Linting
 
-**Tool**: `@diplodoc/lint`
+**Tool**: `@diplodoc/infra` (formerly `@diplodoc/lint`)
 
 **Initialization**:
 ```bash
-npx @diplodoc/lint init
+npx @diplodoc/infra init
 ```
 
 **Usage**:
@@ -238,21 +238,22 @@ npm run lint:fix    # Auto-fix issues
 - Husky hooks
 - Lint-staged
 
-**Infrastructure Auto-Update**:
-- `@diplodoc/lint` is installed as a dev dependency and configured in `prepare` scripts
-- On each run, it checks the actuality of local infrastructure
-- If outdated, it automatically updates/writes the infrastructure
-- This approach prevents infrastructure drift at the package level
+**Infrastructure Distribution**:
+- `@diplodoc/infra` is installed as a dev dependency in all packages
+- Infrastructure updates are distributed via automated PRs from the infra repo (push model)
+- The `distribute-infra.yml` workflow creates PRs in all target repos on new releases
+- Manual updates can be triggered via `npx @diplodoc/infra update`
 - Packages can still extend ESLint configuration at the `src` level if needed
+- Blacklist support via `distribution.yml` (centralized) and `.infrarc.yml` (per-repo)
 
-**Exports** (from `@diplodoc/lint` package):
-- `@diplodoc/lint/eslint-config` – Common ESLint config
-- `@diplodoc/lint/eslint-config/client` – Client-side ESLint config
-- `@diplodoc/lint/eslint-config/node` – Node.js ESLint config
-- `@diplodoc/lint/prettier-config` – Prettier config
-- `@diplodoc/lint/stylelint-config` – Stylelint config
+**Exports** (from `@diplodoc/infra` package):
+- `@diplodoc/infra/eslint-config` – Common ESLint config
+- `@diplodoc/infra/eslint-config/client` – Client-side ESLint config
+- `@diplodoc/infra/eslint-config/node` – Node.js ESLint config
+- `@diplodoc/infra/prettier-config` – Prettier config
+- `@diplodoc/infra/stylelint-config` – Stylelint config
 
-**Note**: These are exports from the `@diplodoc/lint` package, not separate packages. The deprecated `@diplodoc/eslint-config` and `@diplodoc/prettier-config` packages have been merged into `@diplodoc/lint`.
+**Note**: These are exports from the `@diplodoc/infra` package, not separate packages. The deprecated `@diplodoc/eslint-config`, `@diplodoc/prettier-config`, and `@diplodoc/lint` packages have been merged into `@diplodoc/infra`.
 
 ### Pre-commit Hooks
 
@@ -504,12 +505,12 @@ When updating a package's infrastructure to align with current standards, follow
 
 ### 1. Update Dependencies
 
-**Update `@diplodoc/lint`**:
+**Update `@diplodoc/infra`**:
 ```bash
 cd packages/package-name  # or extensions/package-name
-npm install @diplodoc/lint@latest
+npm install @diplodoc/infra@latest
 npm install --no-workspaces --package-lock-only
-npx @diplodoc/lint update
+npx @diplodoc/infra update
 ```
 
 **Update other infrastructure packages** (if needed):
@@ -733,10 +734,10 @@ export default defineConfig({
 # 1. Navigate to package
 cd extensions/file-extension
 
-# 2. Update @diplodoc/lint
-npm install @diplodoc/lint@latest
+# 2. Update @diplodoc/infra
+npm install @diplodoc/infra@latest
 npm install --no-workspaces --package-lock-only
-npx @diplodoc/lint update
+npx @diplodoc/infra update
 
 # 3. Migrate to Vitest (if needed)
 npm uninstall --no-workspaces jest @types/jest jest-environment-jsdom

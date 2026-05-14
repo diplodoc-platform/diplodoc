@@ -19,9 +19,9 @@
 [submodule "devops/babel-preset"]
 	path = devops/babel-preset
 	url = git@github.com:diplodoc-platform/babel-preset.git
-[submodule "devops/lint"]
-	path = devops/lint
-	url = git@github.com:diplodoc-platform/lint.git
+[submodule "devops/infra"]
+	path = devops/infra
+	url = git@github.com:diplodoc-platform/infra.git
 [submodule "devops/package-template"]
 	path = devops/package-template
 	url = git@github.com:diplodoc-platform/package-template.git

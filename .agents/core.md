@@ -46,7 +46,7 @@ Diplodoc Platform is an open platform for working with documentation in accordan
   - All devops packages are separate Git repositories
   - Packages: `babel-preset`, `lint`, `package-template`, `testpack`, `tsconfig`
   - **Notes**:
-    - `eslint-config` and `prettier-config` are deprecated; all functionality is now in `lint`
+    - `eslint-config` and `prettier-config` are deprecated; all functionality is now in `infra` (formerly `lint`)
     - `package-template` is currently outdated and needs to be updated (see `.agents/TODO.md`)
   
 - **`actions/`** – GitHub Actions (all are submodules)
@@ -85,9 +85,10 @@ These packages are the foundation of the Diplodoc ecosystem and are used by exte
 
 **Package Dependencies**:
 - **Devops packages**: Infrastructure packages that integrate across the metapackage
-  - `@diplodoc/lint` – Linting utilities (used by all packages)
+  - `@diplodoc/infra` – Infrastructure management (used by all packages)
     - Includes ESLint, Prettier, and Stylelint configurations
-    - Replaces deprecated `@diplodoc/eslint-config` and `@diplodoc/prettier-config`
+    - CI workflows, scaffolding, and distribution management
+    - Replaces deprecated `@diplodoc/eslint-config`, `@diplodoc/prettier-config`, and `@diplodoc/lint`
   - `@diplodoc/tsconfig` – TypeScript configurations (used by all packages)
   - `@diplodoc/babel-preset` – Babel presets
 - **Core packages**: Core ecosystem packages

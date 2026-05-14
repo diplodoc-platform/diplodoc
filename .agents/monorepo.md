@@ -139,18 +139,18 @@ npm run watch
 
 ### ⚠️ CRITICAL: Updating @diplodoc/* Packages in Submodules
 
-**CRITICAL PROCEDURE**: When updating `@diplodoc/*` packages (like `@diplodoc/lint`, `@diplodoc/tsconfig`) in a submodule while working in metapackage mode, **ALWAYS** use this two-step procedure:
+**CRITICAL PROCEDURE**: When updating `@diplodoc/*` packages (like `@diplodoc/infra`, `@diplodoc/tsconfig`) in a submodule while working in metapackage mode, **ALWAYS** use this two-step procedure:
 
 ```bash
 # Step 1: Install through workspace (WITHOUT --no-workspaces)
 cd packages/liquid  # or any submodule
-npm install @diplodoc/lint@latest
+npm install @diplodoc/infra@latest
 
 # Step 2: Regenerate package-lock.json for standalone mode (WITH --no-workspaces)
 npm install --no-workspaces --package-lock-only
 
 # Step 3: Update configuration (if applicable)
-npx @diplodoc/lint update
+npx @diplodoc/infra update
 ```
 
 **Why this two-step procedure?**
@@ -158,19 +158,19 @@ npx @diplodoc/lint update
 - **Step 2** regenerates `package-lock.json` without workspace context, making it valid for standalone mode
 - **Step 3** updates any auto-generated configuration files
 
-**Common mistake to avoid**: ❌ **DO NOT** use `npm install --no-workspaces @diplodoc/lint@latest` - this skips workspace linking and breaks metapackage mode.
+**Common mistake to avoid**: ❌ **DO NOT** use `npm install --no-workspaces @diplodoc/infra@latest` - this skips workspace linking and breaks metapackage mode.
 
 **This procedure is especially important for**:
-- `@diplodoc/lint` - updates linting configuration
+- `@diplodoc/infra` - updates linting configuration
 - `@diplodoc/tsconfig` - updates TypeScript configuration
 - Other `@diplodoc/*` infrastructure packages
 
-**Example**: Updating `@diplodoc/lint` in `packages/liquid`:
+**Example**: Updating `@diplodoc/infra` in `packages/liquid`:
 ```bash
 cd packages/liquid
-npm install @diplodoc/lint@1.7.0
+npm install @diplodoc/infra@1.7.0
 npm install --no-workspaces --package-lock-only
-npx @diplodoc/lint update
+npx @diplodoc/infra update
 ```
 
 ---

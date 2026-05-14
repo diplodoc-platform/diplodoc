@@ -1,10 +1,10 @@
 # This workflow automatically updates the packages list in update-deps.yml
-# when .gitmodules is changed (new packages/extensions added or removed)
+# and distribution.yml when .gitmodules is changed (new packages/extensions added or removed)
 #
-# Since devops/lint is a submodule, this workflow:
+# Since devops/infra is a submodule, this workflow:
 # 1. Reads .gitmodules from the main repo to get the current packages list
-# 2. Clones the devops/lint repository
-# 3. Updates the workflow file there
+# 2. Clones the devops/infra repository
+# 3. Updates the workflow file and distribution config there
 # 4. Commits and pushes directly to master
 
 name: Sync Packages List
@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   sync-packages-list:
-    name: Update packages list in lint repo
+    name: Update packages list in infra repo
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main repo
@@ -38,8 +38,10 @@ jobs:
           PACKAGES=$(grep -E "path = packages/" .gitmodules | sed 's/.*path = packages\///' | grep -v "^cli$" | sort)
           # Extract extensions
           EXTENSIONS=$(grep -E "path = extensions/" .gitmodules | sed 's/.*path = extensions\///' | sort)
+          # Extract devops (excluding infra itself and package-template)
+          DEVOPS=$(grep -E "path = devops/" .gitmodules | sed 's/.*path = devops\///' | grep -v "^lint$" | grep -v "^infra$" | grep -v "^package-template$" | sort)
           
-          # Build YAML options block
+          # Build YAML options block for update-deps.yml
           OPTIONS="          # === packages ===\n"
           for pkg in $PACKAGES; do
             OPTIONS+="          - '@diplodoc/$pkg'\n"
@@ -52,19 +54,36 @@ jobs:
           # Save to file for later use
           echo -e "$OPTIONS" > /tmp/packages-options.txt
           
+          # Build distribution.yml repos section
+          # We only ADD new repos, never remove (to preserve blacklist config)
+          DIST_REPOS=""
+          DIST_REPOS+="  cli:\n    auto_merge: false\n"
+          for pkg in $PACKAGES; do
+            if [[ "$pkg" == "cli" ]]; then continue; fi
+            DIST_REPOS+="  $pkg:\n"
+          done
+          for ext in $EXTENSIONS; do
+            DIST_REPOS+="  $ext-extension:\n"
+          done
+          for dop in $DEVOPS; do
+            DIST_REPOS+="  $dop:\n"
+          done
+          echo -e "$DIST_REPOS" > /tmp/dist-repos.txt
+          
           echo "Packages: $PACKAGES"
           echo "Extensions: $EXTENSIONS"
+          echo "Devops: $DEVOPS"
 
-      - name: Checkout lint repo
+      - name: Checkout infra repo
         uses: actions/checkout@v4
         with:
-          repository: diplodoc-platform/lint
+          repository: diplodoc-platform/infra
           token: ${{ secrets.YC_UI_BOT_GITHUB_TOKEN }}
-          path: lint-repo
+          path: infra-repo
 
       - name: Update workflow file
         run: |
-          WORKFLOW_FILE="lint-repo/scaffolding/.github/workflows/update-deps.yml"
+          WORKFLOW_FILE="infra-repo/scaffolding/.github/workflows/update-deps.yml"
           
           if [[ ! -f "$WORKFLOW_FILE" ]]; then
             echo "::error::Workflow file not found: $WORKFLOW_FILE"
@@ -94,23 +113,76 @@ jobs:
           
           mv "$WORKFLOW_FILE.new" "$WORKFLOW_FILE"
 
-      - name: Commit and push changes
-        working-directory: lint-repo
+      - name: Update distribution.yml
         run: |
-          # Check if there are changes
+          DIST_FILE="infra-repo/distribution.yml"
+          
+          if [[ ! -f "$DIST_FILE" ]]; then
+            echo "::notice::distribution.yml not found, skipping"
+            exit 0
+          fi
+          
+          # Add new repos that don't exist yet in distribution.yml
+          # (preserves existing entries with their blacklist config)
+          while IFS= read -r line; do
+            REPO_NAME=$(echo "$line" | grep -oP '^\s{2}\K[\w-]+(?=:)' || true)
+            if [[ -n "$REPO_NAME" ]]; then
+              if ! grep -q "^  ${REPO_NAME}:" "$DIST_FILE"; then
+                echo "Adding new repo: $REPO_NAME"
+                echo "  ${REPO_NAME}:" >> "$DIST_FILE"
+                echo "    exclude: []" >> "$DIST_FILE"
+              fi
+            fi
+          done < /tmp/dist-repos.txt
+
+      - name: Detect new repos
+        id: new-repos
+        run: |
+          DIST_FILE="infra-repo/distribution.yml"
+          NEW_REPOS=""
+
+          while IFS= read -r line; do
+            REPO_NAME=$(echo "$line" | grep -oP '^\s{2}\K[\w-]+(?=:)' || true)
+            if [[ -n "$REPO_NAME" ]]; then
+              if ! grep -q "^  ${REPO_NAME}:" "$DIST_FILE" 2>/dev/null; then
+                NEW_REPOS+="${REPO_NAME},"
+              fi
+            fi
+          done < /tmp/dist-repos.txt
+
+          NEW_REPOS="${NEW_REPOS%,}"
+          echo "new_repos=${NEW_REPOS}" >> "$GITHUB_OUTPUT"
+          if [[ -n "$NEW_REPOS" ]]; then
+            echo "New repos detected: $NEW_REPOS"
+          fi
+
+      - name: Commit and push changes
+        working-directory: infra-repo
+        run: |
           if [[ -z $(git status --porcelain) ]]; then
             echo "::notice::No changes detected in packages list"
             exit 0
           fi
-          
+
           echo "Changes detected:"
           git diff --stat
-          
-          # Configure git
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Commit and push
-          git add scaffolding/.github/workflows/update-deps.yml
-          git commit -m "chore: sync packages list in update-deps workflow"
+
+          git add scaffolding/.github/workflows/update-deps.yml distribution.yml
+          git commit -m "chore: sync packages list from metapackage"
           git push origin HEAD:master
+
+      - name: Trigger distribution for new repos
+        if: steps.new-repos.outputs.new_repos != ''
+        env:
+          GH_TOKEN: ${{ secrets.YC_UI_BOT_GITHUB_TOKEN }}
+        run: |
+          IFS=',' read -ra REPOS <<< "${{ steps.new-repos.outputs.new_repos }}"
+          for repo in "${REPOS[@]}"; do
+            echo "Triggering infra distribution for: $repo"
+            gh workflow run distribute-infra.yml \
+              --repo diplodoc-platform/infra \
+              --field target="$repo"
+          done

@@ -84,11 +84,11 @@ This file contains follow-up questions to refine and expand the agent documentat
 ## Code Quality and Standards
 
 ### 7. Linting and Formatting
-- Как именно @diplodoc/lint интегрируется в пакеты? Это через npm scripts или через конфигурацию?
+- Как именно @diplodoc/infra интегрируется в пакеты? Это через npm scripts или через конфигурацию?
 - Есть ли различия в linting для разных типов пакетов (extensions vs packages vs devops)?
 - Как обеспечивается консистентность стиля кода между пакетами?
 
-> @diplodoc/lint установлен как devdep. И еще прописан в prepare скриптах.
+> @diplodoc/infra (ранее @diplodoc/lint) установлен как devdep. И еще прописан в prepare скриптах.
 > У него есть особенность - на каждый запуск он проверяет актуальность локальной инфраструктуры. И в случае чего дозаписывает ее.
 > Такой подход не дает инфраструктуре на верхнем уровне разъезжаться.
 > Но вполне можно доопределить тот же eslint например на уровне src
@@ -156,7 +156,7 @@ This file contains follow-up questions to refine and expand the agent documentat
 ### 15. Devops Packages
 - Как devops пакеты используются другими пакетами?
 - Есть ли общие конфигурации, которые наследуются?
-- Как devops/lint инициализируется в новых пакетах?
+- Как devops/infra инициализируется в новых пакетах?
 
 > Кажется эти вопросы должны проясниться из предыдущих ответов
 
