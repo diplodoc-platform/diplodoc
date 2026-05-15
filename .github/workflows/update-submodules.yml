@@ -33,7 +33,10 @@ jobs:
       - name: Update submodules to remote HEAD
         run: |
           git submodule sync --recursive
-          git submodule update --init --recursive --remote
+          # Drop any local changes that могут появиться из-за EOL/smudge-фильтров
+          # и блокировать checkout (например, перезаписанный CONTRIBUTING.md).
+          git submodule foreach --recursive 'git reset --hard && git clean -fdx'
+          git submodule update --init --recursive --remote --force
 
       - name: Check if there are changes
         run: |
