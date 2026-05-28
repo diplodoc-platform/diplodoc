@@ -22,12 +22,12 @@ jobs:
       - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ vars.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install latest npm (>= 11.5.1)
         run: |
-          [ "$(printf '%s\n' "11.5.1" "$(npm -v)" | sort -V | head -n1)" = "11.5.1" ] || npm install -g npm@latest
+          [ "$(printf '%s\n' "11.5.1" "$(npm -v)" | sort -V | head -n1)" = "11.5.1" ] || npm install -g npm@11.5.1
         shell: bash
 
       - name: Update submodules to remote HEAD

@@ -6,7 +6,7 @@ This document describes the development infrastructure setup for the Diplodoc me
 
 ## Prerequisites
 
-- **Node.js >=22**
+- **Node.js >=24**
 - **npm >=11.5.1**
 - **Git**
 
@@ -475,7 +475,7 @@ npm run bootstrap
 
 ## Important Notes
 
-1. **Node.js Version**: Requires Node.js >=22
+1. **Node.js Version**: Requires Node.js >=24
 2. **npm Version**: Requires npm >=11.5.1
 3. **Package Independence**: Each package should work standalone
 4. **Watch Mode**: Primary development mode
