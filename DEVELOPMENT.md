@@ -4,7 +4,7 @@ This is the root repository for Diplodoc Platform development. It contains all p
 
 ## Prerequisites
 
-- **Node.js >=22**
+- **Node.js >=24**
 - **npm >=11.5.1**
 - **Git**
 
