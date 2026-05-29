@@ -1,3 +1,4 @@
 .nx
+.DS_Store
 /node_modules
 /experiments
