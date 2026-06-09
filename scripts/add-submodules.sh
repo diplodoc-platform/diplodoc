@@ -39,7 +39,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     if [[ "$action" == "+" ]]; then
         # Check if submodule already exists at the specified path
         if submodule_exists "$path"; then
-            Check if submodule already exists at the specified path
+            echo "Check if submodule already exists at the specified path"
             continue
         fi
 
