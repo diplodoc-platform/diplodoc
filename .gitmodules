@@ -103,6 +103,9 @@
 [submodule "packages/utils"]
 	path = packages/utils
 	url = git@github.com:diplodoc-platform/utils.git
+[submodule "packages/vsc"]
+	path = packages/vsc
+	url = git@github.com:diplodoc-platform/vsc.git
 [submodule "packages/yfmlint"]
 	path = packages/yfmlint
 	url = git@github.com:diplodoc-platform/yfmlint.git
