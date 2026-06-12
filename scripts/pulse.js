@@ -19,10 +19,10 @@ const ORG = 'diplodoc-platform';
 const BRANCH = 'master';
 
 /** JSONPath for @diplodoc/lint version in package-lock.json (npm lockfile v3) */
-const LINT_VERSION_QUERY = "$['packages']['node_modules/@diplodoc/lint'].version";
+const LINT_VERSION_QUERY = "$['packages']['node_modules/@diplodoc/infra'].version";
 
 /** Short ids of packages to hide in the dependency graph (e.g. lint/tsconfig — everyone depends on them). */
-const DEPENDS_GRAPH_HIDE = new Set(['lint', 'tsconfig']);
+const DEPENDS_GRAPH_HIDE = new Set(['infra', 'tsconfig']);
 
 /** Exclude example/demo packages from the graph (shortId ending with -example). */
 const DEPENDS_GRAPH_HIDE_EXAMPLE = true;
@@ -41,6 +41,7 @@ const SECTIONS = {
       { path: 'packages/transform', repo: 'transform', npm: '@diplodoc/transform', coverage: 'sonar' },
       { path: 'packages/translation', repo: 'translation', npm: '@diplodoc/translation', coverage: 'sonar' },
       { path: 'packages/utils', repo: 'utils', npm: '@diplodoc/utils', coverage: 'sonar' },
+      { path: 'packages/vsc', repo: 'vsc', npm: '@diplodoc/vsc', coverage: 'sonar' },
       { path: 'packages/yfmlint', repo: 'yfmlint', npm: '@diplodoc/yfmlint', coverage: 'sonar' },
     ],
   },
@@ -68,7 +69,7 @@ const SECTIONS = {
     versionBadge: 'npm',
     rows: [
       { path: 'devops/babel-preset', repo: 'babel-preset', npm: '@diplodoc/babel-preset', tests: '-' },
-      { path: 'devops/lint', repo: 'lint', npm: '@diplodoc/lint', lint: '-' },
+      { path: 'devops/infra', repo: 'infra', npm: '@diplodoc/infra', lint: '-' },
       { path: 'devops/package-template', repo: 'package-template', version: '-', tests: '-', release: '-' },
       { path: 'devops/testpack', repo: 'testpack', npm: '@diplodoc/testpack' },
       { path: 'devops/tsconfig', repo: 'tsconfig', npm: '@diplodoc/tsconfig', tests: '-' },
@@ -79,10 +80,12 @@ const SECTIONS = {
     versionBadge: 'github-release',
     rows: [
       { path: 'actions/docs-build', repo: 'docs-build-action' },
+      { path: 'actions/docs-build-static', repo: 'docs-build-static-action' },
       { path: 'actions/docs-clean', repo: 'docs-clean-action' },
       { path: 'actions/docs-message', repo: 'docs-message-action' },
       { path: 'actions/docs-release', repo: 'docs-release-action' },
       { path: 'actions/docs-upload', repo: 'docs-upload-action' },
+      { path: 'actions/setup-node', repo: 'setup-node-action' },
     ],
   },
 };
@@ -326,7 +329,7 @@ function renderDepsGraph() {
 
 const header = `# Pulse — status of submodules (master)
 
-Status badges for workflows created from [@diplodoc/lint](devops/lint) scaffolding (\`lint init\` / \`lint update\`).  
+Status badges for workflows created from [@diplodoc/infra](devops/infra) scaffolding (\`lint init\` / \`lint update\`).  
 Branch: **master**. Release badge reflects last run (event: \`release: published\` or \`workflow_dispatch\`).
 
 Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/release.yml) · [security](.github/workflows/security.yml)
