@@ -76,6 +76,9 @@
 [submodule "extensions/tabs"]
 	path = extensions/tabs
 	url = git@github.com:diplodoc-platform/tabs-extension.git
+[submodule "packages/ajv"]
+	path = packages/ajv
+	url = git@github.com:diplodoc-platform/ajv.git
 [submodule "packages/cli"]
 	path = packages/cli
 	url = git@github.com:diplodoc-platform/cli.git
