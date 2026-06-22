@@ -7,7 +7,6 @@
   "workspaces": [
     "devops/*",
     "extensions/*",
-    "extensions/**/example",
     "packages/*"
   ],
   "scripts": {
