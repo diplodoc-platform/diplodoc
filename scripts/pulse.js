@@ -41,6 +41,7 @@ const SECTIONS = {
       { path: 'packages/transform', repo: 'transform', npm: '@diplodoc/transform', coverage: 'sonar' },
       { path: 'packages/translation', repo: 'translation', npm: '@diplodoc/translation', coverage: 'sonar' },
       { path: 'packages/utils', repo: 'utils', npm: '@diplodoc/utils', coverage: 'sonar' },
+      { path: 'packages/ajv', repo: 'ajv', npm: '@diplodoc/ajv', coverage: 'sonar' },
       { path: 'packages/vsc', repo: 'vsc', npm: '@diplodoc/vsc', coverage: 'sonar' },
       { path: 'packages/yfmlint', repo: 'yfmlint', npm: '@diplodoc/yfmlint', coverage: 'sonar' },
     ],
