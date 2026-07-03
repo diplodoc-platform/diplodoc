@@ -52,7 +52,7 @@ Align with **package-template**. The following are expected:
 - **.github/workflows/** — at least: `tests.yml`, `security.yml`, release workflow(s), and optionally `release-please.yml`, `package-lock.yml`, `update-deps.yml`, `coverage.yml`, `sonarcloud.yml` (from lint scaffolding).
 - **.release-please-config.json**, **.release-please-manifest.json** — if using release-please (recommended).
 - **.gitignore**, **.npmrc**, **.nvmrc** — standard root files (lint can add/update).
-- **tsconfig.json** — TypeScript config; extend `@diplodoc/tsconfig` where appropriate.
+- **tsconfig.json** — TypeScript config; extend `@diplodoc/infra/tsconfig.json` where appropriate.
 - **vitest.config.mjs** — Vitest config.
 
 Optional but recommended: **AGENTS.md** (for AI/agent guidance), **.github/ISSUE_TEMPLATE/**, **.github/pull_request_template.md**, **dependabot.yml**, **SonarCloud** (scaffolding provides `sonar-project.properties` and `.github/workflows/sonarcloud.yml`; connect the repo in SonarCloud and set **SONAR_TOKEN**; analysis runs when `test:coverage` exists).
@@ -78,7 +78,7 @@ Use a single convention so all packages are predictable:
 ### 6. Engines and tooling
 
 - Specify **engines** in package.json (e.g. `"node": ">=22"`, `"npm": ">=11.5.1"`) to match CI and docs.
-- Use **TypeScript** for source; extend shared config (`@diplodoc/tsconfig`) where it fits.
+- Use **TypeScript** for source; extend shared config (`@diplodoc/infra/tsconfig.json`) where it fits.
 
 ---
 

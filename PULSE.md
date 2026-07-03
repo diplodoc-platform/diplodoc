@@ -50,7 +50,6 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 
 | Submodule | version | tests | release | security |
 |-----------|:-------:|:-------:|:-------:|:-------:|
-| [devops/babel-preset](https://github.com/diplodoc-platform/babel-preset) | [![version](https://img.shields.io/npm/v/@diplodoc/babel-preset)](https://github.com/diplodoc-platform/babel-preset/releases) | - | [![release](https://github.com/diplodoc-platform/babel-preset/actions/workflows/release.yml/badge.svg)](https://github.com/diplodoc-platform/babel-preset/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/babel-preset/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/babel-preset/actions/workflows/security.yml) |
 | [devops/infra](https://github.com/diplodoc-platform/infra) | [![version](https://img.shields.io/npm/v/@diplodoc/infra)](https://github.com/diplodoc-platform/infra/releases) | [![tests](https://github.com/diplodoc-platform/infra/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/infra/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/infra/actions/workflows/release.yml/badge.svg)](https://github.com/diplodoc-platform/infra/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/infra/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/infra/actions/workflows/security.yml) |
 | [devops/package-template](https://github.com/diplodoc-platform/package-template) | - | - | - | [![security](https://github.com/diplodoc-platform/package-template/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/package-template/actions/workflows/security.yml) |
 | [devops/testpack](https://github.com/diplodoc-platform/testpack) | [![version](https://img.shields.io/npm/v/@diplodoc/testpack)](https://github.com/diplodoc-platform/testpack/releases) | [![tests](https://github.com/diplodoc-platform/testpack/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/testpack/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/testpack/actions/workflows/release.yml/badge.svg)](https://github.com/diplodoc-platform/testpack/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/testpack/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/testpack/actions/workflows/security.yml) |
@@ -80,7 +79,6 @@ Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bot
 flowchart LR
   ajv["ajv"]
   algolia-extension["algolia-extension"]
-  babel-preset["babel-preset"]
   cli["cli"]
   client["client"]
   components["components"]
@@ -114,7 +112,6 @@ flowchart LR
   algolia-extension -.-> cli
   algolia-extension --> search-extension
   openapi-extension --> liquid
-  transform -.-> babel-preset
   transform --> cut-extension
   transform --> file-extension
   transform --> tabs-extension
@@ -122,7 +119,6 @@ flowchart LR
   search-extension -.-> client
   search-extension -.-> components
   yfmlint -.-> transform
-  client -.-> babel-preset
   client -.-> components
   client -.-> latex-extension
   client -.-> mermaid-extension
@@ -151,7 +147,6 @@ flowchart LR
   cli --> utils
   click ajv href "https://github.com/diplodoc-platform/ajv"
   click algolia-extension href "https://github.com/diplodoc-platform/algolia-extension"
-  click babel-preset href "https://github.com/diplodoc-platform/babel-preset"
   click cli href "https://github.com/diplodoc-platform/cli"
   click client href "https://github.com/diplodoc-platform/client"
   click components href "https://github.com/diplodoc-platform/components"

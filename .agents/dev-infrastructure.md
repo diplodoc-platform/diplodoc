@@ -584,7 +584,7 @@ export default defineConfig({
 **Standard `tsconfig.json` structure**:
 ```json
 {
-  "extends": "@diplodoc/tsconfig",
+  "extends": "@diplodoc/infra/tsconfig.json",
   "compilerOptions": {
     "target": "es2022",
     "module": "es2022",
@@ -596,7 +596,7 @@ export default defineConfig({
 ```
 
 **Key points**:
-- Always extend `@diplodoc/tsconfig`
+- Always extend `@diplodoc/infra/tsconfig.json`
 - `include` should only contain `["src"]`
 - `exclude` should include `["node_modules", "build", "tests"]`
 - Add `"vitest/globals"` to `types` if using Vitest globals

@@ -19,7 +19,7 @@
 2. **Сабмодули (отдельные репозитории)** - 39 штук:
    - **extensions/** (13): algolia, color, cut, file, folding-headings, html, latex, mermaid, openapi, page-constructor, quote-link, search, tabs
    - **packages/** (12): cli, client, components, directive, gh-docs, liquid, sentenizer, transform, translation, utils, yfmlint
-   - **devops/** (5): babel-preset, lint, package-template, testpack, tsconfig
+   - **devops/** (4): infra, package-template, testpack, tsconfig
    - **Note**: `eslint-config` and `prettier-config` are deprecated; functionality merged into `lint`
    - **actions/** (6): docs-build, docs-build-static, docs-clean, docs-message, docs-release, docs-upload
    - **docs/** (1): пользовательская документация

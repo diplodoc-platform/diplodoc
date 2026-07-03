@@ -26,7 +26,6 @@ This document contains analysis of the Diplodoc metapackage structure based on c
   - Includes ESLint, Prettier, and Stylelint configurations
   - Replaces deprecated `@diplodoc/eslint-config` and `@diplodoc/prettier-config`
 - `@diplodoc/tsconfig` – Used by all packages for TypeScript config
-- `@diplodoc/babel-preset` – Build tooling
 
 **Core Layer** (packages):
 - `@diplodoc/cli` – Main CLI tool

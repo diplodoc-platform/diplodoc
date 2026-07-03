@@ -69,7 +69,6 @@ const SECTIONS = {
     columns: ['version', 'tests', 'release', 'security'],
     versionBadge: 'npm',
     rows: [
-      { path: 'devops/babel-preset', repo: 'babel-preset', npm: '@diplodoc/babel-preset', tests: '-' },
       { path: 'devops/infra', repo: 'infra', npm: '@diplodoc/infra', lint: '-' },
       { path: 'devops/package-template', repo: 'package-template', version: '-', tests: '-', release: '-' },
       { path: 'devops/testpack', repo: 'testpack', npm: '@diplodoc/testpack' },

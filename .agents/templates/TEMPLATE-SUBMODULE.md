@@ -51,7 +51,7 @@ This package follows the standard Diplodoc platform tech stack. See `.agents/dev
 - **Dependencies**: [Key dependencies]
 - **Dev Dependencies**:
   - `@diplodoc/infra` — linting and infrastructure management
-  - `@diplodoc/tsconfig` — TypeScript configuration
+  - `@diplodoc/infra/tsconfig.json` — shared TypeScript configuration (extended via `@diplodoc/infra`)
   - [Other dev dependencies]
 
 ## Setup Commands
