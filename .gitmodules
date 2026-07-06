@@ -19,9 +19,6 @@
 [submodule "actions/setup-node"]
 	path = actions/setup-node
 	url = git@github.com:diplodoc-platform/setup-node-action.git
-[submodule "devops/babel-preset"]
-	path = devops/babel-preset
-	url = git@github.com:diplodoc-platform/babel-preset.git
 [submodule "devops/infra"]
 	path = devops/infra
 	url = git@github.com:diplodoc-platform/infra.git
@@ -31,9 +28,6 @@
 [submodule "devops/testpack"]
 	path = devops/testpack
 	url = git@github.com:diplodoc-platform/testpack.git
-[submodule "devops/tsconfig"]
-	path = devops/tsconfig
-	url = git@github.com:diplodoc-platform/tsconfig.git
 [submodule "docs"]
 	path = docs
 	url = git@github.com:diplodoc-platform/docs.git
