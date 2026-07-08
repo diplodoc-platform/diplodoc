@@ -130,7 +130,7 @@ function cell(row, col, sectionConfig) {
       );
     case 'release':
       return badge(
-        `https://github.com/${ORG}/${repo}/actions/workflows/release.yml/badge.svg`,
+        `https://github.com/${ORG}/${repo}/actions/workflows/release.yml/badge.svg?event=release`,
         `https://github.com/${ORG}/${repo}/actions/workflows/release.yml`,
         'release'
       );
@@ -330,7 +330,7 @@ function renderDepsGraph() {
 const header = `# Pulse — status of submodules (master)
 
 Status badges for workflows created from [@diplodoc/infra](devops/infra) scaffolding (\`lint init\` / \`lint update\`).  
-Branch: **master**. Release badge reflects last run (event: \`release: published\` or \`workflow_dispatch\`).
+Branch: **master**. Release badge reflects the last \`release: published\` run (not \`workflow_dispatch\` on \`master\`).
 
 Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/release.yml) · [security](.github/workflows/security.yml)
 
