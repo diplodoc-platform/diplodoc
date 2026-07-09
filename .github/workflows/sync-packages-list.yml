@@ -92,9 +92,10 @@ jobs:
           
           # Create updated file using awk
           awk '
-            /^[[:space:]]*package:/ { in_package = 1 }
-            /^[[:space:]]*version:/ { in_package = 0; in_options = 0 }
-            in_package && /^[[:space:]]*default:/ {
+            /^[[:space:]]*package:/ { in_package = 1; in_package_input = 1; in_options = 0 }
+            /^[[:space:]]*version:/ { in_package = 0; in_package_input = 0; in_options = 0 }
+            /^[[:space:]]*update_as_dev:/ { in_package_input = 0; in_options = 0 }
+            in_package && in_package_input && /^[[:space:]]*default:/ {
               print "        default: '"'"'@diplodoc/transform'"'"'"
               next
             }
@@ -104,10 +105,11 @@ jobs:
               while ((getline line < "/tmp/packages-options.txt") > 0) {
                 print line
               }
+              close("/tmp/packages-options.txt")
               next
             }
-            in_package && in_options && /^[[:space:]]*-[[:space:]]/ { next }
-            in_package && in_options && /^[[:space:]]*#/ { next }
+            # Drop the previous options list (items, section headers, blanks).
+            in_package && in_options && (/^[[:space:]]*-[[:space:]]/ || /^[[:space:]]*#/ || /^[[:space:]]*$/) { next }
             { print }
           ' "$WORKFLOW_FILE" > "$WORKFLOW_FILE.new"
           
