@@ -1,0 +1,110 @@
+# Release train configuration
+#
+# Orchestrates cross-package PR merges: shared branch name → topo merge →
+# release-please → npm → bump downstream deps → wait CI.
+#
+# See specs/release-train.md
+
+defaults:
+  merge_method: rebase
+  auto_merge_feature: false
+  auto_approve_release: true
+  ci_poll_interval_s: 90
+  ci_poll_timeout_min: 360
+  npm_wait_timeout_min: 15
+  release_poll_interval_s: 30
+  release_poll_timeout_min: 30
+  manual_release_timeout_min: 240
+  org: diplodoc-platform
+
+capabilities:
+  update_snapshots:
+    cli:
+      workflow: update-snapshots.yml
+      input_pr: pr_number
+  update_lockfile:
+    default: true
+
+  # Check names matching snapshot/e2e failures (case-insensitive substring)
+  snapshot_failure_patterns:
+    - e2e
+    - integration
+    - playwright
+    - snapshot
+    - screenshot
+
+  # Explicit bot login allowlist (exact match, case-insensitive) merged with
+  # the built-in defaults in scripts/release-train/gh.js. Used to decide
+  # whose approvals may be auto-dismissed on new pushes and who never counts
+  # as "human approval" — deliberately NOT a fuzzy substring/regex match so a
+  # human login that merely contains "bot" (e.g. "IgorBotov") is never
+  # misclassified.
+  known_bots:
+    - yc-ui-bot
+    - diplodoc-bot
+    - github-actions
+    - github-actions[bot]
+    - dependabot
+    - dependabot[bot]
+
+repos:
+  # === packages (critical: manual release PR review) ===
+  cli:
+    npm: '@diplodoc/cli'
+    auto_approve_release: true
+    auto_merge_feature: false
+  transform:
+    npm: '@diplodoc/transform'
+  components:
+    npm: '@diplodoc/components'
+  client:
+    npm: '@diplodoc/client'
+  utils:
+    npm: '@diplodoc/utils'
+  directive:
+    npm: '@diplodoc/directive'
+  liquid:
+    npm: '@diplodoc/liquid'
+  sentenizer:
+    npm: '@diplodoc/sentenizer'
+  translation:
+    npm: '@diplodoc/translation'
+  yfmlint:
+    npm: '@diplodoc/yfmlint'
+  vsc:
+    npm: '@diplodoc/vsc'
+  ajv:
+    npm: '@diplodoc/ajv'
+
+  # === extensions ===
+  algolia-extension:
+    npm: '@diplodoc/algolia-extension'
+  color-extension:
+    npm: '@diplodoc/color-extension'
+  cut-extension:
+    npm: '@diplodoc/cut-extension'
+  file-extension:
+    npm: '@diplodoc/file-extension'
+  folding-headings-extension:
+    npm: '@diplodoc/folding-headings-extension'
+  html-extension:
+    npm: '@diplodoc/html-extension'
+  latex-extension:
+    npm: '@diplodoc/latex-extension'
+  mermaid-extension:
+    npm: '@diplodoc/mermaid-extension'
+  openapi-extension:
+    npm: '@diplodoc/openapi-extension'
+  page-constructor-extension:
+    npm: '@diplodoc/page-constructor-extension'
+  quote-link-extension:
+    npm: '@diplodoc/quote-link-extension'
+  search-extension:
+    npm: '@diplodoc/search-extension'
+  tabs-extension:
+    npm: '@diplodoc/tabs-extension'
+
+  # === devops (publishable) ===
+  testpack:
+    npm: '@diplodoc/testpack'
+    auto_approve_release: false

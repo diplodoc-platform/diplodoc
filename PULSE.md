@@ -53,7 +53,6 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 | [devops/infra](https://github.com/diplodoc-platform/infra) | [![version](https://img.shields.io/npm/v/@diplodoc/infra)](https://github.com/diplodoc-platform/infra/releases) | [![tests](https://github.com/diplodoc-platform/infra/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/infra/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/infra/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/infra/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/infra/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/infra/actions/workflows/security.yml) |
 | [devops/package-template](https://github.com/diplodoc-platform/package-template) | - | - | - | [![security](https://github.com/diplodoc-platform/package-template/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/package-template/actions/workflows/security.yml) |
 | [devops/testpack](https://github.com/diplodoc-platform/testpack) | [![version](https://img.shields.io/npm/v/@diplodoc/testpack)](https://github.com/diplodoc-platform/testpack/releases) | [![tests](https://github.com/diplodoc-platform/testpack/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/testpack/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/testpack/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/testpack/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/testpack/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/testpack/actions/workflows/security.yml) |
-| [devops/tsconfig](https://github.com/diplodoc-platform/tsconfig) | [![version](https://img.shields.io/npm/v/@diplodoc/tsconfig)](https://github.com/diplodoc-platform/tsconfig/releases) | - | [![release](https://github.com/diplodoc-platform/tsconfig/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/tsconfig/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/tsconfig/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/tsconfig/actions/workflows/security.yml) |
 ---
 
 ## actions
@@ -72,7 +71,7 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 
 ## Dependency graph (@diplodoc packages)
 
-Generated from Nx project graph (`nx graph --file`). **Orientation:** top to bottom (`flowchart TB`).
+Generated from `package.json` dependencies (`scripts/deps-graph.js` → `deps-graph.json`). **Orientation:** left to right (`flowchart LR`).
 
 ```mermaid
 %%{ init: { "flowchart": { "defaultRenderer": "elk" } } }%%
@@ -81,6 +80,7 @@ flowchart LR
   algolia-extension["algolia-extension"]
   cli["cli"]
   client["client"]
+  color-extension["color-extension"]
   components["components"]
   cut-extension["cut-extension"]
   directive["directive"]
@@ -101,24 +101,21 @@ flowchart LR
   translation["translation"]
   utils["utils"]
   yfmlint["yfmlint"]
-  folding-headings-extension -.-> utils
-  page-constructor-extension -.-> transform
-  page-constructor-extension --> directive
-  page-constructor-extension --> utils
-  quote-link-extension --> utils
-  translation --> directive
-  translation --> sentenizer
-  translation --> transform
   algolia-extension -.-> cli
   algolia-extension --> search-extension
-  openapi-extension --> liquid
-  transform --> cut-extension
-  transform --> file-extension
-  transform --> tabs-extension
-  transform --> utils
-  search-extension -.-> client
-  search-extension -.-> components
-  yfmlint -.-> transform
+  cli --> ajv
+  cli --> client
+  cli --> color-extension
+  cli -.-> latex-extension
+  cli --> liquid
+  cli -.-> mermaid-extension
+  cli -.-> openapi-extension
+  cli -.-> page-constructor-extension
+  cli -.-> search-extension
+  cli --> transform
+  cli --> translation
+  cli --> utils
+  cli -.-> yfmlint
   client -.-> components
   client -.-> latex-extension
   client -.-> mermaid-extension
@@ -126,29 +123,34 @@ flowchart LR
   client -.-> page-constructor-extension
   client -.-> tabs-extension
   client -.-> transform
-  file-extension --> directive
-  html-extension -.-> transform
-  html-extension --> directive
-  tabs-extension -.-> utils
-  testpack --> cli
   cut-extension --> directive
   cut-extension --> utils
-  cli -.-> latex-extension
-  cli -.-> mermaid-extension
-  cli -.-> openapi-extension
-  cli -.-> page-constructor-extension
-  cli -.-> search-extension
-  cli -.-> yfmlint
-  cli --> ajv
-  cli --> client
-  cli --> liquid
-  cli --> transform
-  cli --> translation
-  cli --> utils
+  file-extension --> directive
+  folding-headings-extension -.-> utils
+  html-extension --> directive
+  html-extension -.-> transform
+  openapi-extension --> liquid
+  page-constructor-extension --> directive
+  page-constructor-extension -.-> transform
+  page-constructor-extension --> utils
+  quote-link-extension --> utils
+  search-extension -.-> client
+  search-extension -.-> components
+  tabs-extension -.-> utils
+  testpack --> cli
+  transform --> cut-extension
+  transform --> file-extension
+  transform --> tabs-extension
+  transform --> utils
+  translation --> directive
+  translation --> sentenizer
+  translation --> transform
+  yfmlint -.-> transform
   click ajv href "https://github.com/diplodoc-platform/ajv"
   click algolia-extension href "https://github.com/diplodoc-platform/algolia-extension"
   click cli href "https://github.com/diplodoc-platform/cli"
   click client href "https://github.com/diplodoc-platform/client"
+  click color-extension href "https://github.com/diplodoc-platform/color-extension"
   click components href "https://github.com/diplodoc-platform/components"
   click cut-extension href "https://github.com/diplodoc-platform/cut-extension"
   click directive href "https://github.com/diplodoc-platform/directive"
