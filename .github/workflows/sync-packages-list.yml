@@ -5,7 +5,8 @@
 # 1. Reads .gitmodules from the main repo to get the current packages list
 # 2. Clones the devops/infra repository
 # 3. Updates the workflow file and distribution config there
-# 4. Commits and pushes directly to master
+# 4. Adds new repos to release-train.yml in the metapackage (preserves existing config)
+# 5. Commits and pushes directly to master
 
 name: Sync Packages List
 
@@ -19,7 +20,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   sync-packages-list:
@@ -30,6 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          token: ${{ secrets.YC_UI_BOT_GITHUB_TOKEN }}
 
       - name: Extract packages list from .gitmodules
         id: packages
@@ -73,6 +75,31 @@ jobs:
           echo "Packages: $PACKAGES"
           echo "Extensions: $EXTENSIONS"
           echo "Devops: $DEVOPS"
+
+      - name: Setup Node.js
+        uses: diplodoc-platform/setup-node-action@v1
+        with:
+          node-version: ${{ vars.NODE_VERSION || '24' }}
+          run-install: 'false'
+
+      - name: Install js-yaml
+        run: npm install js-yaml@4 --no-save
+
+      - name: Update release-train.yml
+        run: node scripts/sync-release-train-repos.js
+
+      - name: Commit release-train.yml in metapackage
+        run: |
+          if [[ -z $(git status --porcelain release-train.yml) ]]; then
+            echo "::notice::No release-train.yml changes"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add release-train.yml
+          git commit -m "chore: sync release-train repos from .gitmodules"
+          git push origin HEAD:${{ github.ref_name }}
 
       - name: Checkout infra repo
         uses: actions/checkout@v4

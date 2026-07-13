@@ -366,7 +366,42 @@ Each package should have standard workflows in `.github/workflows/`:
 - Each package has its own versioning system
 - No coordinated version bumps across packages
 
-**Cascading Release Process**:
+**Version Management**:
+- Uses **release-please** for automated releases
+- Versions managed based on commit types
+- `feat` → minor version bump
+- `fix` → patch version bump
+- Breaking changes → major version bump
+
+### Release Train (automated cross-package cascade)
+
+For changes spanning multiple `@diplodoc/*` submodules, use the **release train** workflow instead of manual cascading.
+
+**Spec:** [`specs/release-train.md`](../specs/release-train.md)
+
+**Developer contract:**
+
+1. Use the **same branch name** in every affected submodule (e.g. `feat/pc-utils-api`).
+2. Open PRs in all affected repos before starting the train.
+3. Develop locally in the metapackage: `npm run git:apply <branch>`, `npm run watch`, `@diplodoc/testpack`.
+4. After review, run **Actions → Release train** (`workflow_dispatch`) with `branch_name`.
+5. Monitor the live summary table (includes **Snapshots** column when auto-fix runs).
+6. If CI fails, fix the linked PR — the train **polls and continues** without restart.
+
+**What the train does (per package, bottom-up via `deps-graph.json`):**
+
+1. Wait for green CI on the feature PR (optional auto snapshot fix for configured repos).
+2. Merge feature PR → wait for **release-please** PR → wait for **npm** publish.
+3. Bump `@diplodoc/*` versions in remaining open feature branches + refresh lockfiles.
+4. Repeat for the next package.
+
+**Config:** [`release-train.yml`](../release-train.yml) at metapackage root.
+
+**Dependency graph:** regenerate with `npm run deps-graph` (also fixes PULSE.md graph via `npm run pulse`).
+
+**Manual cascading** (below) still applies when not using the train.
+
+**Cascading Release Process (manual)**:
 When changes affect multiple packages, releases happen in dependency order:
 
 1. Make changes in downstream package (e.g., `components`)

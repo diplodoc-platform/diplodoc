@@ -1,0 +1,555 @@
+{
+  "generatedAt": "2026-07-12T08:03:47.630Z",
+  "nodes": [
+    {
+      "npm": "@diplodoc/ajv",
+      "shortId": "ajv",
+      "repo": "ajv",
+      "path": "packages/ajv"
+    },
+    {
+      "npm": "@diplodoc/algolia-extension",
+      "shortId": "algolia-extension",
+      "repo": "algolia-extension",
+      "path": "extensions/algolia"
+    },
+    {
+      "npm": "@diplodoc/cli",
+      "shortId": "cli",
+      "repo": "cli",
+      "path": "packages/cli"
+    },
+    {
+      "npm": "@diplodoc/client",
+      "shortId": "client",
+      "repo": "client",
+      "path": "packages/client"
+    },
+    {
+      "npm": "@diplodoc/color-extension",
+      "shortId": "color-extension",
+      "repo": "color-extension",
+      "path": "extensions/color"
+    },
+    {
+      "npm": "@diplodoc/components",
+      "shortId": "components",
+      "repo": "components",
+      "path": "packages/components"
+    },
+    {
+      "npm": "@diplodoc/cut-extension",
+      "shortId": "cut-extension",
+      "repo": "cut-extension",
+      "path": "extensions/cut"
+    },
+    {
+      "npm": "@diplodoc/directive",
+      "shortId": "directive",
+      "repo": "directive",
+      "path": "packages/directive"
+    },
+    {
+      "npm": "@diplodoc/file-extension",
+      "shortId": "file-extension",
+      "repo": "file-extension",
+      "path": "extensions/file"
+    },
+    {
+      "npm": "@diplodoc/folding-headings-extension",
+      "shortId": "folding-headings-extension",
+      "repo": "folding-headings-extension",
+      "path": "extensions/folding-headings"
+    },
+    {
+      "npm": "@diplodoc/html-extension",
+      "shortId": "html-extension",
+      "repo": "html-extension",
+      "path": "extensions/html"
+    },
+    {
+      "npm": "@diplodoc/latex-extension",
+      "shortId": "latex-extension",
+      "repo": "latex-extension",
+      "path": "extensions/latex"
+    },
+    {
+      "npm": "@diplodoc/liquid",
+      "shortId": "liquid",
+      "repo": "liquid",
+      "path": "packages/liquid"
+    },
+    {
+      "npm": "@diplodoc/mermaid-extension",
+      "shortId": "mermaid-extension",
+      "repo": "mermaid-extension",
+      "path": "extensions/mermaid"
+    },
+    {
+      "npm": "@diplodoc/openapi-extension",
+      "shortId": "openapi-extension",
+      "repo": "openapi-extension",
+      "path": "extensions/openapi"
+    },
+    {
+      "npm": "@diplodoc/page-constructor-extension",
+      "shortId": "page-constructor-extension",
+      "repo": "page-constructor-extension",
+      "path": "extensions/page-constructor"
+    },
+    {
+      "npm": "@diplodoc/quote-link-extension",
+      "shortId": "quote-link-extension",
+      "repo": "quote-link-extension",
+      "path": "extensions/quote-link"
+    },
+    {
+      "npm": "@diplodoc/search-extension",
+      "shortId": "search-extension",
+      "repo": "search-extension",
+      "path": "extensions/search"
+    },
+    {
+      "npm": "@diplodoc/sentenizer",
+      "shortId": "sentenizer",
+      "repo": "sentenizer",
+      "path": "packages/sentenizer"
+    },
+    {
+      "npm": "@diplodoc/tabs-extension",
+      "shortId": "tabs-extension",
+      "repo": "tabs-extension",
+      "path": "extensions/tabs"
+    },
+    {
+      "npm": "@diplodoc/testpack",
+      "shortId": "testpack",
+      "repo": "testpack",
+      "path": "devops/testpack"
+    },
+    {
+      "npm": "@diplodoc/transform",
+      "shortId": "transform",
+      "repo": "transform",
+      "path": "packages/transform"
+    },
+    {
+      "npm": "@diplodoc/translation",
+      "shortId": "translation",
+      "repo": "translation",
+      "path": "packages/translation"
+    },
+    {
+      "npm": "@diplodoc/utils",
+      "shortId": "utils",
+      "repo": "utils",
+      "path": "packages/utils"
+    },
+    {
+      "npm": "@diplodoc/vsc",
+      "shortId": "vsc",
+      "repo": "vsc",
+      "path": "packages/vsc"
+    },
+    {
+      "npm": "@diplodoc/yfmlint",
+      "shortId": "yfmlint",
+      "repo": "yfmlint",
+      "path": "packages/yfmlint"
+    }
+  ],
+  "edges": [
+    {
+      "from": "@diplodoc/algolia-extension",
+      "to": "@diplodoc/cli",
+      "fromShort": "algolia-extension",
+      "toShort": "cli",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/algolia-extension",
+      "to": "@diplodoc/search-extension",
+      "fromShort": "algolia-extension",
+      "toShort": "search-extension",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/ajv",
+      "fromShort": "cli",
+      "toShort": "ajv",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/client",
+      "fromShort": "cli",
+      "toShort": "client",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/color-extension",
+      "fromShort": "cli",
+      "toShort": "color-extension",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/latex-extension",
+      "fromShort": "cli",
+      "toShort": "latex-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/liquid",
+      "fromShort": "cli",
+      "toShort": "liquid",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/mermaid-extension",
+      "fromShort": "cli",
+      "toShort": "mermaid-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/openapi-extension",
+      "fromShort": "cli",
+      "toShort": "openapi-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/page-constructor-extension",
+      "fromShort": "cli",
+      "toShort": "page-constructor-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/search-extension",
+      "fromShort": "cli",
+      "toShort": "search-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/transform",
+      "fromShort": "cli",
+      "toShort": "transform",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/translation",
+      "fromShort": "cli",
+      "toShort": "translation",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/utils",
+      "fromShort": "cli",
+      "toShort": "utils",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cli",
+      "to": "@diplodoc/yfmlint",
+      "fromShort": "cli",
+      "toShort": "yfmlint",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/client",
+      "to": "@diplodoc/components",
+      "fromShort": "client",
+      "toShort": "components",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/client",
+      "to": "@diplodoc/latex-extension",
+      "fromShort": "client",
+      "toShort": "latex-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/client",
+      "to": "@diplodoc/mermaid-extension",
+      "fromShort": "client",
+      "toShort": "mermaid-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/client",
+      "to": "@diplodoc/openapi-extension",
+      "fromShort": "client",
+      "toShort": "openapi-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/client",
+      "to": "@diplodoc/page-constructor-extension",
+      "fromShort": "client",
+      "toShort": "page-constructor-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/client",
+      "to": "@diplodoc/tabs-extension",
+      "fromShort": "client",
+      "toShort": "tabs-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/client",
+      "to": "@diplodoc/transform",
+      "fromShort": "client",
+      "toShort": "transform",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/cut-extension",
+      "to": "@diplodoc/directive",
+      "fromShort": "cut-extension",
+      "toShort": "directive",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/cut-extension",
+      "to": "@diplodoc/utils",
+      "fromShort": "cut-extension",
+      "toShort": "utils",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/file-extension",
+      "to": "@diplodoc/directive",
+      "fromShort": "file-extension",
+      "toShort": "directive",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/folding-headings-extension",
+      "to": "@diplodoc/utils",
+      "fromShort": "folding-headings-extension",
+      "toShort": "utils",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/html-extension",
+      "to": "@diplodoc/directive",
+      "fromShort": "html-extension",
+      "toShort": "directive",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/html-extension",
+      "to": "@diplodoc/transform",
+      "fromShort": "html-extension",
+      "toShort": "transform",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/openapi-extension",
+      "to": "@diplodoc/liquid",
+      "fromShort": "openapi-extension",
+      "toShort": "liquid",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/page-constructor-extension",
+      "to": "@diplodoc/directive",
+      "fromShort": "page-constructor-extension",
+      "toShort": "directive",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/page-constructor-extension",
+      "to": "@diplodoc/transform",
+      "fromShort": "page-constructor-extension",
+      "toShort": "transform",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/page-constructor-extension",
+      "to": "@diplodoc/utils",
+      "fromShort": "page-constructor-extension",
+      "toShort": "utils",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/quote-link-extension",
+      "to": "@diplodoc/utils",
+      "fromShort": "quote-link-extension",
+      "toShort": "utils",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/search-extension",
+      "to": "@diplodoc/client",
+      "fromShort": "search-extension",
+      "toShort": "client",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/search-extension",
+      "to": "@diplodoc/components",
+      "fromShort": "search-extension",
+      "toShort": "components",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/tabs-extension",
+      "to": "@diplodoc/utils",
+      "fromShort": "tabs-extension",
+      "toShort": "utils",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/testpack",
+      "to": "@diplodoc/cli",
+      "fromShort": "testpack",
+      "toShort": "cli",
+      "type": "peer"
+    },
+    {
+      "from": "@diplodoc/transform",
+      "to": "@diplodoc/cut-extension",
+      "fromShort": "transform",
+      "toShort": "cut-extension",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/transform",
+      "to": "@diplodoc/file-extension",
+      "fromShort": "transform",
+      "toShort": "file-extension",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/transform",
+      "to": "@diplodoc/tabs-extension",
+      "fromShort": "transform",
+      "toShort": "tabs-extension",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/transform",
+      "to": "@diplodoc/utils",
+      "fromShort": "transform",
+      "toShort": "utils",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/translation",
+      "to": "@diplodoc/directive",
+      "fromShort": "translation",
+      "toShort": "directive",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/translation",
+      "to": "@diplodoc/sentenizer",
+      "fromShort": "translation",
+      "toShort": "sentenizer",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/translation",
+      "to": "@diplodoc/transform",
+      "fromShort": "translation",
+      "toShort": "transform",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/vsc",
+      "to": "@diplodoc/ajv",
+      "fromShort": "vsc",
+      "toShort": "ajv",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/vsc",
+      "to": "@diplodoc/html-extension",
+      "fromShort": "vsc",
+      "toShort": "html-extension",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/vsc",
+      "to": "@diplodoc/latex-extension",
+      "fromShort": "vsc",
+      "toShort": "latex-extension",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/vsc",
+      "to": "@diplodoc/mermaid-extension",
+      "fromShort": "vsc",
+      "toShort": "mermaid-extension",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/vsc",
+      "to": "@diplodoc/transform",
+      "fromShort": "vsc",
+      "toShort": "transform",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/vsc",
+      "to": "@diplodoc/utils",
+      "fromShort": "vsc",
+      "toShort": "utils",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/vsc",
+      "to": "@diplodoc/yfmlint",
+      "fromShort": "vsc",
+      "toShort": "yfmlint",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/yfmlint",
+      "to": "@diplodoc/transform",
+      "fromShort": "yfmlint",
+      "toShort": "transform",
+      "type": "dev"
+    }
+  ],
+  "topoOrder": [
+    "ajv",
+    "color-extension",
+    "components",
+    "directive",
+    "file-extension",
+    "latex-extension",
+    "liquid",
+    "mermaid-extension",
+    "openapi-extension",
+    "sentenizer",
+    "utils",
+    "cut-extension",
+    "folding-headings-extension",
+    "quote-link-extension",
+    "tabs-extension",
+    "transform",
+    "html-extension",
+    "page-constructor-extension",
+    "client",
+    "search-extension",
+    "translation",
+    "yfmlint",
+    "cli",
+    "algolia-extension",
+    "testpack",
+    "vsc"
+  ]
+}

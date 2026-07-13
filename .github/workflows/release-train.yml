@@ -1,0 +1,184 @@
+name: Release Train
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: 'Shared feature branch name (required)'
+        required: true
+        type: string
+      packages:
+        description: 'Comma-separated repo slugs (empty = auto-discover all open PRs for branch)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Plan only, no merges'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-train-${{ inputs.branch_name }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare release plan
+    runs-on: ubuntu-latest
+    outputs:
+      plan_ready: ${{ steps.prepare.outcome == 'success' && steps.plan_check.outputs.exists == 'true' }}
+      branch_name: ${{ inputs.branch_name }}
+    steps:
+      - name: Checkout metapackage
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - name: Setup Node.js
+        uses: diplodoc-platform/setup-node-action@v1
+        with:
+          node-version: ${{ vars.NODE_VERSION || '24' }}
+          cache: ''
+
+      - name: Install js-yaml
+        run: npm install js-yaml@4 --no-save
+
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.INFRA_APP_ID }}
+          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
+          owner: diplodoc-platform
+
+      - name: Build release plan
+        id: prepare
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH_NAME: ${{ inputs.branch_name }}
+          PACKAGES: ${{ inputs.packages }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          ARGS=(--branch "$BRANCH_NAME" --output plan.json)
+          if [[ -n "${PACKAGES:-}" ]]; then
+            ARGS+=(--packages "$PACKAGES")
+          fi
+          if [[ "$DRY_RUN" == "true" ]]; then
+            ARGS+=(--dry-run)
+          fi
+          node scripts/release-train/prepare.js "${ARGS[@]}"
+
+      - name: Verify plan.json
+        id: plan_check
+        run: |
+          if [[ -f plan.json ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-train-plan
+          path: plan.json
+          retention-days: 7
+
+      - name: Render initial summary
+        env:
+          BRANCH_NAME: ${{ inputs.branch_name }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          node --input-type=module -e "
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { initState, saveState } from './scripts/release-train/state.js';
+          import { publishSummary } from './scripts/release-train/render-summary.js';
+          const plan = JSON.parse(readFileSync('plan.json','utf8'));
+          const state = initState(plan);
+          for (const p of state.packages) p.status = 'queued';
+          saveState(state, 'train-state.json');
+          publishSummary(state, 'Release train — ${{ inputs.branch_name }} (queued)');
+          "
+
+  orchestrate:
+    name: Run release train
+    needs: prepare
+    if: needs.prepare.outputs.plan_ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout metapackage
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - name: Setup Node.js
+        uses: diplodoc-platform/setup-node-action@v1
+        with:
+          node-version: ${{ vars.NODE_VERSION || '24' }}
+          cache: ''
+
+      - name: Install js-yaml
+        run: npm install js-yaml@4 --no-save
+
+      - name: Download plan
+        uses: actions/download-artifact@v7
+        with:
+          name: release-train-plan
+
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.INFRA_APP_ID }}
+          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
+          owner: diplodoc-platform
+
+      - name: Run orchestrator
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          INFRA_APPROVER_PAT: ${{ secrets.INFRA_APPROVER_PAT }}
+        run: node scripts/release-train/orchestrate.js --plan plan.json
+
+      - name: Upload train state
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-train-state
+          path: |
+            train-state.json
+            .release-train-status/**
+          retention-days: 7
+          if-no-files-found: warn
+
+  report:
+    name: Build release train report
+    needs: [prepare, orchestrate]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout metapackage
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - name: Setup Node.js
+        uses: diplodoc-platform/setup-node-action@v1
+        with:
+          node-version: ${{ vars.NODE_VERSION || '24' }}
+          cache: ''
+
+      - name: Download state artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: release-train-*
+          merge-multiple: true
+
+      - name: Render final report
+        env:
+          BRANCH_NAME: ${{ needs.prepare.outputs.branch_name }}
+        run: node scripts/release-train/report.js .release-train-status train-state.json
