@@ -10,7 +10,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { topoSortSubset, buildDepsGraph } from '../deps-graph.js';
+import { topoSortSubset } from '../deps-graph.js';
 import { loadConfig } from './config.js';
 import { findOpenPrByBranch } from './gh.js';
 
@@ -106,6 +106,21 @@ const topoSlugs = topoSortSubset(
 
 const selectedByRepo = new Map(selected.map((s) => [s.repo, s]));
 const ordered = topoSlugs.map((slug) => selectedByRepo.get(slug)).filter(Boolean);
+
+// A non-empty `selected` must always survive topo-sorting. If `ordered` is
+// empty (or shrank), the dependency graph is missing the discovered repos —
+// e.g. a stale/empty deps-graph.json, or repos present in release-train.yml
+// but absent from the graph. Fail loudly instead of writing a plan with zero
+// packages (previously this slipped through and produced `packages: []`).
+if (ordered.length !== selected.length) {
+  const orderedSet = new Set(ordered.map((o) => o.repo));
+  const dropped = selected.map((s) => s.repo).filter((r) => !orderedSet.has(r));
+  console.error(
+    `::error::Topo-sort dropped ${dropped.length} of ${selected.length} discovered package(s): ${dropped.join(', ')}. ` +
+      'The dependency graph is stale or incomplete — run "npm run deps-graph" and commit deps-graph.json.',
+  );
+  process.exit(1);
+}
 
 // Validate upstream PRs exist in train
 const selectedSet = new Set(ordered.map((o) => o.repo));

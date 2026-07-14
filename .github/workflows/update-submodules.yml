@@ -35,6 +35,19 @@ jobs:
           git submodule foreach --recursive 'git reset --hard && git clean -fdx'
           git submodule update --init --recursive --remote --force
 
+      - name: Install js-yaml
+        run: npm install js-yaml@4 --no-save
+
+      # Regenerate the committed dependency graph from the freshly-updated
+      # submodule package.json files. deps-graph.json is the single source of
+      # truth for the release train (config.js reads it via loadDepsGraph),
+      # and the release-train workflow checks out with submodules: false, so it
+      # can never rebuild the graph itself. Regenerating here — where
+      # submodules are present — keeps deps-graph.json in sync with the actual
+      # submodule set/pins on every change.
+      - name: Regenerate deps-graph.json
+        run: npm run deps-graph
+
       - name: Check if there are changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then

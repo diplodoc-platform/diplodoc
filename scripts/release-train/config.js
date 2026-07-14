@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildDepsGraph } from '../deps-graph.js';
+import { loadDepsGraph } from '../deps-graph.js';
 import { loadYaml } from './yaml-loader.js';
 
 const ROOT = process.cwd();
@@ -13,7 +13,12 @@ export function loadConfig(configPath = join(ROOT, 'release-train.yml')) {
   const defaults = raw.defaults || {};
   const capabilities = raw.capabilities || {};
   const repos = raw.repos || {};
-  const graph = buildDepsGraph();
+  // Read the committed deps-graph.json rather than rebuilding from submodule
+  // package.json files: release-train workflows check out with
+  // `submodules: false`, so a live rebuild would see empty directories and
+  // silently produce a graph with no nodes (→ topoOrder=[] → plan with zero
+  // packages). loadDepsGraph() throws on a missing/empty graph instead.
+  const graph = loadDepsGraph();
   const nodesByRepo = new Map(graph.nodes.map((n) => [n.repo, n]));
 
   const repoEntries = Object.entries(repos).map(([slug, repoCfg]) => {

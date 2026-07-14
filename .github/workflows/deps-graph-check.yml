@@ -1,0 +1,66 @@
+name: Deps Graph Check
+
+# Guards the committed deps-graph.json — the single source of truth the release
+# train reads (scripts/release-train/config.js → loadDepsGraph). If a change to
+# the submodule set/pins or any package.json lands without regenerating the
+# graph, this fails so nobody merges a stale graph that would make the release
+# train plan zero packages.
+#
+# Automated submodule bumps regenerate the graph in update-submodules.yml; this
+# workflow is the defense-in-depth gate for manual edits in PRs.
+
+# Trigger only on the inputs that actually decide graph validity for a manual
+# change:
+#   - .gitmodules        — the submodule set (graph nodes)
+#   - release-train.yml  — npm ↔ repo mapping used to resolve node identity
+#   - scripts/deps-graph.js — the generator logic itself
+#   - deps-graph.json    — someone hand-edited the artifact
+#
+# Deliberately NOT triggering on packages/**, extensions/**, devops/**: in the
+# metapackage those paths are submodule pointers that change on every pin bump,
+# and update-submodules.yml already regenerates + commits deps-graph.json on
+# each bump. Adding them here would fire a full recursive-checkout run on every
+# routine submodule update — pure noise with no extra safety.
+on:
+  pull_request:
+    paths:
+      - '.gitmodules'
+      - 'deps-graph.json'
+      - 'release-train.yml'
+      - 'scripts/deps-graph.js'
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - '.gitmodules'
+      - 'deps-graph.json'
+      - 'release-train.yml'
+      - 'scripts/deps-graph.js'
+
+permissions:
+  contents: read
+
+jobs:
+  deps-graph-check:
+    name: Verify deps-graph.json is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: diplodoc-platform/setup-node-action@v1
+        with:
+          node-version: ${{ vars.NODE_VERSION || '24' }}
+          run-install: 'false'
+          cache: ''
+
+      - name: Install js-yaml
+        run: npm install js-yaml@4 --no-save
+
+      - name: Check deps-graph.json
+        run: npm run deps-graph:check

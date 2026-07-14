@@ -253,6 +253,42 @@ function topologicalSort(repoOrder, edges, npmToNode) {
   return result;
 }
 
+/**
+ * Load the committed deps-graph.json from disk (the release train's single
+ * source of truth). Deliberately does NOT rebuild from package.json files:
+ * release-train workflows check out with `submodules: false`, so the submodule
+ * package.json files are absent and a live buildDepsGraph() would silently
+ * produce an empty graph. Reading the committed artifact keeps behaviour
+ * independent of whether submodules are present in the runner.
+ *
+ * Throws (never returns an empty graph) so a stale/missing file fails loudly
+ * instead of yielding a plan with zero packages.
+ */
+export function loadDepsGraph(path = OUTPUT) {
+  if (!existsSync(path)) {
+    throw new Error(
+      `deps-graph.json not found at ${path} — run "npm run deps-graph" and commit the result`,
+    );
+  }
+  let graph;
+  try {
+    graph = JSON.parse(readFileSync(path, 'utf8'));
+  } catch (err) {
+    throw new Error(`deps-graph.json at ${path} is not valid JSON: ${err.message}`);
+  }
+  if (!Array.isArray(graph.nodes) || graph.nodes.length === 0) {
+    throw new Error(
+      `deps-graph.json at ${path} has no nodes — regenerate with "npm run deps-graph"`,
+    );
+  }
+  if (!Array.isArray(graph.topoOrder) || graph.topoOrder.length === 0) {
+    throw new Error(
+      `deps-graph.json at ${path} has an empty topoOrder — regenerate with "npm run deps-graph"`,
+    );
+  }
+  return graph;
+}
+
 /** Topo order restricted to a subset of repos (preserves full-graph order). */
 export function topoSortSubset(repos, graph = buildDepsGraph()) {
   const set = new Set(repos);
