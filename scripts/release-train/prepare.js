@@ -122,8 +122,20 @@ if (ordered.length !== selected.length) {
   process.exit(1);
 }
 
-// Validate upstream PRs exist in train
+// Validate that no *changing* upstream dependency was excluded from the train.
+//
+// A dependency only needs to be in the train if it is ALSO being changed on
+// this branch — i.e. it has its own open PR (is in `discovered`). A dependency
+// without a PR is not changing, so the consumer keeps using its already
+// published version; that is the normal case and must NOT be an error.
+//
+// Previously this flagged EVERY prod/peer dependency that lacked a PR, so a
+// package like `cli` (which legitimately depends on ajv/client/liquid/…)
+// produced a wall of false "missing upstream" errors even though nothing but
+// the selected packages needed changes. The real failure mode this guards
+// against is `--packages` excluding a dependency that *does* have a PR.
 const selectedSet = new Set(ordered.map((o) => o.repo));
+const discoveredSet = new Set(discovered.map((d) => d.repo));
 const missingUpstream = [];
 const nodesByRepo = config.nodesByRepo;
 const nodesByNpm = config.nodesByNpm;
@@ -135,8 +147,11 @@ for (const pkg of ordered) {
     if (edge.from !== node.npm) continue;
     const upNode = nodesByNpm.get(edge.to);
     if (!upNode) continue;
-    if (selectedSet.has(upNode.repo)) continue;
-    // upstream not in train — warn if it's a prod dependency
+    if (selectedSet.has(upNode.repo)) continue; // already in train
+    if (!discoveredSet.has(upNode.repo)) continue; // no PR → not changing, uses published version
+    // upstream HAS a PR on this branch but was excluded from the train
+    // (only reachable via --packages) — releasing the consumer without it
+    // would merge against an unreleased dependency change.
     if (edge.type === 'prod' || edge.type === 'peer') {
       missingUpstream.push({ consumer: pkg.repo, upstream: upNode.repo, npm: edge.to });
     }
@@ -144,7 +159,9 @@ for (const pkg of ordered) {
 }
 
 if (missingUpstream.length) {
-  console.error('::error::Missing upstream PRs in train (add PRs or include packages):');
+  console.error(
+    '::error::Excluded upstream PRs that are part of this change set (add them to --packages):',
+  );
   for (const m of missingUpstream) {
     console.error(`  ${m.consumer} requires ${m.upstream} (${m.npm})`);
   }
