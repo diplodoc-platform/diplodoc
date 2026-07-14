@@ -34,9 +34,10 @@ export function isBotLogin(login, extraBotLogins = []) {
 }
 
 const JSON_FIELDS = {
-  prList: 'number,url,title,headRefName,baseRefName,mergeable,reviewDecision,state,isDraft,autoMergeRequest',
+  prList:
+    'number,url,title,headRefName,baseRefName,mergeable,reviewDecision,state,isDraft,autoMergeRequest,updatedAt,createdAt',
   prView:
-    'number,url,title,headRefName,state,mergeable,reviewDecision,mergedAt,mergeStateStatus,autoMergeRequest,statusCheckRollup,headRefOid',
+    'number,url,title,headRefName,state,mergeable,reviewDecision,mergedAt,mergeStateStatus,autoMergeRequest,statusCheckRollup,headRefOid,updatedAt',
   runList: 'databaseId,status,conclusion,url,workflowName,headBranch,event',
 };
 
@@ -95,6 +96,22 @@ export function approvePr(owner, repo, number, token, body = 'Approved by releas
   ghRaw(['pr', 'review', String(number), '--repo', `${owner}/${repo}`, '--approve', '--body', body], token);
 }
 
+/**
+ * Resolve the GitHub login that a token authenticates as (via `GET /user`).
+ * Used to verify the approver token is the diplodoc-bot machine user and not,
+ * e.g., the GitHub App installation token (which authenticates as
+ * `diplodoc-app[bot]` — a Bot account that must never be the approver).
+ * Returns null if the identity cannot be resolved.
+ */
+export function whoAmI(token) {
+  try {
+    return ghRaw(['api', 'user', '--jq', '.login'], token) || null;
+  } catch (err) {
+    console.warn(`::warning::Could not resolve token identity: ${err.message}`);
+    return null;
+  }
+}
+
 export function listReviews(owner, repo, number, token) {
   try {
     return JSON.parse(ghRaw(['api', `repos/${owner}/${repo}/pulls/${number}/reviews`], token));
@@ -145,13 +162,31 @@ export function listCheckRuns(owner, repo, ref, token) {
   }
 }
 
-export function findReleasePleasePr(owner, repo, token) {
+/**
+ * Find the open release-please PR authored by yc-ui-bot.
+ *
+ * `notBeforeMs` guards against a race: after we merge a feature PR, an OLD
+ * release-please PR may still be open (from a previous release) while
+ * release-please has not yet regenerated it to include our just-merged change.
+ * Returning that stale PR would release the wrong content. When notBeforeMs is
+ * provided, only accept a release PR whose `updatedAt` is at/after that instant
+ * (i.e. release-please has touched it since our merge). Returns null otherwise,
+ * so the caller keeps polling until the PR is refreshed (or newly created).
+ */
+export function findReleasePleasePr(owner, repo, token, notBeforeMs = 0) {
   const prs = ghJson(
     ['pr', 'list', '--repo', `${owner}/${repo}`, '--author', 'yc-ui-bot', '--state', 'open', '--limit', '30'],
     token,
     'prList',
   );
-  return (prs || []).find((p) => p.headRefName?.startsWith('release-please--')) || null;
+  const candidates = (prs || []).filter((p) => p.headRefName?.startsWith('release-please--'));
+  if (!notBeforeMs) return candidates[0] || null;
+  return (
+    candidates.find((p) => {
+      const updated = p.updatedAt ? Date.parse(p.updatedAt) : 0;
+      return updated >= notBeforeMs;
+    }) || null
+  );
 }
 
 export function getLatestWorkflowRun(owner, repo, workflowFile, branch, token) {

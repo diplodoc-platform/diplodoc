@@ -6,13 +6,13 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { loadConfig } from './config.js';
-import { mergePr } from './gh.js';
+import { mergePr, whoAmI } from './gh.js';
 import { waitForReleasePleaseMerge } from './wait-release-please.js';
 import { waitForNpmPackage, readPackageVersionFromRepo } from './wait-npm.js';
 import { bumpDownstreamDeps } from './bump-downstream.js';
 import { waitForCiGreen } from './wait-ci.js';
 import { initState, saveState, updatePackage } from './state.js';
-import { publishSummary } from './render-summary.js';
+import { publishSummary, logProgress } from './render-summary.js';
 
 const { values } = parseArgs({
   options: {
@@ -23,10 +23,32 @@ const { values } = parseArgs({
 });
 
 const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
-const approverToken = process.env.INFRA_APPROVER_PAT || token;
 if (!token) {
   console.error('GH_TOKEN is required');
   process.exit(1);
+}
+
+// The approver MUST be the diplodoc-bot machine user (INFRA_APPROVER_PAT), a
+// real member of @diplodoc-platform/team. Do NOT silently fall back to the
+// App installation token (GH_TOKEN): that authenticates as diplodoc-app[bot],
+// a Bot account which is not a team member / code owner, so its review does not
+// satisfy require_code_owner_review and shows up as an "app" approval. If the
+// PAT is missing we keep approverToken null and skip auto-approve rather than
+// approving under the wrong identity.
+const approverToken = process.env.INFRA_APPROVER_PAT || null;
+if (approverToken) {
+  const approverLogin = whoAmI(approverToken);
+  if (approverLogin && approverLogin !== 'diplodoc-app[bot]') {
+    console.log(`::notice::Release PRs will be approved as: ${approverLogin}`);
+  } else {
+    console.warn(
+      `::warning::INFRA_APPROVER_PAT resolves to "${approverLogin}" (expected the diplodoc-bot machine user, not the App). Approvals may be attributed incorrectly.`,
+    );
+  }
+} else {
+  console.warn(
+    '::warning::INFRA_APPROVER_PAT is not set — release PRs will NOT be auto-approved by release train.',
+  );
 }
 
 const plan = JSON.parse(readFileSync(values.plan, 'utf8'));
@@ -39,7 +61,11 @@ const publishedByNpm = {};
 
 function persist() {
   saveState(state, values['state-file']);
+  // Overwrites the step-summary file (visible only after the step ends) …
   publishSummary(state, `Release train — ${plan.branchName}`);
+  // … and streams the same table to the step log for live progress while
+  // the long-running orchestrate step is still executing.
+  logProgress(state, `Release train — ${plan.branchName}`);
   writeStatusArtifacts();
 }
 
@@ -123,6 +149,13 @@ async function run() {
       persist();
 
       mergePr(org, repo, entry.featurePr.number, entry.merge_method || 'rebase', token);
+      // Record when the feature PR was merged: any release-please PR we act on
+      // must have been refreshed AFTER this instant, otherwise we could grab a
+      // stale release PR from a previous release that does not yet include the
+      // change we just merged (release-please needs a moment to regenerate it).
+      // Subtract a small skew allowance for clock differences between runner
+      // and GitHub, so a legitimately-fresh PR is not rejected by rounding.
+      const mergedAtMs = Date.now() - (defaults.release_freshness_skew_s ?? 30) * 1000;
 
       updatePackage(state, repo, { status: 'release_pending' });
       persist();
@@ -140,6 +173,7 @@ async function run() {
         mergeMethod: entry.merge_method || 'rebase',
         pollIntervalS: defaults.release_poll_interval_s || 30,
         timeoutMin: releaseTimeout,
+        freshSinceMs: mergedAtMs,
       });
 
       updatePackage(state, repo, { releasePr: rp.releasePr });
@@ -176,6 +210,10 @@ async function run() {
         bumpDownstreamDeps({
           owner: org,
           token,
+          // Push the bump commit as diplodoc-bot (PAT), not the App token:
+          // the push identity becomes event.sender on the docs-api webhook,
+          // and only a real team member passes its membership check.
+          pushToken: approverToken,
           branchName: plan.branchName,
           publishedVersions: { ...publishedByNpm },
           targets: downstream,

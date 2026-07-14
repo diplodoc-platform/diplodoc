@@ -154,31 +154,3 @@ jobs:
             .release-train-status/**
           retention-days: 7
           if-no-files-found: warn
-
-  report:
-    name: Build release train report
-    needs: [prepare, orchestrate]
-    if: always() && needs.prepare.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout metapackage
-        uses: actions/checkout@v5
-        with:
-          submodules: false
-
-      - name: Setup Node.js
-        uses: diplodoc-platform/setup-node-action@v1
-        with:
-          node-version: ${{ vars.NODE_VERSION || '24' }}
-          cache: ''
-
-      - name: Download state artifacts
-        uses: actions/download-artifact@v7
-        with:
-          pattern: release-train-*
-          merge-multiple: true
-
-      - name: Render final report
-        env:
-          BRANCH_NAME: ${{ needs.prepare.outputs.branch_name }}
-        run: node scripts/release-train/report.js .release-train-status train-state.json
