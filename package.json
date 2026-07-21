@@ -49,9 +49,13 @@
     "zx": "^8.8.5"
   },
   "overrides": {
+    "@gravity-ui/page-constructor": "8.13.2",
+    "@types/react": "$@types/react",
+    "@types/react-dom": "$@types/react-dom",
     "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-prettier": "^5.0.1",
-    "@gravity-ui/page-constructor": "8.13.2"
+    "react": "$react",
+    "react-dom": "$react-dom"
   },
   "dependencies": {
     "@swc/helpers": "^0.5.17",
