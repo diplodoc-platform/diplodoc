@@ -259,6 +259,13 @@ Different packages may use different frameworks:
 - Arrange-Act-Assert pattern
 - Extract repeated setup into helper functions
 
+### Test Linting Rules
+
+- **Avoid `any`** — never use `any` in test code. Use `unknown` with type narrowing, or cast via `as unknown as <ConcreteType>` when the type system cannot infer the shape (e.g. partial mocks). This keeps type safety intact and avoids `@typescript-eslint/no-explicit-any` warnings.
+- **Avoid negated conditions** — avoid `@typescript-eslint/no-unsafe-negation` patterns such as `!value === false` or `!obj?.prop`. Write conditions in a clear, non-negated form (e.g. `value === true`, `obj?.prop === undefined`).
+- **Type mock objects** — when creating mock objects for interfaces or types, type them explicitly (e.g. `as unknown as Run`) rather than leaving them as `any`.
+- **Prefer typed spies** — when spying on methods, use `vi.fn()` with explicit return types where possible.
+
 ### Testpack
 
 `devops/testpack` provides system-level testing:
