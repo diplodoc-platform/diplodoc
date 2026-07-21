@@ -65,11 +65,7 @@ Sequential loop per package in topo order:
 5. Bump `@diplodoc/*` versions in **remaining** open feature branches + lockfile refresh
 6. Wait CI — **poll on failure**, do not exit; continue after green without workflow restart
 
-**Live summary:** rewrite `$GITHUB_STEP_SUMMARY` after every state transition and during CI poll (full table, not append-only).
-
-### Job `report`
-
-- `if: always()` — aggregate status artifacts into final markdown table
+**Live summary:** rewrite `$GITHUB_STEP_SUMMARY` after every state transition and during CI poll (full table, not append-only). This same table is the final report — `orchestrate` publishes it on every persist and once more at the end, and exits `1` on the first failed package, so no separate report job is needed. State artifacts (`train-state.json`, `.release-train-status/**`) are uploaded with `if: always()` for post-mortem debugging when the job is hard-killed.
 
 ## 4. Summary table columns (Phase 1)
 

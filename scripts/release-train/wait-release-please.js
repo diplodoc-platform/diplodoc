@@ -10,16 +10,29 @@ export async function waitForReleasePleaseMerge({
   mergeMethod,
   pollIntervalS = 30,
   timeoutMin = 30,
+  // Only accept a release-please PR refreshed at/after this instant (ms epoch).
+  // Prevents grabbing a stale release PR that predates our feature merge and
+  // does not yet contain the just-merged change. Defaults to 0 (any PR).
+  freshSinceMs = 0,
 }) {
   const releasePr = await pollUntil({
     timeoutMin,
     intervalS: pollIntervalS,
     check: () => {
-      const pr = findReleasePleasePr(owner, repo, token);
-      if (!pr) console.log(`Waiting for release-please PR in ${owner}/${repo}…`);
+      const pr = findReleasePleasePr(owner, repo, token, freshSinceMs);
+      if (!pr) {
+        console.log(
+          freshSinceMs
+            ? `Waiting for release-please PR in ${owner}/${repo} to be refreshed with the merged change…`
+            : `Waiting for release-please PR in ${owner}/${repo}…`,
+        );
+      }
       return pr || null;
     },
-    onTimeout: () => new Error(`release-please PR did not appear in ${owner}/${repo} within ${timeoutMin}m`),
+    onTimeout: () =>
+      new Error(
+        `release-please PR did not appear (or was not refreshed) in ${owner}/${repo} within ${timeoutMin}m`,
+      ),
   });
 
   const prRef = { number: releasePr.number, url: releasePr.url };

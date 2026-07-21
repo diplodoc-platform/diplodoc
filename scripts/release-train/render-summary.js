@@ -2,7 +2,7 @@
  * Markdown summary table for release train (GITHUB_STEP_SUMMARY).
  */
 
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, writeSync } from 'node:fs';
 
 function fmtSnapshots(snap) {
   if (!snap || snap.state === 'none') return '—';
@@ -90,4 +90,24 @@ export function publishSummary(state, title) {
     return;
   }
   writeFileSync(path, markdown + '\n');
+}
+
+/**
+ * Stream the current table to the step log (stdout) for live progress.
+ *
+ * GitHub renders $GITHUB_STEP_SUMMARY only *after* a step finishes, so a
+ * long-running orchestrate step shows nothing until it exits. The step log,
+ * by contrast, is streamed in near real time — so we also print the table
+ * there on every persist().
+ *
+ * We use writeSync(1, …) instead of console.log because Node buffers stdout
+ * when it is a pipe (as in Actions), which can withhold output for minutes;
+ * a synchronous write forces each snapshot out immediately. The output is
+ * wrapped in a collapsible ::group:: so the log stays readable despite many
+ * repeated snapshots.
+ */
+export function logProgress(state, title = 'Release train — progress') {
+  const markdown = renderSummaryTable(state, title);
+  const ts = new Date().toISOString();
+  writeSync(1, `::group::${title} @ ${ts}\n${markdown}\n::endgroup::\n`);
 }
