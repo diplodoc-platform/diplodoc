@@ -31,6 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          submodules: true
           token: ${{ secrets.YC_UI_BOT_GITHUB_TOKEN }}
 
       - name: Extract packages list from .gitmodules
@@ -88,17 +89,20 @@ jobs:
       - name: Update release-train.yml
         run: node scripts/sync-release-train-repos.js
 
-      - name: Commit release-train.yml in metapackage
+      - name: Generate PULSE.md
+        run: node scripts/pulse.js
+
+      - name: Commit release-train.yml and PULSE.md in metapackage
         run: |
-          if [[ -z $(git status --porcelain release-train.yml) ]]; then
-            echo "::notice::No release-train.yml changes"
+          if [[ -z $(git status --porcelain release-train.yml PULSE.md) ]]; then
+            echo "::notice::No release-train.yml or PULSE.md changes"
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add release-train.yml
-          git commit -m "chore: sync release-train repos from .gitmodules"
+          git add release-train.yml PULSE.md
+          git commit -m "chore: sync release-train repos and PULSE.md from .gitmodules"
           git push origin HEAD:${{ github.ref_name }}
 
       - name: Checkout infra repo
