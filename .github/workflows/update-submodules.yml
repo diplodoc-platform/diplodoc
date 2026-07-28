@@ -11,13 +11,23 @@ on:
 jobs:
   update-submodules:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.INFRA_APP_ID }}
+          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
+          owner: diplodoc-platform
+
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup Node.js
         uses: diplodoc-platform/setup-node-action@v1
@@ -58,6 +68,8 @@ jobs:
           else
             echo "No changes to commit."
           fi
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Push changes
         if: always()
@@ -65,3 +77,5 @@ jobs:
           if [ -n "$(git log -1 --pretty=%B | grep 'chore: update submodules')" ]; then
             git push origin HEAD:${{ github.ref_name }}
           fi
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}

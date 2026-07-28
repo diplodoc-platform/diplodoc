@@ -27,12 +27,20 @@ jobs:
     name: Update packages list in infra repo
     runs-on: ubuntu-latest
     steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.INFRA_APP_ID }}
+          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
+          owner: diplodoc-platform
+
       - name: Checkout main repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: true
-          token: ${{ secrets.YC_UI_BOT_GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Extract packages list from .gitmodules
         id: packages
@@ -104,12 +112,14 @@ jobs:
           git add release-train.yml PULSE.md
           git commit -m "chore: sync release-train repos and PULSE.md from .gitmodules"
           git push origin HEAD:${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Checkout infra repo
         uses: actions/checkout@v4
         with:
           repository: diplodoc-platform/infra
-          token: ${{ secrets.YC_UI_BOT_GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           path: infra-repo
 
       - name: Update workflow file
@@ -210,7 +220,7 @@ jobs:
       - name: Trigger distribution for new repos
         if: steps.new-repos.outputs.new_repos != ''
         env:
-          GH_TOKEN: ${{ secrets.YC_UI_BOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           IFS=',' read -ra REPOS <<< "${{ steps.new-repos.outputs.new_repos }}"
           for repo in "${REPOS[@]}"; do
