@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -25,6 +25,10 @@ function git(dir, args, env) {
 
 /**
  * Bump @diplodoc/* dependency versions on open feature branches (remaining packages).
+ *
+ * Each target carries its own `branch` because feature PRs in a train no
+ * longer have to share a branch name; `branchName` is only the fallback for
+ * legacy branch-discovered trains.
  */
 export function bumpDownstreamDeps({
   owner,
@@ -39,6 +43,12 @@ export function bumpDownstreamDeps({
   for (const target of targets) {
     const { repo, featurePr } = target;
     if (!featurePr?.number) continue;
+    const branch = target.branch || featurePr.headRefName || branchName;
+    if (!branch) {
+      console.warn(`::warning::No branch known for ${owner}/${repo} — skipping dependency bump`);
+      results.push({ repo, bumped: false });
+      continue;
+    }
 
     const dir = mkdtempSync(join(tmpdir(), `rt-bump-${repo}-`));
     const authEnv = gitAuthEnv(owner, repo, token);
@@ -47,8 +57,8 @@ export function bumpDownstreamDeps({
         env: { ...process.env, GH_TOKEN: token },
         stdio: 'pipe',
       });
-      git(dir, ['fetch', 'origin', branchName], authEnv);
-      git(dir, ['checkout', branchName], authEnv);
+      git(dir, ['fetch', 'origin', branch], authEnv);
+      git(dir, ['checkout', branch], authEnv);
 
       const pkgPath = join(dir, 'package.json');
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
@@ -57,8 +67,12 @@ export function bumpDownstreamDeps({
       for (const depType of ['dependencies', 'devDependencies', 'peerDependencies']) {
         if (!pkg[depType]) continue;
         for (const [name, version] of Object.entries(publishedVersions)) {
-          if (pkg[depType][name] && pkg[depType][name] !== version) {
-            pkg[depType][name] = `^${version.replace(/^v/, '')}`;
+          // Compare against the range we would write, not the bare version —
+          // otherwise an already-bumped `^1.2.3` looks changed on every resume
+          // and produces an empty commit that git rejects.
+          const next = `^${String(version).replace(/^v/, '')}`;
+          if (pkg[depType][name] && pkg[depType][name] !== next) {
+            pkg[depType][name] = next;
             changed = true;
           }
         }
@@ -85,13 +99,29 @@ export function bumpDownstreamDeps({
 
       git(dir, ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
       git(dir, ['config', 'user.name', 'github-actions[bot]']);
-      git(dir, ['add', 'package.json', 'package-lock.json']);
+      // `git add` fails the whole bump on a pathspec that matches nothing, and
+      // not every consumer repo commits a lockfile.
+      const staged = ['package.json', 'package-lock.json'].filter((file) =>
+        existsSync(join(dir, file)),
+      );
+      git(dir, ['add', ...staged]);
+
+      // The lockfile refresh may normalize the file back to its committed
+      // state; committing then fails with "nothing to commit".
+      try {
+        git(dir, ['diff', '--cached', '--quiet']);
+        results.push({ repo, bumped: false });
+        continue;
+      } catch {
+        // non-zero exit means there is something staged — proceed
+      }
+
       git(dir, [
         'commit',
         '-m',
         `chore: bump @diplodoc deps for release train (${Object.keys(publishedVersions).join(', ')})`,
       ]);
-      git(dir, ['push', 'origin', branchName], authEnv);
+      git(dir, ['push', 'origin', branch], authEnv);
 
       results.push({ repo, bumped: true, deps: publishedVersions });
     } finally {

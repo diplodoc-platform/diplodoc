@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
  * Release train orchestrator — sequential merge / release / bump / CI loop.
+ *
+ * The tracking issue is updated on every `persist()`, which makes it the live
+ * dashboard (GitHub renders `$GITHUB_STEP_SUMMARY` only after a step ends) and
+ * the durable state a later resume reads back.
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -11,8 +15,23 @@ import { waitForReleasePleaseMerge } from './wait-release-please.js';
 import { waitForNpmPackage, readPackageVersionFromRepo } from './wait-npm.js';
 import { bumpDownstreamDeps } from './bump-downstream.js';
 import { waitForCiGreen } from './wait-ci.js';
-import { initState, saveState, updatePackage } from './state.js';
+import {
+  findPackage,
+  isPackageCompleted,
+  mergePlanWithRestoredState,
+  saveState,
+  serializeTrainState,
+  updatePackage,
+} from './state.js';
 import { publishSummary } from './render-summary.js';
+import { renderProgressGraph } from './render-graph.js';
+import {
+  RT_STATE_BEGIN,
+  closeTrainIssue,
+  commentTrainIssue,
+  renderIssueBody,
+  updateTrainIssue,
+} from './tracking-issue.js';
 
 const { values } = parseArgs({
   options: {
@@ -33,14 +52,70 @@ const plan = JSON.parse(readFileSync(values.plan, 'utf8'));
 const config = loadConfig();
 const org = plan.org || config.org;
 const defaults = config.defaults;
+const trainId = plan.trainId || null;
+const mode = plan.mode || 'feature-prs';
+const issue = plan.issue || null;
+const restored = plan.restoredState || null;
+const trainTitle = trainId ? `Release train ${trainId}` : 'Release train';
 
-let state = initState(plan);
-const publishedByNpm = {};
+const state = mergePlanWithRestoredState(plan, restored);
+const publishedByNpm = { ...(restored?.publishedByNpm || {}) };
 
-function persist() {
+let issueBodyCache = null;
+
+function branchOf(repo) {
+  return findPackage(state, repo)?.featurePr?.headRefName || plan.branchName;
+}
+
+function updateTrackingIssue({ status = 'running', finishedAt = null, error = null } = {}) {
+  if (!issue?.number) return;
+
+  const body = renderIssueBody({
+    trainId,
+    mode,
+    status,
+    state,
+    workflow: plan.workflow,
+    graph: renderProgressGraph(state.packages),
+    diagnostics: error ? { message: error } : null,
+    rtState: serializeTrainState({
+      trainId,
+      mode,
+      status,
+      issue,
+      workflow: plan.workflow,
+      state,
+      publishedByNpm,
+      drift: restored?.drift || null,
+      error,
+      finishedAt,
+    }),
+  });
+
+  // The RT-STATE timestamp changes on every render, so compare everything but
+  // the hidden block to avoid a PATCH per poll when nothing actually moved.
+  const visible = body.split(RT_STATE_BEGIN)[0];
+  if (visible === issueBodyCache) return;
+  issueBodyCache = visible;
+
+  try {
+    updateTrainIssue({
+      owner: issue.owner,
+      repo: issue.repo,
+      issueNumber: issue.number,
+      body,
+      token,
+    });
+  } catch (err) {
+    console.warn(`::warning::Could not update tracking issue #${issue.number}: ${err.message}`);
+  }
+}
+
+function persist(options) {
   saveState(state, values['state-file']);
-  publishSummary(state, `Release train — ${plan.branchName}`);
+  publishSummary(state, trainTitle);
   writeStatusArtifacts();
+  updateTrackingIssue(options);
 }
 
 function writeStatusArtifacts() {
@@ -71,7 +146,7 @@ function writeStatusArtifacts() {
 persist();
 
 async function waitCiForRepo(repo) {
-  const pkgState = state.packages.find((p) => p.repo === repo);
+  const pkgState = findPackage(state, repo);
   if (!pkgState?.featurePr) return;
 
   updatePackage(state, repo, { status: 'waiting_ci' });
@@ -81,7 +156,7 @@ async function waitCiForRepo(repo) {
     owner: org,
     repo,
     featurePr: pkgState.featurePr,
-    branchName: plan.branchName,
+    branchName: branchOf(repo),
     token,
     config,
     pollIntervalS: defaults.ci_poll_interval_s || 90,
@@ -99,26 +174,91 @@ async function waitCiForRepo(repo) {
   persist();
 }
 
+/** Feature PRs still to be processed, with the branch each one lives on. */
+function bumpTargets(fromIndex) {
+  return plan.packages
+    .slice(fromIndex)
+    .map((p) => findPackage(state, p.repo))
+    .filter((pkg) => pkg && !isPackageCompleted(pkg) && pkg.featurePr?.number)
+    .map((pkg) => ({
+      repo: pkg.repo,
+      featurePr: pkg.featurePr,
+      branch: pkg.featurePr.headRefName,
+    }));
+}
+
+function runBump(targets) {
+  if (!targets.length) return;
+  for (const t of targets) {
+    updatePackage(state, t.repo, { status: 'bumping' });
+  }
+  persist();
+
+  bumpDownstreamDeps({
+    owner: org,
+    token,
+    branchName: plan.branchName,
+    publishedVersions: { ...publishedByNpm },
+    targets,
+    updateLockfile: config.capabilities?.update_lockfile?.default !== false,
+  });
+}
+
 async function run() {
   if (plan.dryRun) {
     for (const entry of plan.packages) {
+      if (isPackageCompleted(findPackage(state, entry.repo))) continue;
       updatePackage(state, entry.repo, { status: 'queued (dry-run)' });
     }
-    persist();
+    persist({ status: 'dry-run' });
     console.log('Dry run complete — no merges performed.');
     return;
+  }
+
+  // A resume carries versions published by earlier runs. Packages added to the
+  // train after those releases have never seen them, so replay the bump once
+  // before touching anything else.
+  if (Object.keys(publishedByNpm).length) {
+    const pending = bumpTargets(0);
+    if (pending.length) {
+      console.log(
+        `Replaying published versions on ${pending.length} open PR(s): ${Object.entries(publishedByNpm)
+          .map(([name, v]) => `${name}@${v}`)
+          .join(', ')}`,
+      );
+      runBump(pending);
+      for (const t of pending) {
+        updatePackage(state, t.repo, { status: 'queued' });
+      }
+      persist();
+    }
   }
 
   for (let i = 0; i < plan.packages.length; i++) {
     const entry = plan.packages[i];
     const repo = entry.repo;
+    const pkgState = findPackage(state, repo);
+
+    if (isPackageCompleted(pkgState)) {
+      console.log(`Skipping ${repo} — already ${pkgState.status} in train ${trainId}`);
+      if (pkgState.npmVersion && entry.npm && !publishedByNpm[entry.npm]) {
+        publishedByNpm[entry.npm] = pkgState.npmVersion;
+      }
+      continue;
+    }
+
+    if (pkgState?.status === 'failed') {
+      console.log(`Retrying ${repo} after previous failure: ${pkgState.error || 'unknown error'}`);
+      updatePackage(state, repo, { status: 'queued', error: null, finishedAt: null });
+      persist();
+    }
 
     try {
       await waitCiForRepo(repo);
 
       updatePackage(state, repo, {
         status: 'merging',
-        startedAt: state.packages.find((p) => p.repo === repo)?.startedAt || new Date().toISOString(),
+        startedAt: findPackage(state, repo)?.startedAt || new Date().toISOString(),
       });
       persist();
 
@@ -162,26 +302,7 @@ async function run() {
       });
       persist();
 
-      const downstream = plan.packages.slice(i + 1).map((p) => ({
-        repo: p.repo,
-        featurePr: state.packages.find((s) => s.repo === p.repo)?.featurePr,
-      }));
-
-      if (downstream.length > 0) {
-        for (const d of downstream) {
-          updatePackage(state, d.repo, { status: 'bumping' });
-        }
-        persist();
-
-        bumpDownstreamDeps({
-          owner: org,
-          token,
-          branchName: plan.branchName,
-          publishedVersions: { ...publishedByNpm },
-          targets: downstream,
-          updateLockfile: config.capabilities?.update_lockfile?.default !== false,
-        });
-      }
+      runBump(bumpTargets(i + 1));
 
       updatePackage(state, repo, {
         status: 'done',
@@ -194,13 +315,71 @@ async function run() {
         error: err.message,
         finishedAt: new Date().toISOString(),
       });
-      persist();
+      const finishedAt = new Date().toISOString();
+      persist({ status: 'failed', finishedAt, error: `${repo}: ${err.message}` });
+      reportFailure(repo, err.message);
       console.error(`::error::${err.message}`);
       process.exit(1);
     }
   }
 
-  publishSummary(state, `Release train — ${plan.branchName} (complete)`);
+  finish();
+}
+
+function reportFailure(repo, message) {
+  if (!issue?.number) return;
+  const runLink = plan.workflow?.runUrl ? ` ([run](${plan.workflow.runUrl}))` : '';
+  try {
+    commentTrainIssue({
+      owner: issue.owner,
+      repo: issue.repo,
+      issueNumber: issue.number,
+      body: [
+        `❌ Release train \`${trainId}\` failed on \`${repo}\`${runLink}:`,
+        '',
+        `> ${message}`,
+        '',
+        `Fix the cause and comment \`/rt resume\` to continue from this point.`,
+      ].join('\n'),
+      token,
+    });
+  } catch (err) {
+    console.warn(`::warning::Could not comment on tracking issue: ${err.message}`);
+  }
+}
+
+function finish() {
+  const finishedAt = new Date().toISOString();
+  publishSummary(state, `${trainTitle} (complete)`);
+  updateTrackingIssue({ status: 'success', finishedAt });
+
+  if (issue?.number && defaults.close_issue_on_success !== false) {
+    try {
+      commentTrainIssue({
+        owner: issue.owner,
+        repo: issue.repo,
+        issueNumber: issue.number,
+        body: [
+          `✅ Release train \`${trainId}\` completed.`,
+          '',
+          ...state.packages
+            .filter((p) => p.npmVersion)
+            .map((p) => `- \`${p.npm || p.repo}\` → \`${p.npmVersion}\``),
+        ].join('\n'),
+        token,
+      });
+      closeTrainIssue({
+        owner: issue.owner,
+        repo: issue.repo,
+        issueNumber: issue.number,
+        token,
+      });
+      console.log(`Closed tracking issue #${issue.number}`);
+    } catch (err) {
+      console.warn(`::warning::Could not close tracking issue: ${err.message}`);
+    }
+  }
+
   console.log('Release train completed successfully.');
 }
 

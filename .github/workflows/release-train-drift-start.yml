@@ -1,0 +1,70 @@
+name: Release Train Drift Start
+
+# Turns a dependency drift issue into dependency-update PRs and a release
+# train. Normally dispatched by `/rt start` from the drift issue
+# (.github/workflows/release-train-command.yml), can also be run manually.
+
+on:
+  workflow_dispatch:
+    inputs:
+      train_id:
+        description: 'Train id of the drift issue (label release-train:<id>)'
+        required: true
+        type: string
+      issue_number:
+        description: 'Drift issue number in diplodoc-platform/diplodoc'
+        required: true
+        type: string
+      dry_run:
+        description: 'Plan only: no branches, no update-deps runs, no train'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-train-drift-start-${{ inputs.train_id }}
+  cancel-in-progress: false
+
+jobs:
+  start:
+    name: Create dependency update PRs and start the train
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout metapackage
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - name: Setup Node.js
+        uses: diplodoc-platform/setup-node-action@v1
+        with:
+          node-version: ${{ vars.NODE_VERSION || '24' }}
+          cache: ''
+
+      - name: Install js-yaml
+        run: npm install js-yaml@4 --no-save
+
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.INFRA_APP_ID }}
+          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
+          owner: diplodoc-platform
+
+      - name: Start drift train
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TRAIN_ID: ${{ inputs.train_id }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          ARGS=(--train-id "$TRAIN_ID" --issue-number "$ISSUE_NUMBER")
+          if [[ "$DRY_RUN" == "true" ]]; then
+            ARGS+=(--dry-run)
+          fi
+          node scripts/release-train/start-drift-train.js "${ARGS[@]}"

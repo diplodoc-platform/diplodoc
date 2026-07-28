@@ -1,0 +1,57 @@
+#!/usr/bin/env node
+
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { label, mermaidBlock, renderConflictGraph, renderProgressGraph, statusClass } from './render-graph.js';
+
+test('statusClass maps train statuses to graph classes', () => {
+  assert.equal(statusClass('done'), 'done');
+  assert.equal(statusClass('released'), 'done');
+  assert.equal(statusClass('queued'), 'queued');
+  assert.equal(statusClass('queued (dry-run)'), 'queued');
+  assert.equal(statusClass('failed'), 'failed');
+  assert.equal(statusClass('skipped'), 'skipped');
+  assert.equal(statusClass('merging'), 'running');
+});
+
+test('label strips characters that break mermaid labels', () => {
+  assert.equal(label('cli', 'queued (dry-run)'), 'cli queued dry-run');
+  assert.equal(label('cli', 'say "hi"'), 'cli say hi');
+  assert.equal(label('cli', ''), 'cli');
+});
+
+test('renderProgressGraph chains packages in order with status classes', () => {
+  const graph = renderProgressGraph([
+    { repo: 'utils', status: 'released' },
+    { repo: 'cli', status: 'queued' },
+  ]);
+
+  assert.match(graph, /^flowchart LR/);
+  assert.match(graph, /n0\[utils released]/);
+  assert.match(graph, /n1\[cli queued]/);
+  assert.match(graph, /n0 --> n1/);
+  assert.match(graph, /class n0 done/);
+  assert.match(graph, /class n1 queued/);
+  assert.equal(renderProgressGraph([]), '');
+});
+
+test('renderConflictGraph highlights the added upstream and the bad edge', () => {
+  const graph = renderConflictGraph({
+    packages: [
+      { repo: 'cli', status: 'released' },
+      { repo: 'utils', status: 'queued' },
+    ],
+    conflicts: [{ upstream: 'utils', downstream: 'cli' }],
+  });
+
+  assert.match(graph, /class n0 done/);
+  assert.match(graph, /class n1 conflict/);
+  assert.match(graph, /n1 --> n0/);
+  assert.match(graph, /linkStyle 0 stroke:#cf1322/);
+  assert.equal(renderConflictGraph({ packages: [], conflicts: [] }), '');
+});
+
+test('mermaidBlock wraps only non-empty graphs', () => {
+  assert.equal(mermaidBlock(''), '');
+  assert.equal(mermaidBlock('flowchart LR'), '```mermaid\nflowchart LR\n```');
+});

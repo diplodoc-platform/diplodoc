@@ -1,0 +1,108 @@
+name: Release Train Drift Audit
+
+# Reports @diplodoc/* dependencies in master branches that lag behind the
+# latest published versions. With create_issue it opens a drift issue whose
+# hidden RT-STATE holds the update plan; `/rt start` there turns the plan into
+# dependency-update PRs and a release train.
+
+on:
+  workflow_dispatch:
+    inputs:
+      train_id:
+        description: 'Train id for the drift issue (generated as rt-drift-<run_number> if empty)'
+        required: false
+        type: string
+      repos:
+        description: 'Comma-separated consumer repo slugs (empty = all repos from release-train.yml)'
+        required: false
+        type: string
+      deps:
+        description: 'Comma-separated @diplodoc/* package names to check (empty = all)'
+        required: false
+        type: string
+      create_issue:
+        description: 'Create/update the drift issue with the update plan'
+        required: false
+        type: boolean
+        default: false
+      fail_on_stale:
+        description: 'Fail the run when stale dependencies are found'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-train-audit-${{ inputs.train_id || github.run_number }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Audit @diplodoc/* dependency drift
+    runs-on: ubuntu-latest
+    outputs:
+      train_id: ${{ steps.audit.outputs.train_id }}
+      stale_count: ${{ steps.audit.outputs.stale_count }}
+      issue_url: ${{ steps.audit.outputs.issue_url }}
+    steps:
+      - name: Checkout metapackage
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - name: Setup Node.js
+        uses: diplodoc-platform/setup-node-action@v1
+        with:
+          node-version: ${{ vars.NODE_VERSION || '24' }}
+          cache: ''
+
+      - name: Install js-yaml
+        run: npm install js-yaml@4 --no-save
+
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.INFRA_APP_ID }}
+          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
+          owner: diplodoc-platform
+
+      - name: Audit dependency drift
+        id: audit
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TRAIN_ID: ${{ inputs.train_id }}
+          REPOS: ${{ inputs.repos }}
+          DEPS: ${{ inputs.deps }}
+          CREATE_ISSUE: ${{ inputs.create_issue }}
+          FAIL_ON_STALE: ${{ inputs.fail_on_stale }}
+        run: |
+          set -euo pipefail
+          ARGS=(--output drift.json)
+          if [[ -n "${TRAIN_ID:-}" ]]; then
+            ARGS+=(--train-id "$TRAIN_ID")
+          fi
+          if [[ -n "${REPOS:-}" ]]; then
+            ARGS+=(--repos "$REPOS")
+          fi
+          if [[ -n "${DEPS:-}" ]]; then
+            ARGS+=(--deps "$DEPS")
+          fi
+          if [[ "$CREATE_ISSUE" == "true" ]]; then
+            ARGS+=(--create-issue)
+          fi
+          if [[ "$FAIL_ON_STALE" == "true" ]]; then
+            ARGS+=(--fail-on-stale)
+          fi
+          node scripts/release-train/audit-drift.js "${ARGS[@]}"
+
+      - name: Upload drift report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-train-drift
+          path: drift.json
+          retention-days: 14
+          if-no-files-found: warn
