@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T02:31:38.232Z",
+  "generatedAt": "2026-07-28T14:22:16.774Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -314,6 +314,13 @@
       "type": "dev"
     },
     {
+      "from": "@diplodoc/components",
+      "to": "@diplodoc/transform",
+      "fromShort": "components",
+      "toShort": "transform",
+      "type": "dev"
+    },
+    {
       "from": "@diplodoc/cut-extension",
       "to": "@diplodoc/directive",
       "fromShort": "cut-extension",
@@ -527,7 +534,6 @@
   "topoOrder": [
     "ajv",
     "color-extension",
-    "components",
     "directive",
     "file-extension",
     "latex-extension",
@@ -541,6 +547,7 @@
     "quote-link-extension",
     "tabs-extension",
     "transform",
+    "components",
     "html-extension",
     "page-constructor-extension",
     "client",
