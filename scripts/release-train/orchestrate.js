@@ -62,13 +62,20 @@ const state = mergePlanWithRestoredState(plan, restored);
 const publishedByNpm = { ...(restored?.publishedByNpm || {}) };
 
 let issueBodyCache = null;
+// A permission error will not fix itself mid-run: report it once, keep the
+// train going and stop hammering the API on every poll.
+let issueWritesDisabled = false;
+
+function isPermanentApiError(message) {
+  return /HTTP (401|403|404)/.test(message);
+}
 
 function branchOf(repo) {
   return findPackage(state, repo)?.featurePr?.headRefName || plan.branchName;
 }
 
 function updateTrackingIssue({ status = 'running', finishedAt = null, error = null } = {}) {
-  if (!issue?.number) return;
+  if (!issue?.number || issueWritesDisabled) return;
 
   const body = renderIssueBody({
     trainId,
@@ -108,6 +115,13 @@ function updateTrackingIssue({ status = 'running', finishedAt = null, error = nu
     });
   } catch (err) {
     console.warn(`::warning::Could not update tracking issue #${issue.number}: ${err.message}`);
+    if (isPermanentApiError(err.message)) {
+      issueWritesDisabled = true;
+      console.warn(
+        '::warning::Tracking issue updates are disabled for the rest of this run — the resume state ' +
+          'in RT-STATE will be stale. Check that the GitHub App has "Issues: Read and write".',
+      );
+    }
   }
 }
 

@@ -57,8 +57,12 @@ export function bumpDownstreamDeps({
         env: { ...process.env, GH_TOKEN: token },
         stdio: 'pipe',
       });
-      git(dir, ['fetch', 'origin', branch], authEnv);
-      git(dir, ['checkout', branch], authEnv);
+      // `gh repo clone --depth 1` is single-branch, so a plain
+      // `fetch origin <branch>` only updates FETCH_HEAD and `checkout <branch>`
+      // then fails with "pathspec did not match". Fetch into an explicit
+      // remote-tracking ref and branch off that instead.
+      git(dir, ['fetch', '--depth', '1', 'origin', `+refs/heads/${branch}:refs/remotes/origin/${branch}`], authEnv);
+      git(dir, ['checkout', '-B', branch, `refs/remotes/origin/${branch}`], authEnv);
 
       const pkgPath = join(dir, 'package.json');
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));

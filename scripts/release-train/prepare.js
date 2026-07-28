@@ -138,8 +138,12 @@ const issueRef = issue
 /**
  * Render and write the tracking issue in one step, so the visible report and
  * the hidden RT-STATE can never describe different states.
+ *
+ * `required` marks the write that stores the resume state: without it the
+ * train would run to completion with no way to resume, so a failure there is
+ * fatal rather than a warning.
  */
-function writeIssue({ status, state, diagnostics = null, error = null }) {
+function writeIssue({ status, state, diagnostics = null, error = null, required = false }) {
   if (!issueRef) return;
 
   const body = renderIssueBody({
@@ -172,7 +176,17 @@ function writeIssue({ status, state, diagnostics = null, error = null }) {
       token,
     });
   } catch (err) {
-    console.warn(`::warning::Could not update tracking issue: ${err.message}`);
+    if (!required) {
+      console.warn(`::warning::Could not update tracking issue: ${err.message}`);
+      return;
+    }
+    fail(
+      `Could not write the tracking issue ${issueRef.url}: ${err.message}\n` +
+        'The hidden RT-STATE block in that issue is what a "/rt resume" reads back, so the train is ' +
+        'stopped instead of running without resumable state. A 403 here means the GitHub App is ' +
+        'missing "Issues: Read and write" on the issue repository. Pass --no-issue to run without a ' +
+        'tracking issue (resume will not be available).',
+    );
   }
 }
 
@@ -435,7 +449,7 @@ for (const pkg of state.packages) {
   pkg.status = dryRun ? 'queued (dry-run)' : 'queued';
 }
 
-writeIssue({ status: dryRun ? 'dry-run' : 'queued', state });
+writeIssue({ status: dryRun ? 'dry-run' : 'queued', state, required: true });
 
 if (issue) {
   if (dryRun) {

@@ -84,6 +84,13 @@ Everything except release-PR approval runs with the GitHub App installation toke
 
 `INFRA_APPROVER_PAT` is used only to approve release PRs (`Pull requests: Read and write` on package repos); the train falls back to the App token when it is absent.
 
+Without `Issues: Read and write` the App can still create the tracking issue and
+its label, but `PATCH /issues/:n` and issue comments return
+`403 Resource not accessible by integration` and labels are silently dropped
+from the new issue. Since that means `RT-STATE` is never written, `prepare`
+treats the first issue write as mandatory and fails the run instead of starting
+a train that cannot be resumed.
+
 ### Job `prepare`
 
 - Run [`scripts/release-train/prepare.js`](../scripts/release-train/prepare.js)
