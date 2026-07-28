@@ -29,7 +29,7 @@ export async function waitForNpmPackage(npmName, version, timeoutMin = 15) {
   });
 }
 
-export function readPackageVersionFromRepo(owner, repo, ref, token) {
+export function readPackageJsonFromRepo(owner, repo, ref, token) {
   const out = execFileSync(
     'gh',
     ['api', `repos/${owner}/${repo}/contents/package.json?ref=${encodeURIComponent(ref)}`],
@@ -37,6 +37,21 @@ export function readPackageVersionFromRepo(owner, repo, ref, token) {
   );
   const data = JSON.parse(out);
   const content = Buffer.from(data.content, data.encoding || 'base64').toString('utf8');
-  const pkg = JSON.parse(content);
-  return pkg.version;
+  return JSON.parse(content);
+}
+
+export function readPackageVersionFromRepo(owner, repo, ref, token) {
+  return readPackageJsonFromRepo(owner, repo, ref, token).version;
+}
+
+/** Latest published version of an npm package, or null when unpublished. */
+export function npmLatestVersion(npmName) {
+  try {
+    return execFileSync('npm', ['view', npmName, 'version'], {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch {
+    return null;
+  }
 }

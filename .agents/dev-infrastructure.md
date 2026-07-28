@@ -381,12 +381,12 @@ For changes spanning multiple `@diplodoc/*` submodules, use the **release train*
 
 **Developer contract:**
 
-1. Use the **same branch name** in every affected submodule (e.g. `feat/pc-utils-api`).
-2. Open PRs in all affected repos before starting the train.
-3. Develop locally in the metapackage: `npm run git:apply <branch>`, `npm run watch`, `@diplodoc/testpack`.
-4. After review, run **Actions → Release train** (`workflow_dispatch`) with `branch_name`.
-5. Monitor the live summary table (includes **Snapshots** column when auto-fix runs).
-6. If CI fails, fix the linked PR — the train **polls and continues** without restart.
+1. Open PRs in all affected repos; branch names may differ per repo.
+2. Develop locally in the metapackage: `npm run git:apply <branch>`, `npm run watch`, `@diplodoc/testpack`.
+3. After review, run **Actions → Release train** (`workflow_dispatch`) with `prs` (e.g. `cli#123,transform#456`). A shared `branch_name` still works as a fallback.
+4. Follow the **tracking issue** the train opens in `diplodoc-platform/diplodoc` (`Release train: rt-<run_number>`) — it is the live dashboard and is updated during long steps, unlike the step summary.
+5. If CI fails, fix the linked PR — the train **polls and continues** without restart.
+6. If the train itself fails, comment `/rt resume` in the tracking issue (optionally `/rt resume prs=cli#123` to add PRs); it continues from the first unfinished package.
 
 **What the train does (per package, bottom-up via `deps-graph.json`):**
 
@@ -397,7 +397,11 @@ For changes spanning multiple `@diplodoc/*` submodules, use the **release train*
 
 **Config:** [`release-train.yml`](../release-train.yml) at metapackage root.
 
+**Dependency drift:** **Actions → Release train drift audit** reports `@diplodoc/*` deps left behind in master branches; with `create_issue` it opens a drift issue whose `/rt start` command creates the update PRs and runs the train.
+
 **Dependency graph:** regenerate with `npm run deps-graph` (also fixes PULSE.md graph via `npm run pulse`).
+
+**Script tests:** `npm run test:scripts` (node:test, no framework).
 
 **Manual cascading** (below) still applies when not using the train.
 

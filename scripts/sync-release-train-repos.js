@@ -166,13 +166,19 @@ function dumpBlock(name, value) {
   return lines.join('\n');
 }
 
+/** Top-level blocks with a fixed position in the rewritten file. */
+const KNOWN_TOP_LEVEL = new Set(['defaults', 'capabilities', 'repos']);
+
 export function serializeReleaseTrain(config, gitmodules, addedSlugs = []) {
   const buckets = orderReposBySection(config.repos, gitmodules, addedSlugs);
   const parts = [
     '# Release train configuration',
     '#',
-    '# Orchestrates cross-package PR merges: shared branch name → topo merge →',
-    '# release-please → npm → bump downstream deps → wait CI.',
+    '# Orchestrates cross-package PR merges: explicit PR list (or shared branch',
+    '# name) → topo merge → release-please → npm → bump downstream deps → wait CI.',
+    '#',
+    '# A train is identified by `train_id`; its live dashboard and durable state',
+    '# live in the tracking issue `Release train: <train_id>`.',
     '#',
     '# See specs/release-train.md',
     '',
@@ -180,8 +186,16 @@ export function serializeReleaseTrain(config, gitmodules, addedSlugs = []) {
     '',
     dumpBlock('capabilities', config.capabilities || {}),
     '',
-    'repos:',
   ];
+
+  // Blocks this script does not know about (e.g. `commands`) must survive a
+  // rewrite — otherwise adding a submodule would silently delete them.
+  for (const [key, value] of Object.entries(config)) {
+    if (KNOWN_TOP_LEVEL.has(key)) continue;
+    parts.push(dumpBlock(key, value), '');
+  }
+
+  parts.push('repos:');
 
   for (const section of REPO_SECTIONS) {
     const slugs = buckets[section.id];

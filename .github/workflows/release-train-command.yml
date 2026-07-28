@@ -1,0 +1,59 @@
+name: Release Train Command
+
+# Issue-comment router for release train tracking issues:
+#   /release-train retry | resume | start
+#   /rt …    /train …
+#
+# The workflow file is read from the default branch (issue_comment always runs
+# there), so the command logic itself is never controlled by the commenter.
+# handle-command.js re-validates the repo, the issue labels and the author's
+# team membership before dispatching anything.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: release-train-command-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  command:
+    name: Handle release train command
+    if: >-
+      github.event.issue.pull_request == null &&
+      (contains(github.event.comment.body, '/release-train ') ||
+       contains(github.event.comment.body, '/rt ') ||
+       contains(github.event.comment.body, '/train '))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout metapackage
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      - name: Setup Node.js
+        uses: diplodoc-platform/setup-node-action@v1
+        with:
+          node-version: ${{ vars.NODE_VERSION || '24' }}
+          cache: ''
+
+      - name: Install js-yaml
+        run: npm install js-yaml@4 --no-save
+
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.INFRA_APP_ID }}
+          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
+          owner: diplodoc-platform
+
+      - name: Handle command
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: node scripts/release-train/handle-command.js

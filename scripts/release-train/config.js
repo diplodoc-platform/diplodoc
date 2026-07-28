@@ -12,6 +12,7 @@ export function loadConfig(configPath = join(ROOT, 'release-train.yml')) {
   const raw = loadYaml(configPath);
   const defaults = raw.defaults || {};
   const capabilities = raw.capabilities || {};
+  const commands = raw.commands || {};
   const repos = raw.repos || {};
   // Read the committed deps-graph.json rather than rebuilding from submodule
   // package.json files: release-train workflows check out with
@@ -38,11 +39,28 @@ export function loadConfig(configPath = join(ROOT, 'release-train.yml')) {
   return {
     defaults,
     capabilities,
+    commands,
     repos: Object.fromEntries(repoEntries.map((e) => [e.slug, e])),
     graph,
     nodesByRepo,
     nodesByNpm: new Map(graph.nodes.map((n) => [n.npm, n])),
     org: defaults.org || 'diplodoc-platform',
+  };
+}
+
+/**
+ * Where a train's tracking issue lives and which branch workflows are
+ * dispatched on. Every entry point needs the same four values, so they are
+ * resolved in one place instead of being re-derived per script.
+ */
+export function trainContext(config) {
+  const defaults = config.defaults || {};
+  const org = config.org;
+  return {
+    org,
+    issueOwner: defaults.issue_owner || org,
+    issueRepo: defaults.issue_repo || 'diplodoc',
+    targetBranch: defaults.target_branch || 'master',
   };
 }
 

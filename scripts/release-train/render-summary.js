@@ -2,7 +2,7 @@
  * Markdown summary table for release train (GITHUB_STEP_SUMMARY).
  */
 
-import { writeFileSync } from 'node:fs';
+import { appendFileSync, writeFileSync } from 'node:fs';
 
 function fmtSnapshots(snap) {
   if (!snap || snap.state === 'none') return '—';
@@ -52,12 +52,13 @@ export function renderSummaryTable(state, title = 'Release train') {
     (counts.waiting_review || 0) +
     (counts.bumping || 0);
 
+  const branchLine = state.branchName ? `**Branch:** \`${state.branchName}\`` : '';
+  const dryRunLine = state.dryRun ? '**dry run**' : '';
+
   const header = [
     `## ${title}`,
     '',
-    state.branchName
-      ? `**Branch:** \`${state.branchName}\`${state.dryRun ? ' · **dry run**' : ''}`
-      : '',
+    [branchLine, dryRunLine].filter(Boolean).join(' · '),
     '',
     `Packages: **${rows.length}** · queued: **${counts.queued || 0}** · in progress: **${inProgress}** · done: **${(counts.done || 0) + (counts.released || 0)}** · failed: **${counts.failed || 0}**`,
     '',
@@ -90,4 +91,14 @@ export function publishSummary(state, title) {
     return;
   }
   writeFileSync(path, markdown + '\n');
+}
+
+/** Append extra markdown after the summary table (links, hints). */
+export function appendSummary(markdown) {
+  const path = process.env.GITHUB_STEP_SUMMARY;
+  if (!path) {
+    console.log(markdown);
+    return;
+  }
+  appendFileSync(path, markdown + '\n');
 }

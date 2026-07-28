@@ -1,7 +1,10 @@
 # Release train configuration
 #
-# Orchestrates cross-package PR merges: shared branch name → topo merge →
-# release-please → npm → bump downstream deps → wait CI.
+# Orchestrates cross-package PR merges: explicit PR list (or shared branch
+# name) → topo merge → release-please → npm → bump downstream deps → wait CI.
+#
+# A train is identified by `train_id`; its live dashboard and durable state
+# live in the tracking issue `Release train: <train_id>`.
 #
 # See specs/release-train.md
 
@@ -16,6 +19,29 @@ defaults:
   release_poll_timeout_min: 30
   manual_release_timeout_min: 240
   org: diplodoc-platform
+
+  # Branch feature PRs must target to be accepted into a train.
+  target_branch: master
+
+  # Where the tracking issue lives (dashboard + durable RT-STATE).
+  issue_owner: diplodoc-platform
+  issue_repo: diplodoc
+  close_issue_on_success: true
+
+# Issue-comment commands (.github/workflows/release-train-command.yml)
+commands:
+  # Command prefixes: /release-train …, /rt …, /train …
+  aliases:
+    - release-train
+    - rt
+    - train
+  actions:
+    - retry
+    - resume
+    - start
+  # Only active members of this GitHub team may run commands.
+  team_org: diplodoc-platform
+  team_slug: team
 
 capabilities:
   update_snapshots:

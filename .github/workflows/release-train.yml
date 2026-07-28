@@ -3,12 +3,20 @@ name: Release Train
 on:
   workflow_dispatch:
     inputs:
+      train_id:
+        description: 'Resume key. Empty on first run (generated as rt-<run_number>); copy it from the tracking issue to resume.'
+        required: false
+        type: string
+      prs:
+        description: 'Participants: comma-separated PR refs (cli#123, owner/repo#123 or PR URLs)'
+        required: false
+        type: string
       branch_name:
-        description: 'Shared feature branch name (required)'
-        required: true
+        description: 'Fallback discovery by shared feature branch name'
+        required: false
         type: string
       packages:
-        description: 'Comma-separated repo slugs (empty = auto-discover all open PRs for branch)'
+        description: 'Comma-separated repo slugs — narrows the branch fallback only'
         required: false
         type: string
       dry_run:
@@ -20,8 +28,11 @@ on:
 permissions:
   contents: read
 
+# One run per train. A resume uses the same train_id, so it queues behind the
+# run it is replacing instead of racing it; a fresh run is unique per workflow
+# run number.
 concurrency:
-  group: release-train-${{ inputs.branch_name }}
+  group: release-train-${{ inputs.train_id || format('run-{0}', github.run_number) }}
   cancel-in-progress: false
 
 jobs:
@@ -30,7 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       plan_ready: ${{ steps.prepare.outcome == 'success' && steps.plan_check.outputs.exists == 'true' }}
-      branch_name: ${{ inputs.branch_name }}
+      train_id: ${{ steps.prepare.outputs.train_id }}
+      issue_number: ${{ steps.prepare.outputs.issue_number }}
+      issue_url: ${{ steps.prepare.outputs.issue_url }}
     steps:
       - name: Checkout metapackage
         uses: actions/checkout@v5
@@ -58,12 +71,23 @@ jobs:
         id: prepare
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TRAIN_ID: ${{ inputs.train_id }}
+          PRS: ${{ inputs.prs }}
           BRANCH_NAME: ${{ inputs.branch_name }}
           PACKAGES: ${{ inputs.packages }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          ARGS=(--branch "$BRANCH_NAME" --output plan.json)
+          ARGS=(--output plan.json)
+          if [[ -n "${TRAIN_ID:-}" ]]; then
+            ARGS+=(--train-id "$TRAIN_ID")
+          fi
+          if [[ -n "${PRS:-}" ]]; then
+            ARGS+=(--prs "$PRS")
+          fi
+          if [[ -n "${BRANCH_NAME:-}" ]]; then
+            ARGS+=(--branch "$BRANCH_NAME")
+          fi
           if [[ -n "${PACKAGES:-}" ]]; then
             ARGS+=(--packages "$PACKAGES")
           fi
@@ -88,22 +112,6 @@ jobs:
           name: release-train-plan
           path: plan.json
           retention-days: 7
-
-      - name: Render initial summary
-        env:
-          BRANCH_NAME: ${{ inputs.branch_name }}
-          DRY_RUN: ${{ inputs.dry_run }}
-        run: |
-          node --input-type=module -e "
-          import { readFileSync, writeFileSync } from 'node:fs';
-          import { initState, saveState } from './scripts/release-train/state.js';
-          import { publishSummary } from './scripts/release-train/render-summary.js';
-          const plan = JSON.parse(readFileSync('plan.json','utf8'));
-          const state = initState(plan);
-          for (const p of state.packages) p.status = 'queued';
-          saveState(state, 'train-state.json');
-          publishSummary(state, 'Release train — ${{ inputs.branch_name }} (queued)');
-          "
 
   orchestrate:
     name: Run release train
@@ -180,5 +188,6 @@ jobs:
 
       - name: Render final report
         env:
-          BRANCH_NAME: ${{ needs.prepare.outputs.branch_name }}
+          TRAIN_ID: ${{ needs.prepare.outputs.train_id }}
+          ISSUE_URL: ${{ needs.prepare.outputs.issue_url }}
         run: node scripts/release-train/report.js .release-train-status train-state.json
