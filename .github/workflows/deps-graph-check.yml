@@ -9,12 +9,17 @@ name: Deps Graph Check
 # Automated submodule bumps regenerate the graph in update-submodules.yml; this
 # workflow is the defense-in-depth gate for manual edits in PRs.
 
-# Trigger only on the inputs that actually decide graph validity for a manual
-# change:
+# Trigger on the inputs that actually decide graph validity:
 #   - .gitmodules        — the submodule set (graph nodes)
 #   - release-train.yml  — npm ↔ repo mapping used to resolve node identity
 #   - scripts/deps-graph.js — the generator logic itself
-#   - deps-graph.json    — someone hand-edited the artifact
+#   - deps-graph.json    — someone hand-edited the artifact (PR only)
+#
+# NOTE: deps-graph.json is deliberately excluded from the push trigger paths.
+# update-submodules.yml regenerates and commits deps-graph.json on every
+# automated bump, so including it here would re-trigger this check on every
+# bot push — a redundant run that adds no safety. The pull_request trigger
+# still catches hand-edits to deps-graph.json before they land on master.
 #
 # Deliberately NOT triggering on packages/**, extensions/**, devops/**: in the
 # metapackage those paths are submodule pointers that change on every pin bump,
@@ -34,7 +39,6 @@ on:
       - main
     paths:
       - '.gitmodules'
-      - 'deps-graph.json'
       - 'release-train.yml'
       - 'scripts/deps-graph.js'
 

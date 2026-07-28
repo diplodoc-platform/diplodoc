@@ -10,6 +10,11 @@ on:
 
 jobs:
   update-submodules:
+    # Skip push events triggered by bots (this workflow's own App commits and
+    # sync-packages-list.yml commits) to avoid a feedback loop: bot pushes to
+    # master → re-triggers this workflow → finds no changes → stops. Schedule
+    # and workflow_dispatch are unaffected; human pushes still run.
+    if: github.event_name != 'push' || !contains(github.actor, '[bot]')
     runs-on: ubuntu-latest
     permissions:
       contents: write
