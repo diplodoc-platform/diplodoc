@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T02:22:56.230Z",
+  "generatedAt": "2026-08-06T02:25:36.678Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -192,13 +192,6 @@
       "to": "@diplodoc/color-extension",
       "fromShort": "cli",
       "toShort": "color-extension",
-      "type": "prod"
-    },
-    {
-      "from": "@diplodoc/cli",
-      "to": "@diplodoc/components",
-      "fromShort": "cli",
-      "toShort": "components",
       "type": "prod"
     },
     {
