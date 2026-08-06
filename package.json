@@ -29,7 +29,8 @@
     "git:head": "scripts/git-apply.sh master --unsafe",
     "analyze-deps": "scripts/node-version-checker.sh",
     "check-submodules": "scripts/check-submodules.sh",
-    "add-submodules": "scripts/add-submodules.sh"
+    "add-submodules": "scripts/add-submodules.sh",
+    "typecheck:native": "scripts/typecheck-native.sh"
   },
   "repository": {
     "type": "git",
@@ -63,6 +64,6 @@
   },
   "dependencies": {
     "@swc/helpers": "^0.5.17",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   }
 }

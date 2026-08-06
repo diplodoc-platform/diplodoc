@@ -1,0 +1,83 @@
+name: Type Check
+
+# Cross-package type check for the metapackage.
+#
+# Every submodule already type-checks itself in its own "Quality" workflow, but
+# only against the published versions of its @diplodoc dependencies. In the
+# metapackage the same dependencies are npm workspace symlinks to the submodule
+# working copies, so this is the only place where a type break that crosses a
+# package boundary — the usual fallout of a submodule pin bump — becomes visible.
+#
+# The check runs on the native TypeScript compiler (scripts/typecheck-native.sh),
+# which walks every project in the repo in ~6 seconds against ~29 seconds for the
+# JavaScript compiler from package.json. The native compiler is installed by the
+# script into node_modules/.cache/ts-native, deliberately outside the dependency
+# tree: typescript@6 and typescript@7 both ship a `tsc` binary, so installing the
+# second one as a devDependency would silently repoint node_modules/.bin/tsc and
+# change the compiler used by builds, ESLint and ts-jest. Emit and linting stay
+# on the version declared in package.json; this workflow only reads types.
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    name: 'Type check all projects'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install latest npm (>= 11.5.1)
+        run: |
+          [ "$(printf '%s\n' "11.5.1" "$(npm -v)" | sort -V | head -n1)" = "11.5.1" ] || npm install -g npm@11.5.1
+        shell: bash
+
+      - name: Setup node_modules
+        run: |
+          npm i
+          npm run reset -- -u -q
+
+      # Packages resolve each other through their published entry points
+      # (build/, lib/), not through source, so the declaration files have to
+      # exist before anything can be type-checked.
+      - name: Build projects
+        run: npm run build -- --verbose
+
+      # The step is blocking, with two projects excluded by name:
+      #   packages/cli - a TypeScript 7 regression, fails on the native
+      #                  compiler only (microsoft/typescript-go#3481)
+      #   packages/vsc - not maintained for the current toolchain
+      # Making the whole step non-blocking instead would report the same known
+      # failures on every run and train everyone to ignore it, which costs the
+      # other ~28 projects their gate. Drop a name from the filter as soon as
+      # its project is fixed.
+      - name: Type check with the native compiler
+        run: |
+          npm run typecheck:native -- $(
+            ls -d devops/*/ extensions/*/ packages/*/ \
+              packages/transform/e2e packages/transform/playground |
+              grep -vE '^packages/(cli|vsc)/$'
+          )
