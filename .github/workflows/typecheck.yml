@@ -66,6 +66,19 @@ jobs:
       - name: Build projects
         run: npm run build -- --verbose
 
+      # packages/transform/e2e and packages/transform/playground are standalone
+      # npm projects, not workspace members, so the root install leaves them
+      # without node_modules. Type-checking them in that state reports every
+      # storybook/monaco import as TS2307 instead of the cross-package breaks
+      # this workflow exists to catch.
+      - name: Install nested project dependencies
+        run: |
+          for dir in packages/transform/e2e packages/transform/playground; do
+            [ -f "$dir/package-lock.json" ] || continue
+            npm ci --prefix "$dir"
+          done
+        shell: bash
+
       # The step is blocking, with two projects excluded by name:
       #   packages/cli - a TypeScript 7 regression, fails on the native
       #                  compiler only (microsoft/typescript-go#3481)
