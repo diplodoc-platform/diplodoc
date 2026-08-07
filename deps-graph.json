@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-07T02:34:46.358Z",
+  "generatedAt": "2026-08-07T14:22:29.990Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -451,6 +451,13 @@
       "to": "@diplodoc/utils",
       "fromShort": "transform",
       "toShort": "utils",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/translation",
+      "to": "@diplodoc/ajv",
+      "fromShort": "translation",
+      "toShort": "ajv",
       "type": "prod"
     },
     {
