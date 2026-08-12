@@ -22,7 +22,9 @@ export function statusClass(status) {
   if (COMPLETED.has(value)) return 'done';
   if (value === 'failed') return 'failed';
   if (value.startsWith('queued')) return 'queued';
-  if (value === 'skipped') return 'skipped';
+  if (value === 'skipped' || value === 'blocked') return 'skipped';
+  // Waiting on a human is stalled, not progressing — colour it like a queue.
+  if (value === 'needs_human') return 'queued';
   return 'running';
 }
 

@@ -11,6 +11,8 @@ test('statusClass maps train statuses to graph classes', () => {
   assert.equal(statusClass('queued (dry-run)'), 'queued');
   assert.equal(statusClass('failed'), 'failed');
   assert.equal(statusClass('skipped'), 'skipped');
+  assert.equal(statusClass('blocked'), 'skipped');
+  assert.equal(statusClass('needs_human'), 'queued');
   assert.equal(statusClass('merging'), 'running');
 });
 
