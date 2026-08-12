@@ -22,6 +22,7 @@ export function createPackageState(entry) {
     snapshots: { state: 'none', url: null, message: null },
     mergeReadiness: null,
     bumpedDeps: null,
+    needsHuman: null,
     autoMergeEnabled: false,
     startedAt: null,
     finishedAt: null,
@@ -124,6 +125,7 @@ const KNOWN_STATUSES = new Set([
   'merging',
   'release_pending',
   'waiting_release_review',
+  'needs_human',
   'bumping',
   'released',
   'done',
@@ -249,6 +251,9 @@ export function mergePlanWithRestoredState(plan, restored) {
       snapshots: prev.snapshots || pkg.snapshots,
       mergeReadiness: prev.mergeReadiness ?? null,
       bumpedDeps: prev.bumpedDeps ?? null,
+      // A resume is an explicit human action, so a package that ran out of its
+      // grace window starts a fresh one instead of inheriting a past deadline.
+      needsHuman: null,
       autoMergeEnabled: Boolean(prev.autoMergeEnabled),
       startedAt: prev.startedAt ?? null,
       finishedAt: prev.finishedAt ?? null,
