@@ -25,6 +25,18 @@ defaults:
   merge_grace_min: 30
   merge_grace_poll_s: 240
 
+  # How many packages the train may process at once. Packages only start when
+  # their in-train dependencies have released, so the effective parallelism is
+  # bounded by the dependency graph as well. Each package in flight costs
+  # roughly 6-10 CI jobs (3-OS matrix, coverage, security, lockfile), so 3
+  # keeps a 20-runner pool busy without starving it. Set to 1 to reproduce the
+  # old strictly sequential behaviour.
+  concurrency: 3
+
+  # Floor between tracking-issue PATCH requests, so concurrent packages polling
+  # in parallel cannot turn the dashboard into an API-rate-limit problem.
+  issue_update_min_interval_s: 20
+
   org: diplodoc-platform
 
   # Branch feature PRs must target to be accepted into a train.

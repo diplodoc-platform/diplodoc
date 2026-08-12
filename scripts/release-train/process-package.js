@@ -160,7 +160,7 @@ async function waitForHumanMerge(ctx, entry, prNumber, { reason, autoMerge, deps
     status: 'needs_human',
     needsHuman: { reason, autoMerge, since: ctx.now(), deadline: new Date(deadline).toISOString() },
   });
-  ctx.persist();
+  ctx.persist({ force: true });
 
   const prRef = `${ctx.org}/${repo}#${prNumber}`;
   console.log(`::warning::${prRef} cannot merge: ${reason}. Waiting up to ${graceMin}m.`);

@@ -19,6 +19,10 @@ on:
         description: 'Comma-separated repo slugs — narrows the branch fallback only'
         required: false
         type: string
+      concurrency:
+        description: 'How many packages to process at once (default from release-train.yml, currently 3)'
+        required: false
+        type: string
       dry_run:
         description: 'Plan only, no merges'
         required: false
@@ -75,6 +79,7 @@ jobs:
           PRS: ${{ inputs.prs }}
           BRANCH_NAME: ${{ inputs.branch_name }}
           PACKAGES: ${{ inputs.packages }}
+          CONCURRENCY: ${{ inputs.concurrency }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
@@ -90,6 +95,9 @@ jobs:
           fi
           if [[ -n "${PACKAGES:-}" ]]; then
             ARGS+=(--packages "$PACKAGES")
+          fi
+          if [[ -n "${CONCURRENCY:-}" ]]; then
+            ARGS+=(--concurrency "$CONCURRENCY")
           fi
           if [[ "$DRY_RUN" == "true" ]]; then
             ARGS+=(--dry-run)
