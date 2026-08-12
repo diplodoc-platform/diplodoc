@@ -10,11 +10,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { loadConfig } from './config.js';
-import { mergePr } from './gh.js';
-import { waitForReleasePleaseMerge } from './wait-release-please.js';
-import { waitForNpmPackage, readPackageVersionFromRepo } from './wait-npm.js';
-import { bumpDownstreamDeps } from './bump-downstream.js';
-import { waitForCiGreen } from './wait-ci.js';
+import { processPackage } from './process-package.js';
 import {
   findPackage,
   isPackageCompleted,
@@ -68,10 +64,6 @@ let issueWritesDisabled = false;
 
 function isPermanentApiError(message) {
   return /HTTP (401|403|404)/.test(message);
-}
-
-function branchOf(repo) {
-  return findPackage(state, repo)?.featurePr?.headRefName || plan.branchName;
 }
 
 function updateTrackingIssue({ status = 'running', finishedAt = null, error = null } = {}) {
@@ -159,67 +151,24 @@ function writeStatusArtifacts() {
 
 persist();
 
-async function waitCiForRepo(repo) {
-  const pkgState = findPackage(state, repo);
-  if (!pkgState?.featurePr) return;
-
-  updatePackage(state, repo, { status: 'waiting_ci' });
-  persist();
-
-  const result = await waitForCiGreen({
-    owner: org,
-    repo,
-    featurePr: pkgState.featurePr,
-    branchName: branchOf(repo),
-    token,
-    config,
-    pollIntervalS: defaults.ci_poll_interval_s || 90,
-    timeoutMin: defaults.ci_poll_timeout_min || 360,
-    onPoll: ({ ci, snapshots, mergeReadiness }) => {
-      updatePackage(state, repo, { ci, snapshots, mergeReadiness });
-      persist();
-    },
-  });
-
-  updatePackage(state, repo, {
-    ci: result.ci,
-    snapshots: result.snapshots,
-  });
-  persist();
-}
-
-/**
- * Deferred dependency bump: one commit on the package's feature branch with
- * every version published so far, applied right before the package's turn.
- * In topological order all in-train upstreams have released by that point, so
- * `publishedByNpm` is exactly the accumulated set — one commit, one CI rerun,
- * instead of the previous per-release fan-out over every remaining PR.
- * `bumpDownstreamDeps` is idempotent, so a resume replays this as a no-op.
- */
-function applyPendingBump(entry) {
-  const pkg = findPackage(state, entry.repo);
-  if (!pkg?.featurePr?.number) return;
-  if (!Object.keys(publishedByNpm).length) return;
-
-  updatePackage(state, entry.repo, { status: 'bumping' });
-  persist();
-
-  const results = bumpDownstreamDeps({
-    owner: org,
-    token,
-    branchName: plan.branchName,
-    publishedVersions: { ...publishedByNpm },
-    targets: [{ repo: entry.repo, featurePr: pkg.featurePr, branch: pkg.featurePr.headRefName }],
-    updateLockfile: config.capabilities?.update_lockfile?.default !== false,
-    trainId,
-    issueRef: issue,
-  });
-
-  if (results[0]?.bumped) {
-    updatePackage(state, entry.repo, { bumpedDeps: { ...publishedByNpm } });
-    persist();
-  }
-}
+/** Shared context handed to the per-package pipeline (process-package.js). */
+const ctx = {
+  org,
+  token,
+  approverToken,
+  config,
+  defaults,
+  trainId,
+  issue,
+  branchName: plan.branchName,
+  targetBranch: defaults.target_branch || 'master',
+  publishedByNpm,
+  updateLockfile: config.capabilities?.update_lockfile?.default !== false,
+  findPackage: (repo) => findPackage(state, repo),
+  updatePackage: (repo, patch) => updatePackage(state, repo, patch),
+  persist,
+  now: () => new Date().toISOString(),
+};
 
 async function run() {
   if (plan.dryRun) {
@@ -252,65 +201,7 @@ async function run() {
     }
 
     try {
-      applyPendingBump(entry);
-
-      await waitCiForRepo(repo);
-
-      updatePackage(state, repo, {
-        status: 'merging',
-        startedAt: findPackage(state, repo)?.startedAt || new Date().toISOString(),
-      });
-      persist();
-
-      mergePr(org, repo, entry.featurePr.number, entry.merge_method || 'rebase', token);
-
-      updatePackage(state, repo, { status: 'release_pending' });
-      persist();
-
-      const releaseTimeout = entry.auto_approve_release
-        ? defaults.release_poll_timeout_min || 30
-        : defaults.manual_release_timeout_min || 240;
-
-      const rp = await waitForReleasePleaseMerge({
-        owner: org,
-        repo,
-        token,
-        approverToken,
-        autoApprove: entry.auto_approve_release,
-        mergeMethod: entry.merge_method || 'rebase',
-        pollIntervalS: defaults.release_poll_interval_s || 30,
-        timeoutMin: releaseTimeout,
-        onReleasePr: ({ releasePr, pendingVersion }) => {
-          updatePackage(state, repo, { releasePr, pendingVersion });
-          persist();
-        },
-      });
-
-      updatePackage(state, repo, { releasePr: rp.releasePr });
-
-      if (rp.waitingManual) {
-        updatePackage(state, repo, { status: 'waiting_release_review' });
-        persist();
-        throw new Error(
-          `Timed out waiting for manual release PR merge: ${org}/${repo}#${rp.releasePr.number}`,
-        );
-      }
-
-      const version = readPackageVersionFromRepo(org, repo, 'master', token);
-      await waitForNpmPackage(entry.npm, version, defaults.npm_wait_timeout_min || 15);
-      publishedByNpm[entry.npm] = version.replace(/^v/, '');
-
-      updatePackage(state, repo, {
-        status: 'released',
-        npmVersion: publishedByNpm[entry.npm],
-      });
-      persist();
-
-      updatePackage(state, repo, {
-        status: 'done',
-        finishedAt: new Date().toISOString(),
-      });
-      persist();
+      await processPackage(ctx, entry);
     } catch (err) {
       updatePackage(state, repo, {
         status: 'failed',
