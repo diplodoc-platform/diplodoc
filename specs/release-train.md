@@ -339,6 +339,23 @@ Important boundaries:
 
 The drift audit reports peer dependencies but never auto-updates them: `npm install --save*` cannot write `peerDependencies`.
 
+`workflow_dispatch` always runs the workflow definition taken from the ref it is
+dispatched on, not from the default branch. The drift flow is safe because
+`drift-<train_id>` is branched off `master`, which carries the current
+scaffolding. Dispatching `update-deps.yml` by hand on an older feature branch
+runs that branch's copy of the workflow instead — a branch cut before
+scaffolding v2.2.2 has no `create_pr` input and falls back to the legacy
+behaviour (a `ci/update-deps/*` branch and a PR to `master`), and rejects the
+dispatch with `Unexpected inputs`.
+
+All train repos carry `create_pr` on `master` today, so in practice this can
+only happen on a `drift-<train_id>` branch left over from an earlier train:
+`ensureBranch` deliberately reuses an existing drift branch instead of
+recreating it, and the dispatch targets that branch. `start-drift-train.js`
+therefore annotates the failure differently depending on whether the branch was
+reused (delete it, or start a train with a new id) or freshly cut (update the
+repo's scaffolding) — see `dispatchFailureHint` in `drift.js`.
+
 ## 11. Scripts layout
 
 **Path:** [`scripts/release-train/`](../scripts/release-train/)

@@ -26,7 +26,7 @@ import {
   getIssue,
   getLatestWorkflowRun,
 } from './gh.js';
-import { updateDepsPackagesInput } from './drift.js';
+import { dispatchFailureHint, updateDepsPackagesInput } from './drift.js';
 import { pollUntil, waitMs } from './poll.js';
 import { appendSummary } from './render-summary.js';
 import {
@@ -111,8 +111,10 @@ for (const update of drift.updates) {
     continue;
   }
 
+  let branchReused = false;
   try {
     const branch = ensureBranch(org, repo, driftBranch, targetBranch, token);
+    branchReused = !branch.created;
     console.log(`${org}/${repo}: branch ${driftBranch} ${branch.created ? 'created' : 'reused'}`);
 
     dispatchWorkflow(
@@ -160,8 +162,20 @@ for (const update of drift.updates) {
 
     results.push({ repo, packages, branch: driftBranch, pr: { number: pr.number, url: pr.url }, status: 'ready' });
   } catch (err) {
-    results.push({ repo, packages, branch: driftBranch, pr: null, status: `failed: ${err.message}` });
-    console.warn(`::warning::Drift start failed for ${repo}: ${err.message}`);
+    const hint = dispatchFailureHint({
+      message: err.message,
+      branch: driftBranch,
+      branchReused,
+      targetBranch,
+    });
+    results.push({
+      repo,
+      packages,
+      branch: driftBranch,
+      pr: null,
+      status: `failed: ${err.message}${hint}`,
+    });
+    console.warn(`::warning::Drift start failed for ${repo}: ${err.message}${hint}`);
   }
 }
 
