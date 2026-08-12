@@ -11,8 +11,9 @@
  * testable without a network.
  */
 
-import { getPr, mergePr } from './gh.js';
+import { enableAutoMerge, getPr, mergePr } from './gh.js';
 import { bumpDownstreamDeps } from './bump-downstream.js';
+import { waitMs } from './poll.js';
 import { waitForCiGreen } from './wait-ci.js';
 import { waitForReleasePleaseMerge } from './wait-release-please.js';
 import { readPackageVersionFromRepo, waitForNpmPackage } from './wait-npm.js';
@@ -20,7 +21,9 @@ import { readPackageVersionFromRepo, waitForNpmPackage } from './wait-npm.js';
 export const defaultDeps = {
   getPr,
   mergePr,
+  enableAutoMerge,
   bumpDownstreamDeps,
+  waitMs,
   waitForCiGreen,
   waitForReleasePleaseMerge,
   readPackageVersionFromRepo,
@@ -56,7 +59,7 @@ export async function processPackage(ctx, entry, deps = defaultDeps) {
     await waitForGreenCi(ctx, entry, deps);
     ctx.updatePackage(repo, { status: 'merging' });
     ctx.persist();
-    deps.mergePr(ctx.org, repo, prNumber, entry.merge_method || 'rebase', ctx.token);
+    await mergeFeaturePr(ctx, entry, prNumber, deps);
   }
 
   await ensureReleased(ctx, entry, deps);
@@ -96,6 +99,115 @@ function ensureBumped(ctx, entry, deps) {
     ctx.updatePackage(entry.repo, { bumpedDeps: { ...ctx.publishedByNpm } });
     ctx.persist();
   }
+}
+
+/**
+ * Merge failures that a human can clear (branch protection, missing review,
+ * a check that has not reported yet). Anything else is a real error and fails
+ * the package immediately.
+ */
+const MERGE_BLOCKED_RE =
+  /base branch policy|not mergeable|review required|required status check|protected branch|changes requested|not in the required state|auto-merge/i;
+
+/**
+ * Merge the feature PR, tolerating "not mergeable yet".
+ *
+ * Auto-merge is tried first: on a repo with branch protection it is exactly
+ * the primitive `gh pr merge` suggests, and GitHub merges as soon as the
+ * requirements are met. When the merge stays blocked the package enters a
+ * grace window instead of failing the train — the table shows a countdown so
+ * a human can intervene before the deadline.
+ */
+async function mergeFeaturePr(ctx, entry, prNumber, deps) {
+  const repo = entry.repo;
+  const method = entry.merge_method || 'rebase';
+
+  try {
+    deps.mergePr(ctx.org, repo, prNumber, method, ctx.token);
+    return;
+  } catch (err) {
+    if (!MERGE_BLOCKED_RE.test(err.message)) throw err;
+
+    const armed = deps.enableAutoMerge(ctx.org, repo, prNumber, method, ctx.token);
+    await waitForHumanMerge(ctx, entry, prNumber, {
+      reason: firstLine(err.message),
+      autoMerge: armed,
+      deps,
+    });
+  }
+}
+
+function firstLine(message) {
+  return String(message || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .find((line) => !/^Command failed/i.test(line)) || 'merge blocked';
+}
+
+/**
+ * Grace window for a blocked merge. The deadline is stored in state and the
+ * remaining time is rendered by render-summary at persist time, so the
+ * countdown needs no timer of its own.
+ */
+async function waitForHumanMerge(ctx, entry, prNumber, { reason, autoMerge, deps }) {
+  const repo = entry.repo;
+  const graceMin = ctx.defaults.merge_grace_min ?? 30;
+  const pollS = ctx.defaults.merge_grace_poll_s ?? 240;
+  const deadline = Date.now() + graceMin * 60 * 1000;
+
+  ctx.updatePackage(repo, {
+    status: 'needs_human',
+    needsHuman: { reason, autoMerge, since: ctx.now(), deadline: new Date(deadline).toISOString() },
+  });
+  ctx.persist();
+
+  const prRef = `${ctx.org}/${repo}#${prNumber}`;
+  console.log(`::warning::${prRef} cannot merge: ${reason}. Waiting up to ${graceMin}m.`);
+  if (ctx.notify) {
+    ctx.notify(
+      [
+        `⚠️ Release train \`${ctx.trainId}\` is waiting on \`${prRef}\`: ${reason}`,
+        '',
+        autoMerge
+          ? 'Auto-merge is armed — the train continues as soon as the requirements are met.'
+          : 'Auto-merge could not be enabled — merge the PR manually.',
+        '',
+        `The train gives up on this package in ${graceMin}m.`,
+      ].join('\n'),
+    );
+  }
+
+  while (Date.now() < deadline) {
+    await deps.waitMs(pollS * 1000);
+
+    const pr = deps.getPr(ctx.org, repo, prNumber, ctx.token);
+    if (pr.state === 'MERGED') {
+      console.log(`[${repo}] feature PR #${prNumber} merged during the grace period`);
+      ctx.updatePackage(repo, { status: 'merging', needsHuman: null });
+      ctx.persist();
+      return;
+    }
+    if (pr.state === 'CLOSED') {
+      throw new Error(`Feature PR ${prRef} was closed without merge`);
+    }
+
+    if (!autoMerge) {
+      try {
+        deps.mergePr(ctx.org, repo, prNumber, entry.merge_method || 'rebase', ctx.token);
+        ctx.updatePackage(repo, { status: 'merging', needsHuman: null });
+        ctx.persist();
+        return;
+      } catch (err) {
+        if (!MERGE_BLOCKED_RE.test(err.message)) throw err;
+      }
+    }
+
+    // Re-persist so the rendered countdown moves.
+    ctx.persist();
+  }
+
+  throw new Error(`Feature PR ${prRef} still cannot merge after ${graceMin}m: ${reason}`);
 }
 
 async function waitForGreenCi(ctx, entry, deps) {

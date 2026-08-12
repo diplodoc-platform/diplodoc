@@ -160,8 +160,19 @@ for (const update of drift.updates) {
 
     results.push({ repo, packages, branch: driftBranch, pr: { number: pr.number, url: pr.url }, status: 'ready' });
   } catch (err) {
-    results.push({ repo, packages, branch: driftBranch, pr: null, status: `failed: ${err.message}` });
-    console.warn(`::warning::Drift start failed for ${repo}: ${err.message}`);
+    // `create_pr` only exists in the scaffolding template from v2.2.2 on; a repo
+    // that has not picked it up yet rejects the dispatch outright.
+    const hint = /nexpected inputs/.test(err.message)
+      ? ' — this repo still has an update-deps.yml without the `create_pr` input, update its scaffolding'
+      : '';
+    results.push({
+      repo,
+      packages,
+      branch: driftBranch,
+      pr: null,
+      status: `failed: ${err.message}${hint}`,
+    });
+    console.warn(`::warning::Drift start failed for ${repo}: ${err.message}${hint}`);
   }
 }
 

@@ -18,6 +18,13 @@ defaults:
   release_poll_interval_s: 30
   release_poll_timeout_min: 30
   manual_release_timeout_min: 240
+
+  # A feature PR that cannot merge yet (branch protection, missing review) does
+  # not fail the train immediately: auto-merge is armed and the package waits
+  # this long for a human, showing a countdown in the dashboard table.
+  merge_grace_min: 30
+  merge_grace_poll_s: 240
+
   org: diplodoc-platform
 
   # Branch feature PRs must target to be accepted into a train.

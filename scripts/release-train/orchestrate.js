@@ -168,6 +168,20 @@ const ctx = {
   updatePackage: (repo, patch) => updatePackage(state, repo, patch),
   persist,
   now: () => new Date().toISOString(),
+  notify: (body) => {
+    if (!issue?.number) return;
+    try {
+      commentTrainIssue({
+        owner: issue.owner,
+        repo: issue.repo,
+        issueNumber: issue.number,
+        body,
+        token,
+      });
+    } catch (err) {
+      console.warn(`::warning::Could not comment on tracking issue: ${err.message}`);
+    }
+  },
 };
 
 async function run() {

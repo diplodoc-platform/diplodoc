@@ -6,6 +6,7 @@ import {
   fmtFeaturePr,
   fmtMergeReadiness,
   fmtNpmVersion,
+  fmtStatus,
   renderSummaryTable,
 } from './render-summary.js';
 
@@ -36,6 +37,19 @@ test('fmtNpmVersion shows the pending release version before npm confirms', () =
   assert.equal(fmtNpmVersion({ npmVersion: '1.2.3', pendingVersion: '1.2.3' }), '1.2.3');
   assert.equal(fmtNpmVersion({ npmVersion: null, pendingVersion: '1.2.3' }), '1.2.3 (pending)');
   assert.equal(fmtNpmVersion({ npmVersion: null, pendingVersion: null }), '—');
+});
+
+test('fmtStatus counts down the needs-human grace window', () => {
+  const now = Date.parse('2026-08-12T12:00:00.000Z');
+  const pkg = {
+    status: 'needs_human',
+    needsHuman: { deadline: '2026-08-12T12:17:30.000Z' },
+  };
+  assert.equal(fmtStatus(pkg, now), '⚠️ needs human — 18m left');
+  assert.equal(fmtStatus({ ...pkg, needsHuman: { deadline: '2026-08-12T11:00:00.000Z' } }, now), '⚠️ needs human — 0m left');
+  assert.equal(fmtStatus({ status: 'needs_human' }, now), 'needs_human');
+  assert.equal(fmtStatus({ status: 'done' }, now), 'done');
+  assert.equal(fmtStatus({ status: 'failed', error: 'boom' }, now), '❌ failed');
 });
 
 test('renderSummaryTable shows early CI failures with remaining check count', () => {

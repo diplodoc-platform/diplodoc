@@ -64,6 +64,21 @@ export function fmtNpmVersion(pkg) {
   return '—';
 }
 
+/**
+ * Status cell. A package waiting for a human shows the time left in its grace
+ * window; the deadline lives in state, so the countdown moves on every persist
+ * without a timer of its own.
+ */
+export function fmtStatus(pkg, now = Date.now()) {
+  const status = pkg.error ? `❌ ${pkg.status}` : pkg.status;
+  if (pkg.status !== 'needs_human' || !pkg.needsHuman?.deadline) return status;
+
+  const leftMs = new Date(pkg.needsHuman.deadline).getTime() - now;
+  if (!Number.isFinite(leftMs)) return status;
+  const leftMin = Math.max(0, Math.ceil(leftMs / 60000));
+  return `⚠️ needs human — ${leftMin}m left`;
+}
+
 function fmtDuration(pkg) {
   if (!pkg.startedAt) return '—';
   const end = pkg.finishedAt ? new Date(pkg.finishedAt) : new Date();
@@ -84,6 +99,7 @@ export function renderSummaryTable(state, title = 'Release train') {
     (counts.release_pending || 0) +
     (counts.waiting_ci || 0) +
     (counts.waiting_review || 0) +
+    (counts.needs_human || 0) +
     (counts.bumping || 0);
 
   const branchLine = state.branchName ? `**Branch:** \`${state.branchName}\`` : '';
@@ -101,11 +117,10 @@ export function renderSummaryTable(state, title = 'Release train') {
   ].filter(Boolean);
 
   const body = rows.map((p) => {
-    const status = p.error ? `❌ ${p.status}` : p.status;
     return [
       `\`${p.repo}\``,
       fmtFeaturePr(p.featurePr, p.mergeReadiness),
-      status,
+      fmtStatus(p),
       fmtPr(p.releasePr),
       fmtNpmVersion(p),
       fmtCi(p.ci),

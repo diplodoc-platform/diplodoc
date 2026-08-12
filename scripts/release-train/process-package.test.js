@@ -13,14 +13,16 @@ const ENTRY = {
   auto_approve_release: true,
 };
 
-function makeCtx({ pkg = createPackageState(ENTRY), publishedByNpm = {} } = {}) {
+function makeCtx({ pkg = createPackageState(ENTRY), publishedByNpm = {}, defaults = {} } = {}) {
   const packages = [pkg];
+  const notices = [];
   return {
     org: 'diplodoc-platform',
     token: 'token',
     approverToken: 'approver',
     config: {},
-    defaults: {},
+    defaults,
+    notices,
     trainId: 'rt-1',
     issue: { owner: 'diplodoc-platform', repo: 'diplodoc', number: 106 },
     branchName: null,
@@ -30,6 +32,7 @@ function makeCtx({ pkg = createPackageState(ENTRY), publishedByNpm = {} } = {}) 
     findPackage: (repo) => packages.find((p) => p.repo === repo),
     updatePackage: (repo, patch) => Object.assign(packages.find((p) => p.repo === repo), patch),
     persist: () => {},
+    notify: (body) => notices.push(body),
     now: () => '2026-08-12T00:00:00.000Z',
   };
 }
@@ -41,6 +44,13 @@ function makeDeps(overrides = {}) {
   const deps = {
     getPr: () => ({ state: 'OPEN' }),
     mergePr: (...args) => calls.push(['mergePr', args]),
+    enableAutoMerge: (...args) => {
+      calls.push(['autoMerge', args]);
+      return true;
+    },
+    waitMs: async () => {
+      calls.push(['waitMs']);
+    },
     bumpDownstreamDeps: (...args) => {
       calls.push(['bump', args]);
       return [{ repo: 'cli', bumped: true }];
@@ -156,6 +166,63 @@ test('manual release timeout surfaces waiting_release_review', async () => {
     /Timed out waiting for manual release PR merge/,
   );
   assert.equal(ctx.findPackage('cli').status, 'waiting_release_review');
+});
+
+test('a blocked merge arms auto-merge and waits for a human instead of failing', async () => {
+  const ctx = makeCtx({ defaults: { merge_grace_min: 30, merge_grace_poll_s: 0 } });
+  let mergeCalls = 0;
+  let prState = 'OPEN';
+  const { deps, calls } = makeDeps({
+    mergePr: () => {
+      mergeCalls += 1;
+      throw new Error(
+        'Command failed: gh pr merge 1\nX Pull request #1 is not mergeable: the base branch policy prohibits the merge.',
+      );
+    },
+    getPr: (owner, repo, number) => {
+      if (number === 9) return { state: 'MERGED' };
+      const state = prState;
+      // The human merges it while the train waits.
+      prState = 'MERGED';
+      return { state };
+    },
+  });
+
+  await processPackage(ctx, ENTRY, deps);
+
+  assert.equal(mergeCalls, 1, 'auto-merge armed, so no repeated direct merge');
+  assert.ok(calls.some(([name]) => name === 'autoMerge'));
+  assert.equal(ctx.findPackage('cli').status, 'done');
+  assert.equal(ctx.findPackage('cli').needsHuman, null);
+  assert.match(ctx.notices[0], /base branch policy prohibits the merge/);
+});
+
+test('a merge blocked past the grace window fails the package', async () => {
+  const ctx = makeCtx({ defaults: { merge_grace_min: 0, merge_grace_poll_s: 0 } });
+  const { deps } = makeDeps({
+    mergePr: () => {
+      throw new Error('X Pull request #1 is not mergeable: review required');
+    },
+  });
+
+  await assert.rejects(
+    () => processPackage(ctx, ENTRY, deps),
+    /still cannot merge after 0m: .*review required/,
+  );
+  assert.equal(ctx.findPackage('cli').status, 'needs_human');
+  assert.ok(ctx.findPackage('cli').needsHuman.deadline);
+});
+
+test('a non-blocking merge error still fails immediately', async () => {
+  const ctx = makeCtx();
+  const { deps } = makeDeps({
+    mergePr: () => {
+      throw new Error('HTTP 500: something exploded');
+    },
+    enableAutoMerge: never('enableAutoMerge'),
+  });
+
+  await assert.rejects(() => processPackage(ctx, ENTRY, deps), /something exploded/);
 });
 
 test('no accumulated versions means no bump commit', async () => {
