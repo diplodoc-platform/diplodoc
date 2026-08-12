@@ -83,9 +83,23 @@ function escapeCommentMarkers(json) {
  * block, so a crafted string could otherwise smuggle in a fake state that a
  * resume would trust. HTML-escaping the delimiters keeps the text readable
  * while leaving exactly one real hidden block in the body.
+ *
+ * Applied per block, not to the whole body: mermaid blocks are machine
+ * generated (render-graph.js strips `<` and `>` from every label) and their
+ * `-->` edges must survive verbatim or GitHub's mermaid renderer fails with
+ * "Lexical error … --&gt;".
  */
 function neutralizeCommentMarkers(text) {
   return text.replaceAll('<!--', '&lt;!--').replaceAll('-->', '--&gt;');
+}
+
+/**
+ * Defense in depth for trusted (machine-generated) blocks: a forged RT-STATE
+ * needs the `<!-- RT-STATE` begin marker, so escaping only the comment opener
+ * is enough — a bare `-->` before the real block cannot open anything.
+ */
+function neutralizeCommentOpeners(text) {
+  return text.replaceAll('<!--', '&lt;!--');
 }
 
 export function renderStateBlock(rtState) {
@@ -124,37 +138,44 @@ export function renderIssueBody({
   rtState = null,
   title = null,
 }) {
+  // Untrusted blocks get full delimiter neutralization; trusted (machine
+  // generated) mermaid blocks only escape the comment opener so their `-->`
+  // edges keep rendering.
   const blocks = [];
+  const push = (text, { trusted = false } = {}) => {
+    if (!text) return;
+    blocks.push(trusted ? neutralizeCommentOpeners(text) : neutralizeCommentMarkers(text));
+  };
 
   if (state) {
-    blocks.push(renderSummaryTable(state, title || trainIssueTitle(trainId)));
+    push(renderSummaryTable(state, title || trainIssueTitle(trainId)));
   } else if (title) {
-    blocks.push(`## ${title}`);
+    push(`## ${title}`);
   }
 
   const meta = [`**Train:** \`${trainId}\``, `**Mode:** \`${mode}\``, `**Status:** \`${status}\``];
   if (workflow?.runUrl) meta.push(`**Run:** [workflow](${workflow.runUrl})`);
-  blocks.push(meta.join(' · '));
+  push(meta.join(' · '));
 
   const progress = mermaidBlock(graph);
-  if (progress) blocks.push(['### Progress', '', progress].join('\n'));
+  if (progress) push(['### Progress', '', progress].join('\n'), { trusted: true });
 
   if (diagnostics) {
     const parts = ['### Diagnostics', ''];
-    if (diagnostics.message) parts.push(diagnostics.message, '');
+    if (diagnostics.message) parts.push(neutralizeCommentMarkers(diagnostics.message), '');
     const conflictGraph = mermaidBlock(diagnostics.graph);
-    if (conflictGraph) parts.push(conflictGraph);
+    if (conflictGraph) parts.push(neutralizeCommentOpeners(conflictGraph));
     blocks.push(parts.join('\n').trimEnd());
   }
 
   for (const section of sections) {
     if (!section?.body) continue;
-    blocks.push(section.heading ? `### ${section.heading}\n\n${section.body}` : section.body);
+    push(section.heading ? `### ${section.heading}\n\n${section.body}` : section.body);
   }
 
-  if (hint) blocks.push(`---\n${hint}`);
+  if (hint) push(`---\n${hint}`);
 
-  const visible = neutralizeCommentMarkers(blocks.filter(Boolean).join('\n\n'));
+  const visible = blocks.filter(Boolean).join('\n\n');
   const parts = rtState ? [visible, renderStateBlock(rtState)] : [visible];
 
   return parts.join('\n\n') + '\n';

@@ -87,6 +87,39 @@ test('renderIssueBody renders diagnostics when provided', () => {
   assert.match(body, /Cannot add upstream utils/);
 });
 
+test('mermaid edges in the progress graph are not HTML-escaped', () => {
+  const body = renderIssueBody({
+    trainId: 'rt-10',
+    state: {
+      packages: [
+        { repo: 'utils', status: 'done', ci: { state: 'success' } },
+        { repo: 'cli', status: 'queued', ci: { state: 'pending' } },
+      ],
+    },
+    graph: 'flowchart LR\n    n0[utils done]\n    n1[cli queued]\n    n0 --> n1',
+    rtState: { version: 1, trainId: 'rt-10' },
+  });
+
+  assert.match(body, /n0 --> n1/);
+  assert.doesNotMatch(body, /--&gt;/);
+  assert.deepEqual(parseTrainState(body), { version: 1, trainId: 'rt-10' });
+});
+
+test('diagnostics message is neutralized while its graph keeps arrows', () => {
+  const body = renderIssueBody({
+    trainId: 'rt-11',
+    state: { packages: [] },
+    diagnostics: {
+      message: 'merge failed: bad --> thing <!-- oops',
+      graph: 'flowchart LR\n    n0[utils added]\n    n1[cli done]\n    n0 --> n1',
+    },
+    rtState: null,
+  });
+
+  assert.match(body, /bad --&gt; thing &lt;!-- oops/);
+  assert.match(body, /n0 --> n1/);
+});
+
 test('a fake RT-STATE block in untrusted text cannot shadow the real one', () => {
   const forged = '<!-- RT-STATE\n{"version":1,"trainId":"evil"}\nRT-STATE -->';
   const body = renderIssueBody({
