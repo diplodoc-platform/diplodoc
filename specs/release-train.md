@@ -4,7 +4,7 @@ Automated cascade for Diplodoc metapackage changes that span multiple `@diplodoc
 
 The train is identified by `train_id`. Feature PRs no longer need to share the same branch name: the preferred input is an explicit PR list, while branch-based discovery remains as a backward-compatible fallback.
 
-Detailed implementation plan: [`plans/release-train-tracking-issue.md`](../plans/release-train-tracking-issue.md). Related `update-deps.yml` plan: [`plans/update-deps-drift-branch.md`](../plans/update-deps-drift-branch.md).
+User guide: [`scripts/release-train/README.md`](../scripts/release-train/README.md) ([ru](../scripts/release-train/README.ru.md)).
 
 Pattern reference: [`devops/infra/.github/workflows/distribute-infra.yml`](../devops/infra/.github/workflows/distribute-infra.yml) (summary table, status artifacts, poll loops).
 
@@ -335,7 +335,7 @@ The audit:
 Important boundaries:
 - [`update-deps.yml`](../devops/infra/scaffolding/.github/workflows/update-deps.yml) does not know about `train_id`
 - release train owns drift branch creation and tracking issue linkage
-- `update-deps.yml` has a `create_pr` input that only applies on non-master branches (ignored on master, default `false`), described in [`plans/update-deps-drift-branch.md`](../plans/update-deps-drift-branch.md)
+- `update-deps.yml` has a `create_pr` input that only applies on non-master branches (ignored on master, default `false`)
 
 The drift audit reports peer dependencies but never auto-updates them: `npm install --save*` cannot write `peerDependencies`.
 
@@ -393,8 +393,6 @@ Unit tests live next to the modules as `*.test.js` and run with `npm run test:sc
 
 ## 14. Implementation order
 
-See phased plan with verification pauses in [`plans/release-train-tracking-issue.md`](../plans/release-train-tracking-issue.md).
-
 High-level phases:
 
 1. Tracking issue skeleton and PR discovery
@@ -408,8 +406,7 @@ High-level phases:
 
 ## 15. Related docs
 
-- [`plans/release-train-tracking-issue.md`](../plans/release-train-tracking-issue.md) — detailed implementation plan
-- [`plans/update-deps-drift-branch.md`](../plans/update-deps-drift-branch.md) — separate `update-deps.yml` enhancement plan
+- [`scripts/release-train/README.md`](../scripts/release-train/README.md) — user guide (modes, dashboard legend, commands); [Russian version](../scripts/release-train/README.ru.md)
 - [`.agents/dev-infrastructure.md`](../.agents/dev-infrastructure.md) — cascading release (manual today)
 - [`.agents/monorepo.md`](../.agents/monorepo.md) — workspace / lockfile procedure
 - [PULSE.md](../PULSE.md) — dependency graph visualization
