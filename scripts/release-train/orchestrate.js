@@ -10,6 +10,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { loadConfig } from './config.js';
+import { tokenManagerFromEnv } from './app-token.js';
+import { setTokenManager } from './gh.js';
 import { processPackage } from './process-package.js';
 import {
   findPackage,
@@ -54,6 +56,19 @@ const issue = plan.issue || null;
 const restored = plan.restoredState || null;
 const trainTitle = trainId ? `Release train ${trainId}` : 'Release train';
 
+// A train routinely runs longer than the 1-hour installation-token lifetime.
+// With App credentials in the environment the orchestrator re-mints tokens
+// itself; without them it keeps using the workflow-minted one as before.
+const tokenManager = tokenManagerFromEnv({ owner: org, initialToken: token });
+if (tokenManager) {
+  setTokenManager(tokenManager);
+  tokenManager.refresh();
+} else {
+  console.log(
+    '::notice title=release train::RT_APP_ID/RT_APP_PRIVATE_KEY are not set — the run is limited to the lifetime of the workflow token',
+  );
+}
+
 const state = mergePlanWithRestoredState(plan, restored);
 const publishedByNpm = { ...(restored?.publishedByNpm || {}) };
 
@@ -62,8 +77,10 @@ let issueBodyCache = null;
 // train going and stop hammering the API on every poll.
 let issueWritesDisabled = false;
 
+// 401 is not permanent any more: ghRaw re-mints the App token and retries, so
+// only a genuine permission/lookup problem may silence issue writes.
 function isPermanentApiError(message) {
-  return /HTTP (401|403|404)/.test(message);
+  return /HTTP (403|404)/.test(message);
 }
 
 function updateTrackingIssue({ status = 'running', finishedAt = null, error = null } = {}) {
@@ -154,7 +171,11 @@ persist();
 /** Shared context handed to the per-package pipeline (process-package.js). */
 const ctx = {
   org,
-  token,
+  // Resolved per read: bump-downstream pushes with this token over git, which
+  // does not go through gh.js and so cannot benefit from its refresh path.
+  get token() {
+    return tokenManager ? tokenManager.get() : token;
+  },
   approverToken,
   config,
   defaults,

@@ -150,6 +150,10 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           INFRA_APPROVER_PAT: ${{ secrets.INFRA_APPROVER_PAT }}
+          # A train outlives the 1-hour installation token, so the orchestrator
+          # re-mints it from the App credentials (scripts/release-train/app-token.js).
+          RT_APP_ID: ${{ secrets.INFRA_APP_ID }}
+          RT_APP_PRIVATE_KEY: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
         run: node scripts/release-train/orchestrate.js --plan plan.json
 
       - name: Upload train state

@@ -41,13 +41,31 @@ const JSON_FIELDS = {
 };
 
 /**
- * Run `gh` with an argument array (no shell involved).
- * @param {string[]} args
- * @param {string} [token]
- * @param {{input?: string}} [options] - stdin payload, used for `gh api --input -`
- *   so large/multiline JSON bodies never travel through argv.
+ * Optional GitHub App token manager (app-token.js). When set, tokens it issued
+ * are transparently replaced by the current one, so a train outliving the
+ * 1-hour installation-token lifetime keeps working. Tokens it did not issue
+ * (INFRA_APPROVER_PAT) are passed through untouched.
  */
-export function ghRaw(args, token, options = {}) {
+let tokenManager = null;
+
+export function setTokenManager(manager) {
+  tokenManager = manager;
+}
+
+function resolveToken(token) {
+  if (!tokenManager) return token;
+  if (token && !tokenManager.owns(token)) return token;
+  return tokenManager.get();
+}
+
+const EXPIRED_TOKEN_RE = /HTTP 401|Bad credentials/i;
+
+function isExpiredTokenError(err) {
+  const stderr = err?.stderr ? String(err.stderr) : '';
+  return EXPIRED_TOKEN_RE.test(`${err?.message || ''}\n${stderr}`);
+}
+
+function runGh(args, token, options) {
   const env = { ...process.env };
   if (token) env.GH_TOKEN = token;
   return execFileSync('gh', args, {
@@ -57,6 +75,26 @@ export function ghRaw(args, token, options = {}) {
     stdio: ['pipe', 'pipe', 'pipe'],
     maxBuffer: 32 * 1024 * 1024,
   }).trim();
+}
+
+/**
+ * Run `gh` with an argument array (no shell involved).
+ * @param {string[]} args
+ * @param {string} [token]
+ * @param {{input?: string}} [options] - stdin payload, used for `gh api --input -`
+ *   so large/multiline JSON bodies never travel through argv.
+ */
+export function ghRaw(args, token, options = {}) {
+  const resolved = resolveToken(token);
+  try {
+    return runGh(args, resolved, options);
+  } catch (err) {
+    // A token can expire mid-call (or mid-wait); re-mint once and retry before
+    // letting the failure reach the train.
+    if (!tokenManager || !tokenManager.owns(resolved) || !isExpiredTokenError(err)) throw err;
+    console.warn('::warning::GitHub token rejected — refreshing the App installation token');
+    return runGh(args, tokenManager.refresh(), options);
+  }
 }
 
 /**
