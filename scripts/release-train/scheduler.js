@@ -55,10 +55,16 @@ export function trainEdges(dag) {
 
 /**
  * Packages that may start now: not terminal, not already running, and with
- * every in-train upstream released. Order follows `packages` (topological), so
- * a narrow concurrency window still prefers the packages most work depends on.
+ * every in-train upstream released.
+ *
+ * Ordered by how much of the train waits behind each one, because the ready
+ * set is usually wider than `concurrency` and whatever is left over waits a
+ * full package cycle. Topological order alone is a poor tie-breaker here: in
+ * the current graph it picks `utils` (16 dependents) only tenth, which idles
+ * `tabs-extension` and the whole `cut-extension → transform` chain behind it.
+ * Ties keep topological order — `Array.prototype.sort` is stable.
  */
-export function readyRepos({ packages, dag, statusOf, running = new Set() }) {
+export function readyRepos({ packages, dag, statusOf, running = new Set(), weights = null }) {
   const ready = [];
 
   for (const pkg of packages) {
@@ -71,7 +77,13 @@ export function readyRepos({ packages, dag, statusOf, running = new Set() }) {
     if (!blocked) ready.push(repo);
   }
 
-  return ready;
+  const byWeight = weights || schedulingWeights(dag);
+  return ready.sort((a, b) => (byWeight.get(b) || 0) - (byWeight.get(a) || 0));
+}
+
+/** repo → number of packages transitively waiting on it. */
+export function schedulingWeights(dag) {
+  return new Map([...dag.keys()].map((repo) => [repo, downstreamOf(repo, dag).size]));
 }
 
 /** Transitive in-train dependents of `repo`. */
