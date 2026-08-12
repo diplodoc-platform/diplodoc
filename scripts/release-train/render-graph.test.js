@@ -20,6 +20,14 @@ test('label strips characters that break mermaid labels', () => {
   assert.equal(label('cli', ''), 'cli');
 });
 
+test('label output can never contain HTML comment delimiters', () => {
+  // tracking-issue.js treats mermaid blocks as trusted and skips `-->`
+  // neutralization there — that is only safe while labels cannot smuggle
+  // in `<` or `>`.
+  assert.equal(label('re<!--po', 'st-->atus'), 're !--po st-- atus');
+  assert.doesNotMatch(label('<!-- RT-STATE', 'x --> y'), /[<>]/);
+});
+
 test('renderProgressGraph chains packages in order with status classes', () => {
   const graph = renderProgressGraph([
     { repo: 'utils', status: 'released' },
