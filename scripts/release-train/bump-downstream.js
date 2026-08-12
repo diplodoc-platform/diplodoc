@@ -24,6 +24,22 @@ function git(dir, args, env) {
 }
 
 /**
+ * Commit message for a dependency bump. Listing `name@version` pairs keeps the
+ * cumulative subject truthful (one commit now carries every accumulated
+ * version), and the `owner/repo#N` reference in the body makes GitHub link the
+ * commit on the tracking issue's timeline.
+ */
+export function formatBumpCommitMessage({ trainId, issueRef, publishedVersions }) {
+  const deps = Object.entries(publishedVersions)
+    .map(([name, version]) => `${name}@${String(version).replace(/^v/, '')}`)
+    .join(', ');
+  const train = trainId ? ` ${trainId}` : '';
+  const subject = `chore: bump @diplodoc deps for release train${train} (${deps})`;
+  if (!issueRef?.number) return subject;
+  return `${subject}\n\nRelease train: ${issueRef.owner}/${issueRef.repo}#${issueRef.number}`;
+}
+
+/**
  * Bump @diplodoc/* dependency versions on open feature branches (remaining packages).
  *
  * Each target carries its own `branch` because feature PRs in a train no
@@ -37,6 +53,8 @@ export function bumpDownstreamDeps({
   publishedVersions,
   targets,
   updateLockfile = true,
+  trainId = null,
+  issueRef = null,
 }) {
   const results = [];
 
@@ -123,7 +141,7 @@ export function bumpDownstreamDeps({
       git(dir, [
         'commit',
         '-m',
-        `chore: bump @diplodoc deps for release train (${Object.keys(publishedVersions).join(', ')})`,
+        formatBumpCommitMessage({ trainId, issueRef, publishedVersions }),
       ]);
       git(dir, ['push', 'origin', branch], authEnv);
 

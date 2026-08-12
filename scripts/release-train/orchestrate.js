@@ -188,34 +188,37 @@ async function waitCiForRepo(repo) {
   persist();
 }
 
-/** Feature PRs still to be processed, with the branch each one lives on. */
-function bumpTargets(fromIndex) {
-  return plan.packages
-    .slice(fromIndex)
-    .map((p) => findPackage(state, p.repo))
-    .filter((pkg) => pkg && !isPackageCompleted(pkg) && pkg.featurePr?.number)
-    .map((pkg) => ({
-      repo: pkg.repo,
-      featurePr: pkg.featurePr,
-      branch: pkg.featurePr.headRefName,
-    }));
-}
+/**
+ * Deferred dependency bump: one commit on the package's feature branch with
+ * every version published so far, applied right before the package's turn.
+ * In topological order all in-train upstreams have released by that point, so
+ * `publishedByNpm` is exactly the accumulated set — one commit, one CI rerun,
+ * instead of the previous per-release fan-out over every remaining PR.
+ * `bumpDownstreamDeps` is idempotent, so a resume replays this as a no-op.
+ */
+function applyPendingBump(entry) {
+  const pkg = findPackage(state, entry.repo);
+  if (!pkg?.featurePr?.number) return;
+  if (!Object.keys(publishedByNpm).length) return;
 
-function runBump(targets) {
-  if (!targets.length) return;
-  for (const t of targets) {
-    updatePackage(state, t.repo, { status: 'bumping' });
-  }
+  updatePackage(state, entry.repo, { status: 'bumping' });
   persist();
 
-  bumpDownstreamDeps({
+  const results = bumpDownstreamDeps({
     owner: org,
     token,
     branchName: plan.branchName,
     publishedVersions: { ...publishedByNpm },
-    targets,
+    targets: [{ repo: entry.repo, featurePr: pkg.featurePr, branch: pkg.featurePr.headRefName }],
     updateLockfile: config.capabilities?.update_lockfile?.default !== false,
+    trainId,
+    issueRef: issue,
   });
+
+  if (results[0]?.bumped) {
+    updatePackage(state, entry.repo, { bumpedDeps: { ...publishedByNpm } });
+    persist();
+  }
 }
 
 async function run() {
@@ -227,25 +230,6 @@ async function run() {
     persist({ status: 'dry-run' });
     console.log('Dry run complete — no merges performed.');
     return;
-  }
-
-  // A resume carries versions published by earlier runs. Packages added to the
-  // train after those releases have never seen them, so replay the bump once
-  // before touching anything else.
-  if (Object.keys(publishedByNpm).length) {
-    const pending = bumpTargets(0);
-    if (pending.length) {
-      console.log(
-        `Replaying published versions on ${pending.length} open PR(s): ${Object.entries(publishedByNpm)
-          .map(([name, v]) => `${name}@${v}`)
-          .join(', ')}`,
-      );
-      runBump(pending);
-      for (const t of pending) {
-        updatePackage(state, t.repo, { status: 'queued' });
-      }
-      persist();
-    }
   }
 
   for (let i = 0; i < plan.packages.length; i++) {
@@ -268,6 +252,8 @@ async function run() {
     }
 
     try {
+      applyPendingBump(entry);
+
       await waitCiForRepo(repo);
 
       updatePackage(state, repo, {
@@ -320,8 +306,6 @@ async function run() {
       });
       persist();
 
-      runBump(bumpTargets(i + 1));
-
       updatePackage(state, repo, {
         status: 'done',
         finishedAt: new Date().toISOString(),
@@ -371,6 +355,18 @@ function finish() {
   publishSummary(state, `${trainTitle} (complete)`);
   updateTrackingIssue({ status: 'success', finishedAt });
 
+  // One batch of `owner/repo#N` references: a single comment cross-links the
+  // issue with every PR the train merged, instead of one mention event per PR.
+  const mergedPrRefs = state.packages
+    .filter((p) => isPackageCompleted(p))
+    .map((p) => {
+      const refs = [p.featurePr, p.releasePr]
+        .filter((pr) => pr?.number)
+        .map((pr) => `${org}/${p.repo}#${pr.number}`);
+      return refs.length ? `- \`${p.repo}\`: ${refs.join(', ')}` : null;
+    })
+    .filter(Boolean);
+
   if (issue?.number && defaults.close_issue_on_success !== false) {
     try {
       commentTrainIssue({
@@ -383,6 +379,7 @@ function finish() {
           ...state.packages
             .filter((p) => p.npmVersion)
             .map((p) => `- \`${p.npm || p.repo}\` → \`${p.npmVersion}\``),
+          ...(mergedPrRefs.length ? ['', '**Merged pull requests:**', ...mergedPrRefs] : []),
         ].join('\n'),
         token,
       });
