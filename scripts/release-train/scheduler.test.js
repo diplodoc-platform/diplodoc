@@ -8,6 +8,7 @@ import {
   downstreamOf,
   readyRepos,
   resolveConcurrency,
+  schedulingWeights,
   trainEdges,
 } from './scheduler.js';
 
@@ -68,6 +69,68 @@ test('readyRepos returns independent roots first, then unblocked packages', () =
   statuses.ajv = 'done';
   statuses.client = 'done';
   assert.deepEqual(readyRepos({ packages: PACKAGES, dag, statusOf }), ['cli']);
+});
+
+test('schedulingWeights counts what waits behind each package', () => {
+  const weights = schedulingWeights(makeDag());
+  assert.equal(weights.get('utils'), 2);
+  assert.equal(weights.get('ajv'), 1);
+  assert.equal(weights.get('client'), 1);
+  assert.equal(weights.get('cli'), 0);
+});
+
+test('readyRepos puts hubs before leaves regardless of topological position', () => {
+  // A leaf listed first, a hub listed last: topological order alone would pick
+  // the leaf and leave everything behind the hub idle.
+  const graph = {
+    edges: [
+      { from: '@diplodoc/client', to: '@diplodoc/utils', type: 'prod' },
+      { from: '@diplodoc/cli', to: '@diplodoc/client', type: 'prod' },
+    ],
+  };
+  const nodes = new Map(
+    [
+      ['sentenizer', '@diplodoc/sentenizer'],
+      ['utils', '@diplodoc/utils'],
+      ['client', '@diplodoc/client'],
+      ['cli', '@diplodoc/cli'],
+    ].map(([repo, npm]) => [repo, { repo, npm }]),
+  );
+  const packages = [{ repo: 'sentenizer' }, { repo: 'utils' }, { repo: 'client' }, { repo: 'cli' }];
+  const dag = buildTrainDag(packages, graph, nodes);
+
+  assert.deepEqual(readyRepos({ packages, dag, statusOf: () => 'queued' }), [
+    'utils',
+    'sentenizer',
+  ]);
+});
+
+test('readyRepos keeps topological order for equal weights', () => {
+  const graph = { edges: [] };
+  const nodes = new Map(
+    [
+      ['ajv', '@diplodoc/ajv'],
+      ['liquid', '@diplodoc/liquid'],
+      ['sentenizer', '@diplodoc/sentenizer'],
+    ].map(([repo, npm]) => [repo, { repo, npm }]),
+  );
+  const packages = [{ repo: 'ajv' }, { repo: 'liquid' }, { repo: 'sentenizer' }];
+  const dag = buildTrainDag(packages, graph, nodes);
+
+  assert.deepEqual(readyRepos({ packages, dag, statusOf: () => 'queued' }), [
+    'ajv',
+    'liquid',
+    'sentenizer',
+  ]);
+});
+
+test('readyRepos accepts precomputed weights', () => {
+  const dag = makeDag();
+  const weights = schedulingWeights(dag);
+  assert.deepEqual(readyRepos({ packages: PACKAGES, dag, statusOf: () => 'queued', weights }), [
+    'utils',
+    'ajv',
+  ]);
 });
 
 test('readyRepos skips running and terminal packages', () => {

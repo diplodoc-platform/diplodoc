@@ -24,6 +24,7 @@ import {
   buildTrainDag,
   readyRepos,
   resolveConcurrency,
+  schedulingWeights,
   trainEdges,
 } from './scheduler.js';
 import {
@@ -86,6 +87,7 @@ const state = mergePlanWithRestoredState(plan, restored);
 const publishedByNpm = { ...(restored?.publishedByNpm || {}) };
 
 const dag = buildTrainDag(plan.packages, config.graph, config.nodesByRepo);
+const dagWeights = schedulingWeights(dag);
 const concurrency = resolveConcurrency(plan.concurrency, defaults.concurrency, 3);
 
 let issueBodyCache = null;
@@ -291,6 +293,7 @@ async function run() {
       dag,
       statusOf,
       running: new Set(running.keys()),
+      weights: dagWeights,
     });
 
     for (const repo of ready.slice(0, Math.max(0, concurrency - running.size))) {

@@ -38,7 +38,13 @@ import {
   serializeTrainState,
 } from './state.js';
 import { findMissingUpstream, findUpstreamConflicts } from './topology.js';
-import { buildTrainDag, readyRepos, resolveConcurrency, trainEdges } from './scheduler.js';
+import {
+  buildTrainDag,
+  readyRepos,
+  resolveConcurrency,
+  schedulingWeights,
+  trainEdges,
+} from './scheduler.js';
 
 const { values, positionals } = parseArgs({
   options: {
@@ -374,6 +380,7 @@ if (ordered.length !== selected.length) {
 // concurrent schedule in the orchestrator.
 const dag = buildTrainDag(ordered, graph, config.nodesByRepo);
 const planEdges = trainEdges(dag);
+const dagWeights = schedulingWeights(dag);
 const concurrency = resolveConcurrency(values.concurrency, config.defaults.concurrency, 3);
 
 const completedRepos = restoredPackages.filter(isPackageCompleted).map((p) => p.repo);
@@ -519,6 +526,7 @@ function scheduleWaves(packages, trainDag, limit) {
       packages,
       dag: trainDag,
       statusOf: (repo) => (released.has(repo) ? 'released' : 'queued'),
+      weights: dagWeights,
     }).slice(0, limit);
     if (!ready.length) break;
     ready.forEach((repo) => released.add(repo));
