@@ -102,6 +102,15 @@ jobs:
       - name: Link CLI binaries
         run: npm i @diplodoc/cli --ignore-scripts
 
+      # The install above prunes everything it does not know about, including the
+      # @diplodoc/infra link that reset puts next to each workspace root. Without
+      # it Playwright cannot resolve the "extends" of devops/testpack/tsconfig.json
+      # — it looks only in node_modules adjacent to that file and never walks up
+      # to the workspace link in the repository root. Re-run reset so the layout
+      # survives into the test step; -q makes it a relink with no reinstall.
+      - name: Restore workspace links
+        run: npm run reset -- -u -q
+
       - name: Run E2E tests
         run: npm run test
 
