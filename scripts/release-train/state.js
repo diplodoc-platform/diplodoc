@@ -23,6 +23,7 @@ export function createPackageState(entry) {
     mergeReadiness: null,
     bumpedDeps: null,
     needsHuman: null,
+    blockedBy: null,
     autoMergeEnabled: false,
     startedAt: null,
     finishedAt: null,
@@ -130,6 +131,7 @@ const KNOWN_STATUSES = new Set([
   'released',
   'done',
   'failed',
+  'blocked',
 ]);
 
 const REPO_SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;

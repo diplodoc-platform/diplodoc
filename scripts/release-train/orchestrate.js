@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 /**
- * Release train orchestrator — sequential merge / release / bump / CI loop.
+ * Release train orchestrator — dependency-aware merge / release / bump / CI
+ * scheduler.
  *
- * The tracking issue is updated on every `persist()`, which makes it the live
+ * Packages whose in-train upstreams have released run concurrently (see
+ * scheduler.js), bounded by `defaults.concurrency`. All state mutations happen
+ * on the single JS thread between awaits, and every `gh` call is synchronous,
+ * so concurrent packages cannot interleave inside a persist.
+ *
+ * The tracking issue is updated on `persist()`, which makes it the live
  * dashboard (GitHub renders `$GITHUB_STEP_SUMMARY` only after a step ends) and
  * the durable state a later resume reads back.
  */
@@ -13,6 +19,13 @@ import { loadConfig } from './config.js';
 import { tokenManagerFromEnv } from './app-token.js';
 import { setTokenManager } from './gh.js';
 import { processPackage } from './process-package.js';
+import {
+  blockedByFailure,
+  buildTrainDag,
+  readyRepos,
+  resolveConcurrency,
+  trainEdges,
+} from './scheduler.js';
 import {
   findPackage,
   isPackageCompleted,
@@ -72,7 +85,11 @@ if (tokenManager) {
 const state = mergePlanWithRestoredState(plan, restored);
 const publishedByNpm = { ...(restored?.publishedByNpm || {}) };
 
+const dag = buildTrainDag(plan.packages, config.graph, config.nodesByRepo);
+const concurrency = resolveConcurrency(plan.concurrency, defaults.concurrency, 3);
+
 let issueBodyCache = null;
+let lastIssueWriteAt = 0;
 // A permission error will not fix itself mid-run: report it once, keep the
 // train going and stop hammering the API on every poll.
 let issueWritesDisabled = false;
@@ -83,8 +100,18 @@ function isPermanentApiError(message) {
   return /HTTP (403|404)/.test(message);
 }
 
-function updateTrackingIssue({ status = 'running', finishedAt = null, error = null } = {}) {
+function updateTrackingIssue({
+  status = 'running',
+  finishedAt = null,
+  error = null,
+  force = false,
+} = {}) {
   if (!issue?.number || issueWritesDisabled) return;
+
+  // Several packages poll concurrently; without a floor between writes the
+  // dashboard would eat a PATCH per poll per package.
+  const minIntervalS = defaults.issue_update_min_interval_s ?? 20;
+  if (!force && Date.now() - lastIssueWriteAt < minIntervalS * 1000) return;
 
   const body = renderIssueBody({
     trainId,
@@ -92,7 +119,7 @@ function updateTrackingIssue({ status = 'running', finishedAt = null, error = nu
     status,
     state,
     workflow: plan.workflow,
-    graph: renderProgressGraph(state.packages),
+    graph: renderProgressGraph(state.packages, { edges: trainEdges(dag) }),
     diagnostics: error ? { message: error } : null,
     rtState: serializeTrainState({
       trainId,
@@ -122,6 +149,7 @@ function updateTrackingIssue({ status = 'running', finishedAt = null, error = nu
       body,
       token,
     });
+    lastIssueWriteAt = Date.now();
   } catch (err) {
     console.warn(`::warning::Could not update tracking issue #${issue.number}: ${err.message}`);
     if (isPermanentApiError(err.message)) {
@@ -211,50 +239,98 @@ async function run() {
       if (isPackageCompleted(findPackage(state, entry.repo))) continue;
       updatePackage(state, entry.repo, { status: 'queued (dry-run)' });
     }
-    persist({ status: 'dry-run' });
+    persist({ status: 'dry-run', force: true });
     console.log('Dry run complete — no merges performed.');
     return;
   }
 
-  for (let i = 0; i < plan.packages.length; i++) {
-    const entry = plan.packages[i];
-    const repo = entry.repo;
-    const pkgState = findPackage(state, repo);
-
+  // Absorb progress from earlier runs before scheduling anything: a package
+  // already released in a previous run still has to feed publishedByNpm.
+  for (const entry of plan.packages) {
+    const pkgState = findPackage(state, entry.repo);
     if (isPackageCompleted(pkgState)) {
-      console.log(`Skipping ${repo} — already ${pkgState.status} in train ${trainId}`);
+      console.log(`Skipping ${entry.repo} — already ${pkgState.status} in train ${trainId}`);
       if (pkgState.npmVersion && entry.npm && !publishedByNpm[entry.npm]) {
         publishedByNpm[entry.npm] = pkgState.npmVersion;
       }
-      continue;
-    }
-
-    if (pkgState?.status === 'failed') {
-      console.log(`Retrying ${repo} after previous failure: ${pkgState.error || 'unknown error'}`);
-      updatePackage(state, repo, { status: 'queued', error: null, finishedAt: null });
-      persist();
-    }
-
-    try {
-      await processPackage(ctx, entry);
-    } catch (err) {
-      updatePackage(state, repo, {
-        status: 'failed',
-        error: err.message,
-        finishedAt: new Date().toISOString(),
+    } else if (pkgState?.status === 'failed' || pkgState?.status === 'blocked') {
+      console.log(`Retrying ${entry.repo} after previous ${pkgState.status}`);
+      updatePackage(state, entry.repo, {
+        status: 'queued',
+        error: null,
+        finishedAt: null,
+        blockedBy: null,
       });
-      const finishedAt = new Date().toISOString();
-      persist({ status: 'failed', finishedAt, error: `${repo}: ${err.message}` });
-      reportFailure(repo, err.message);
-      console.error(`::error::${err.message}`);
-      process.exit(1);
     }
+  }
+  persist();
+
+  const failures = [];
+  const running = new Map();
+  const entryByRepo = new Map(plan.packages.map((entry) => [entry.repo, entry]));
+  const statusOf = (repo) => findPackage(state, repo)?.status || 'queued';
+
+  console.log(
+    `Scheduling ${plan.packages.length} package(s) with concurrency ${concurrency} ` +
+      `(${trainEdges(dag).length} in-train dependency edge(s))`,
+  );
+
+  while (true) {
+    const ready = readyRepos({
+      packages: plan.packages,
+      dag,
+      statusOf,
+      running: new Set(running.keys()),
+    });
+
+    for (const repo of ready.slice(0, Math.max(0, concurrency - running.size))) {
+      running.set(
+        repo,
+        processPackage(ctx, entryByRepo.get(repo)).then(
+          () => ({ repo, ok: true }),
+          (err) => ({ repo, ok: false, err }),
+        ),
+      );
+    }
+
+    if (!running.size) break;
+
+    const settled = await Promise.race(running.values());
+    running.delete(settled.repo);
+    if (settled.ok) continue;
+
+    const { repo, err } = settled;
+    updatePackage(state, repo, {
+      status: 'failed',
+      error: err.message,
+      finishedAt: new Date().toISOString(),
+    });
+
+    // Only the packages that depend on the failed one are stopped; everything
+    // independent keeps running, so one bad package does not cost the train.
+    const blocked = blockedByFailure(repo, dag, statusOf).filter((other) => !running.has(other));
+    for (const other of blocked) {
+      updatePackage(state, other, { status: 'blocked', blockedBy: repo });
+    }
+
+    failures.push({ repo, message: err.message });
+    persist({ error: `${repo}: ${err.message}`, force: true });
+    reportFailure(repo, err.message, blocked);
+    console.error(`::error::[${repo}] ${err.message}`);
+  }
+
+  if (failures.length) {
+    const finishedAt = new Date().toISOString();
+    const summary = failures.map((f) => `${f.repo}: ${f.message}`).join('; ');
+    persist({ status: 'failed', finishedAt, error: summary, force: true });
+    console.error(`::error::Release train ${trainId} finished with ${failures.length} failure(s)`);
+    process.exit(1);
   }
 
   finish();
 }
 
-function reportFailure(repo, message) {
+function reportFailure(repo, message, blocked = []) {
   if (!issue?.number) return;
   const runLink = plan.workflow?.runUrl ? ` ([run](${plan.workflow.runUrl}))` : '';
   try {
@@ -267,6 +343,10 @@ function reportFailure(repo, message) {
         '',
         `> ${message}`,
         '',
+        ...(blocked.length
+          ? [`Blocked downstream packages: ${blocked.map((r) => `\`${r}\``).join(', ')}.`, '']
+          : []),
+        'Independent packages keep running.',
         `Fix the cause and comment \`/rt resume\` to continue from this point.`,
       ].join('\n'),
       token,
@@ -279,7 +359,7 @@ function reportFailure(repo, message) {
 function finish() {
   const finishedAt = new Date().toISOString();
   publishSummary(state, `${trainTitle} (complete)`);
-  updateTrackingIssue({ status: 'success', finishedAt });
+  updateTrackingIssue({ status: 'success', finishedAt, force: true });
 
   // One batch of `owner/repo#N` references: a single comment cross-links the
   // issue with every PR the train merged, instead of one mention event per PR.

@@ -44,10 +44,14 @@ function classLines(byClass) {
 }
 
 /**
- * Train progress in topological order: one node per package, chained left to
- * right, coloured by status.
+ * Train progress, coloured by status.
+ *
+ * With `edges` (upstream → downstream, from scheduler.trainEdges) the real
+ * dependency DAG is drawn, so independent packages appear as parallel roots —
+ * which is how the train actually runs them. Without it the packages are
+ * chained in the order given.
  */
-export function renderProgressGraph(packages = []) {
+export function renderProgressGraph(packages = [], { edges = null } = {}) {
   if (!packages.length) return '';
 
   const lines = ['flowchart LR'];
@@ -55,14 +59,29 @@ export function renderProgressGraph(packages = []) {
     ['done', 'running', 'queued', 'failed', 'skipped'].map((c) => [c, []]),
   );
 
+  const idByRepo = new Map();
   packages.forEach((pkg, index) => {
     const id = `n${index}`;
+    idByRepo.set(pkg.repo, id);
     lines.push(`    ${id}[${label(pkg.repo, pkg.status)}]`);
     byClass.get(statusClass(pkg.status))?.push(id);
   });
 
-  for (let i = 1; i < packages.length; i++) {
-    lines.push(`    n${i - 1} --> n${i}`);
+  if (edges) {
+    const seen = new Set();
+    for (const { from, to } of edges) {
+      const fromId = idByRepo.get(from);
+      const toId = idByRepo.get(to);
+      if (!fromId || !toId || fromId === toId) continue;
+      const key = `${fromId}>${toId}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      lines.push(`    ${fromId} --> ${toId}`);
+    }
+  } else {
+    for (let i = 1; i < packages.length; i++) {
+      lines.push(`    n${i - 1} --> n${i}`);
+    }
   }
 
   return [...lines, ...CLASS_DEFS.map((d) => `    ${d}`), ...classLines(byClass).map((l) => `    ${l}`)].join(

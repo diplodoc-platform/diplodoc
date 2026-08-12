@@ -71,6 +71,9 @@ export function fmtNpmVersion(pkg) {
  */
 export function fmtStatus(pkg, now = Date.now()) {
   const status = pkg.error ? `❌ ${pkg.status}` : pkg.status;
+  if (pkg.status === 'blocked') {
+    return pkg.blockedBy ? `⛔ blocked by \`${pkg.blockedBy}\`` : '⛔ blocked';
+  }
   if (pkg.status !== 'needs_human' || !pkg.needsHuman?.deadline) return status;
 
   const leftMs = new Date(pkg.needsHuman.deadline).getTime() - now;
@@ -110,7 +113,7 @@ export function renderSummaryTable(state, title = 'Release train') {
     '',
     [branchLine, dryRunLine].filter(Boolean).join(' · '),
     '',
-    `Packages: **${rows.length}** · queued: **${counts.queued || 0}** · in progress: **${inProgress}** · done: **${(counts.done || 0) + (counts.released || 0)}** · failed: **${counts.failed || 0}**`,
+    `Packages: **${rows.length}** · queued: **${counts.queued || 0}** · in progress: **${inProgress}** · done: **${(counts.done || 0) + (counts.released || 0)}** · failed: **${counts.failed || 0}**${counts.blocked ? ` · blocked: **${counts.blocked}**` : ''}`,
     '',
     '| Repo | Feature PR | Status | Release PR | npm | CI | Snapshots | Duration |',
     '| --- | --- | --- | --- | --- | --- | --- | --- |',

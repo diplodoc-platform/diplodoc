@@ -38,6 +38,7 @@ import {
   serializeTrainState,
 } from './state.js';
 import { findMissingUpstream, findUpstreamConflicts } from './topology.js';
+import { buildTrainDag, readyRepos, resolveConcurrency, trainEdges } from './scheduler.js';
 
 const { values, positionals } = parseArgs({
   options: {
@@ -47,6 +48,7 @@ const { values, positionals } = parseArgs({
     packages: { type: 'string', short: 'p' },
     'dry-run': { type: 'boolean', default: false },
     'no-issue': { type: 'boolean', default: false },
+    concurrency: { type: 'string' },
     output: { type: 'string', default: 'plan.json' },
   },
   allowPositionals: true,
@@ -152,7 +154,7 @@ function writeIssue({ status, state, diagnostics = null, error = null, required 
     status,
     state,
     workflow,
-    graph: renderProgressGraph(state.packages),
+    graph: renderProgressGraph(state.packages, { edges: planEdges }),
     diagnostics,
     rtState: serializeTrainState({
       trainId,
@@ -368,6 +370,12 @@ if (ordered.length !== selected.length) {
   );
 }
 
+// The train's own dependency DAG: drives the progress graph here and the
+// concurrent schedule in the orchestrator.
+const dag = buildTrainDag(ordered, graph, config.nodesByRepo);
+const planEdges = trainEdges(dag);
+const concurrency = resolveConcurrency(values.concurrency, config.defaults.concurrency, 3);
+
 const completedRepos = restoredPackages.filter(isPackageCompleted).map((p) => p.repo);
 const newRepos = ordered.map((o) => o.repo).filter((repo) => !restoredByRepo.has(repo));
 
@@ -438,6 +446,7 @@ const plan = {
   mode,
   branchName,
   dryRun,
+  concurrency,
   org,
   issue: issueRef,
   workflow,
@@ -485,7 +494,39 @@ publishSummary(state, `Release train ${trainId} (queued)`);
 if (issue) {
   appendSummary(`\n**Tracking issue:** [${issue.url}](${issue.url})\n`);
 }
-appendSummary(`\n**Train id:** \`${trainId}\`\n\n${mermaidBlock(renderProgressGraph(state.packages))}`);
+appendSummary(
+  `\n**Train id:** \`${trainId}\`\n\n${mermaidBlock(renderProgressGraph(state.packages, { edges: planEdges }))}`,
+);
+
+// What the orchestrator will actually do: each wave is the set of packages
+// that may run together once the previous wave has released.
+const waves = scheduleWaves(ordered, dag, concurrency);
+const wavesText = waves.map((wave, i) => `  ${i + 1}. ${wave.join(', ')}`).join('\n');
+console.log(`Schedule (concurrency ${concurrency}):\n${wavesText}`);
+appendSummary(
+  `\n**Schedule** (concurrency \`${concurrency}\`):\n\n${waves
+    .map((wave, i) => `${i + 1}. ${wave.map((r) => `\`${r}\``).join(', ')}`)
+    .join('\n')}\n`,
+);
+
+/** Dry-run view of the schedule: successive batches of ready packages. */
+function scheduleWaves(packages, trainDag, limit) {
+  const released = new Set();
+  const result = [];
+
+  while (released.size < packages.length) {
+    const ready = readyRepos({
+      packages,
+      dag: trainDag,
+      statusOf: (repo) => (released.has(repo) ? 'released' : 'queued'),
+    }).slice(0, limit);
+    if (!ready.length) break;
+    ready.forEach((repo) => released.add(repo));
+    result.push(ready);
+  }
+
+  return result;
+}
 
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(

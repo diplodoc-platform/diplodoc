@@ -43,6 +43,30 @@ test('renderProgressGraph chains packages in order with status classes', () => {
   assert.equal(renderProgressGraph([]), '');
 });
 
+test('renderProgressGraph draws the dependency DAG when edges are given', () => {
+  const graph = renderProgressGraph(
+    [
+      { repo: 'utils', status: 'released' },
+      { repo: 'ajv', status: 'queued' },
+      { repo: 'cli', status: 'queued' },
+    ],
+    {
+      edges: [
+        { from: 'utils', to: 'cli' },
+        { from: 'ajv', to: 'cli' },
+        // Duplicates and unknown repos must not reach the diagram.
+        { from: 'utils', to: 'cli' },
+        { from: 'vsc', to: 'cli' },
+      ],
+    },
+  );
+
+  assert.match(graph, /n0 --> n2/);
+  assert.match(graph, /n1 --> n2/);
+  assert.equal(graph.match(/n0 --> n2/g).length, 1);
+  assert.doesNotMatch(graph, /n0 --> n1/, 'independent roots are not chained');
+});
+
 test('renderConflictGraph highlights the added upstream and the bad edge', () => {
   const graph = renderConflictGraph({
     packages: [
