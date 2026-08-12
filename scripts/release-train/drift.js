@@ -89,6 +89,23 @@ export function buildUpdatePlan(rows) {
   return [...byRepo.values()].sort((a, b) => a.repo.localeCompare(b.repo));
 }
 
+/**
+ * Explain an `update-deps.yml` dispatch failure in terms of its actual cause.
+ *
+ * `workflow_dispatch` runs the workflow definition taken from the ref it is
+ * dispatched on, so `Unexpected inputs` means *that ref's* copy of
+ * update-deps.yml predates the `create_pr` input (scaffolding v2.2.2). Drift
+ * branches are cut from the target branch and then reused by later runs of the
+ * same train, so the usual culprit is a leftover branch rather than stale
+ * scaffolding — and updating the scaffolding would not fix that one.
+ */
+export function dispatchFailureHint({ message, branch, branchReused, targetBranch = 'master' }) {
+  if (!/nexpected inputs/i.test(String(message || ''))) return '';
+  return branchReused
+    ? ` — the reused \`${branch}\` branch predates the \`create_pr\` input in update-deps.yml; delete that branch or start a train with a new id`
+    : ` — \`${targetBranch}\` in this repo still has an update-deps.yml without the \`create_pr\` input, update its scaffolding`;
+}
+
 /** `packages` input for update-deps.yml: `dev:` marks devDependencies. */
 export function updateDepsPackagesInput(update) {
   return update.packages

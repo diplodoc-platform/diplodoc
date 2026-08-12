@@ -6,6 +6,7 @@ import {
   buildUpdatePlan,
   classifyDependency,
   compareVersions,
+  dispatchFailureHint,
   isUpdatableSection,
   rangeAllowsLatest,
   renderDriftTable,
@@ -92,4 +93,35 @@ test('renderDriftTable renders rows or an empty note', () => {
     },
   ]);
   assert.match(table, /\| `cli` \| `@diplodoc\/utils` \| dev \| `\^1\.0\.0` \| `1\.2\.0` \| yes \|/);
+});
+
+test('dispatchFailureHint blames the reused branch, not the scaffolding', () => {
+  const reused = dispatchFailureHint({
+    message: 'Unexpected inputs provided: ["create_pr"]',
+    branch: 'drift-rt-11',
+    branchReused: true,
+    targetBranch: 'master',
+  });
+  assert.match(reused, /reused `drift-rt-11` branch predates/);
+  assert.match(reused, /delete that branch or start a train with a new id/);
+  assert.doesNotMatch(reused, /scaffolding/);
+});
+
+test('dispatchFailureHint blames the scaffolding for a freshly cut branch', () => {
+  const fresh = dispatchFailureHint({
+    message: 'Unexpected inputs provided: ["create_pr"]',
+    branch: 'drift-rt-12',
+    branchReused: false,
+    targetBranch: 'master',
+  });
+  assert.match(fresh, /`master` in this repo still has an update-deps\.yml/);
+  assert.match(fresh, /update its scaffolding/);
+});
+
+test('dispatchFailureHint stays silent for unrelated failures', () => {
+  assert.equal(
+    dispatchFailureHint({ message: 'HTTP 404: Not Found', branch: 'drift-rt-11', branchReused: true }),
+    '',
+  );
+  assert.equal(dispatchFailureHint({ message: null, branch: 'b', branchReused: false }), '');
 });
