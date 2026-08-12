@@ -17,8 +17,10 @@ export function createPackageState(entry) {
     featurePr: entry.featurePr || null,
     releasePr: null,
     npmVersion: null,
+    pendingVersion: null,
     ci: { state: 'pending', url: null, failingCheck: null },
     snapshots: { state: 'none', url: null, message: null },
+    mergeReadiness: null,
     autoMergeEnabled: false,
     startedAt: null,
     finishedAt: null,
@@ -176,6 +178,7 @@ function safePackage(pkg) {
     featurePr: safePr(pkg.featurePr),
     releasePr: safePr(pkg.releasePr),
     npmVersion: safeVersion(pkg.npmVersion),
+    pendingVersion: safeVersion(pkg.pendingVersion),
   };
 }
 
@@ -240,8 +243,10 @@ export function mergePlanWithRestoredState(plan, restored) {
       status: prev.status || pkg.status,
       releasePr: prev.releasePr ?? null,
       npmVersion: prev.npmVersion ?? null,
+      pendingVersion: prev.pendingVersion ?? null,
       ci: prev.ci || pkg.ci,
       snapshots: prev.snapshots || pkg.snapshots,
+      mergeReadiness: prev.mergeReadiness ?? null,
       autoMergeEnabled: Boolean(prev.autoMergeEnabled),
       startedAt: prev.startedAt ?? null,
       finishedAt: prev.finishedAt ?? null,

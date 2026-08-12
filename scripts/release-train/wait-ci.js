@@ -13,22 +13,31 @@ import { knownBotLogins, snapshotFailurePatterns, snapshotWorkflowForRepo } from
 
 const SKIP_CHECK_RE = /^(auto-approve|release-please|dependabot|update dependenc|distribute|publish|sonarcloud|release train)/i;
 
-function classifyChecks(checkRuns) {
+const FAILED_CONCLUSIONS = new Set(['failure', 'cancelled', 'timed_out', 'action_required']);
+
+export function classifyChecks(checkRuns) {
   const relevant = (checkRuns.check_runs || []).filter(
     (r) => r.name && !SKIP_CHECK_RE.test(r.name),
   );
   if (relevant.length === 0) {
     return { state: 'pending', failing: null };
   }
-  if (relevant.some((r) => r.status !== 'completed')) {
-    return { state: 'pending', failing: null };
-  }
-  const failed = relevant.find((r) => r.conclusion === 'failure' || r.conclusion === 'cancelled');
+  // Report a failure as soon as any check completes red — waiting for the
+  // rest of the suite would hide a failed test until the slowest matrix job
+  // finishes, which on a 3-OS matrix can be tens of minutes later.
+  const stillRunning = relevant.filter((r) => r.status !== 'completed').length;
+  const failed = relevant.find(
+    (r) => r.status === 'completed' && FAILED_CONCLUSIONS.has(r.conclusion),
+  );
   if (failed) {
     return {
       state: 'failure',
       failing: { name: failed.name, url: failed.details_url || failed.html_url },
+      stillRunning,
     };
+  }
+  if (stillRunning > 0) {
+    return { state: 'pending', failing: null };
   }
   if (
     relevant.every(
@@ -147,8 +156,14 @@ export async function waitForCiGreen({
               state: ci.state,
               url: ci.failing?.url,
               failingCheck: ci.failing?.name,
+              stillRunning: ci.stillRunning || 0,
             },
         snapshots,
+        mergeReadiness: {
+          mergeable: prMeta.mergeable,
+          reviewDecision: prMeta.reviewDecision,
+          mergeStateStatus: prMeta.mergeStateStatus,
+        },
       });
     }
 

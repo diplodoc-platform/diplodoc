@@ -318,9 +318,14 @@ export function ensureBranch(owner, repo, branch, fromBranch, token) {
 
 export function listCheckRuns(owner, repo, ref, token) {
   try {
-    return JSON.parse(
-      ghRaw(['api', `repos/${owner}/${repo}/commits/${ref}/check-runs?per_page=100`], token),
-    );
+    const pages = ghApi(`repos/${owner}/${repo}/commits/${ref}/check-runs?per_page=100`, {
+      token,
+      paginate: true,
+    });
+    // `--slurp` wraps the object pages into an array; merge their check_runs
+    // so re-runs on visual-test repos are not truncated at 100 entries.
+    const list = Array.isArray(pages) ? pages : [pages];
+    return { check_runs: list.flatMap((page) => page?.check_runs || []) };
   } catch {
     return { check_runs: [] };
   }
