@@ -269,7 +269,12 @@ if (values.prs) {
       fail(`Could not read PR ${ref.owner}/${ref.repo}#${ref.number}: ${err.message}`);
     }
 
-    if (!isPackageCompleted(restoredByRepo.get(ref.repo))) {
+    // A restored participant's PR may have been merged by a previous run that
+    // crashed before recording the result — orchestrate reconciles the live
+    // PR state per package, so only brand-new participants must arrive open.
+    const restored = restoredByRepo.get(ref.repo);
+    const mergedRestored = Boolean(restored) && pr.state === 'MERGED';
+    if (!isPackageCompleted(restored) && !mergedRestored) {
       if (pr.state !== 'OPEN') {
         fail(`PR ${ref.owner}/${ref.repo}#${ref.number} is ${pr.state}, expected an open PR`);
       }
