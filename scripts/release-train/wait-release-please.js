@@ -1,6 +1,13 @@
 import { approvePr, enableAutoMerge, findReleasePleasePr, getPr } from './gh.js';
 import { pollUntil } from './poll.js';
 
+/** First semver in a release-please PR title ("chore(main): release 1.2.3"),
+ * or null — the dashboard shows it as "pending" until npm confirms it. */
+export function releaseVersionFromTitle(title) {
+  const match = /(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)/.exec(String(title || ''));
+  return match ? match[1] : null;
+}
+
 export async function waitForReleasePleaseMerge({
   owner,
   repo,
@@ -10,6 +17,7 @@ export async function waitForReleasePleaseMerge({
   mergeMethod,
   pollIntervalS = 30,
   timeoutMin = 30,
+  onReleasePr,
 }) {
   const releasePr = await pollUntil({
     timeoutMin,
@@ -23,6 +31,12 @@ export async function waitForReleasePleaseMerge({
   });
 
   const prRef = { number: releasePr.number, url: releasePr.url };
+
+  // Surface the release PR on the dashboard as soon as it exists, not only
+  // after it merged — the wait below can take up to the manual timeout.
+  if (onReleasePr) {
+    await onReleasePr({ releasePr: prRef, pendingVersion: releaseVersionFromTitle(releasePr.title) });
+  }
 
   if (autoApprove && approverToken) {
     try {

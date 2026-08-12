@@ -175,8 +175,8 @@ async function waitCiForRepo(repo) {
     config,
     pollIntervalS: defaults.ci_poll_interval_s || 90,
     timeoutMin: defaults.ci_poll_timeout_min || 360,
-    onPoll: ({ ci, snapshots }) => {
-      updatePackage(state, repo, { ci, snapshots });
+    onPoll: ({ ci, snapshots, mergeReadiness }) => {
+      updatePackage(state, repo, { ci, snapshots, mergeReadiness });
       persist();
     },
   });
@@ -294,6 +294,10 @@ async function run() {
         mergeMethod: entry.merge_method || 'rebase',
         pollIntervalS: defaults.release_poll_interval_s || 30,
         timeoutMin: releaseTimeout,
+        onReleasePr: ({ releasePr, pendingVersion }) => {
+          updatePackage(state, repo, { releasePr, pendingVersion });
+          persist();
+        },
       });
 
       updatePackage(state, repo, { releasePr: rp.releasePr });

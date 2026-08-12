@@ -20,7 +20,8 @@ function fmtCi(ci) {
   if (ci.state === 'pending') return '⏳ pending';
   if (ci.state === 'waiting_review') return '⏸ re-approval required';
   if (ci.state === 'failure') {
-    return ci.url ? `❌ [${ci.failingCheck || 'check'}](${ci.url})` : '❌';
+    const link = ci.url ? `❌ [${ci.failingCheck || 'check'}](${ci.url})` : '❌';
+    return ci.stillRunning ? `${link} (${ci.stillRunning} still running)` : link;
   }
   return ci.state;
 }
@@ -28,6 +29,39 @@ function fmtCi(ci) {
 function fmtPr(pr) {
   if (!pr) return '—';
   return `[#${pr.number}](${pr.url})`;
+}
+
+/** `mergeStateStatus` values that mean "nothing left but pressing merge". */
+const MERGE_READY = new Set(['CLEAN', 'HAS_HOOKS', 'UNSTABLE']);
+
+/**
+ * Merge-readiness flag next to the feature PR. Maps GitHub's enums to fixed
+ * strings only, so untrusted API values never reach the markdown verbatim.
+ */
+export function fmtMergeReadiness(readiness) {
+  const status = readiness?.mergeStateStatus;
+  if (!status || status === 'UNKNOWN') return '';
+  if (MERGE_READY.has(status)) return '✓';
+  if (status === 'DIRTY') return '✗ conflicts';
+  if (status === 'BEHIND') return '✗ behind base';
+  if (status === 'DRAFT') return '✗ draft';
+  // BLOCKED: name the reason when the review decision explains it.
+  if (readiness.reviewDecision === 'REVIEW_REQUIRED') return '✗ review required';
+  if (readiness.reviewDecision === 'CHANGES_REQUESTED') return '✗ changes requested';
+  return '✗ blocked';
+}
+
+export function fmtFeaturePr(pr, readiness) {
+  if (!pr) return '—';
+  const flag = fmtMergeReadiness(readiness);
+  return flag ? `${fmtPr(pr)} ${flag}` : fmtPr(pr);
+}
+
+/** npm cell: the published version, or the release PR's version as pending. */
+export function fmtNpmVersion(pkg) {
+  if (pkg.npmVersion) return pkg.npmVersion;
+  if (pkg.pendingVersion) return `${pkg.pendingVersion} (pending)`;
+  return '—';
 }
 
 function fmtDuration(pkg) {
@@ -70,10 +104,10 @@ export function renderSummaryTable(state, title = 'Release train') {
     const status = p.error ? `❌ ${p.status}` : p.status;
     return [
       `\`${p.repo}\``,
-      fmtPr(p.featurePr),
+      fmtFeaturePr(p.featurePr, p.mergeReadiness),
       status,
       fmtPr(p.releasePr),
-      p.npmVersion || '—',
+      fmtNpmVersion(p),
       fmtCi(p.ci),
       fmtSnapshots(p.snapshots),
       fmtDuration(p),
