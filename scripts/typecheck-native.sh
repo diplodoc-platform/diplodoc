@@ -40,6 +40,34 @@ else
   TARGETS="$(ls -d devops/*/ extensions/*/ packages/*/ 2>/dev/null) packages/transform/e2e packages/transform/playground"
 fi
 
+# Prelude: library declarations must exist BEFORE the main loop reaches their
+# consumers (extensions/* are walked before packages/*). Otherwise, for example,
+# extensions/algolia is type-checked against @diplodoc/cli without a single .d.ts
+# and fails with TS2305 on every import.
+# `build` in packages/cli runs `rm -rf build lib` and emits no declarations:
+# those come from a separate `build:types` that only lives in prepublishOnly.
+#
+# The prelude always scans ALL packages, not just the targets passed on the
+# command line: packages/cli is excluded from the typecheck loop (a known TS7
+# regression), but its .d.ts files are still needed by consumers like
+# extensions/algolia.
+PRELUDE_TARGETS="$(ls -d devops/*/ extensions/*/ packages/*/ 2>/dev/null) packages/transform/e2e packages/transform/playground"
+PRELUDE_FAILED=""
+for dir in $PRELUDE_TARGETS; do
+  dir="${dir%/}"
+  [ -f "$ROOT/$dir/package.json" ] || continue
+  ( cd "$ROOT/$dir" || exit
+    node -e "process.exit((require('./package.json').scripts||{})['build:types']?0:1)" || exit 0
+    echo "prelude: build:types in $dir"
+    npm run build:types 2>&1 | sed 's/^/    /'
+  ) || PRELUDE_FAILED="$PRELUDE_FAILED $dir"
+done
+
+if [ -n "$PRELUDE_FAILED" ]; then
+  echo "prelude build:types failed:$PRELUDE_FAILED"
+  exit 1
+fi
+
 FAILED=""
 TOTAL=0
 CHECKED=0
