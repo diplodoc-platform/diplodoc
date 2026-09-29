@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T03:44:02.998Z",
+  "generatedAt": "2026-09-29T04:19:19.367Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -423,7 +423,21 @@
       "to": "@diplodoc/cli",
       "fromShort": "testpack",
       "toShort": "cli",
-      "type": "peer"
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/testpack",
+      "to": "@diplodoc/folding-headings-extension",
+      "fromShort": "testpack",
+      "toShort": "folding-headings-extension",
+      "type": "dev"
+    },
+    {
+      "from": "@diplodoc/testpack",
+      "to": "@diplodoc/quote-link-extension",
+      "fromShort": "testpack",
+      "toShort": "quote-link-extension",
+      "type": "dev"
     },
     {
       "from": "@diplodoc/transform",
