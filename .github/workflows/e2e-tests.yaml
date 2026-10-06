@@ -26,12 +26,12 @@ on:
         description: 'Branch name to checkout in all submodules (e.g., "feature-branch")'
         required: false
         type: string
-        default: ''
+        default: ""
       trigger_id:
-        description: 'Unique identifier for this trigger (for tracking)'
+        description: "Unique identifier for this trigger (for tracking)"
         required: false
         type: string
-        default: ''
+        default: ""
 
   # Allow triggering from other repositories (child modules)
   workflow_call:
@@ -40,16 +40,16 @@ on:
         description: 'Branch name to checkout in all submodules (e.g., "feature-branch")'
         required: false
         type: string
-        default: ''
+        default: ""
       trigger_id:
-        description: 'Unique identifier for this trigger (for tracking)'
+        description: "Unique identifier for this trigger (for tracking)"
         required: false
         type: string
-        default: ''
+        default: ""
 
 jobs:
   e2e-tests:
-    name: 'Run E2E Tests'
+    name: "Run E2E Tests"
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -65,7 +65,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install latest npm (>= 11.5.1)
         run: |
@@ -112,15 +112,18 @@ jobs:
         run: npm run reset -- -u -q
 
       - name: Run E2E tests
+        id: browser
         run: npm run test
 
       - name: Upload test results
-        if: always()
+        if: always() && (steps.browser.outcome == 'success' || steps.browser.outcome == 'failure')
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
-            devops/testpack/test-results/
-            devops/testpack/playwright-report/
+            devops/testpack/.playwright/result/
+            devops/testpack/.playwright/html/
+            devops/testpack/.playwright/json/
+          include-hidden-files: true
+          if-no-files-found: error
           retention-days: 7
-
