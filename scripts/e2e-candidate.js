@@ -73,7 +73,17 @@ export function bindCandidate(env, root = process.cwd(), git = runGit) {
     directory.startsWith(resolve(root) + sep),
     "Submodule path escapes the metapackage",
   );
-  git(["fetch", "--no-tags", "--depth=1", "origin", sha], directory);
+  // Public HTTPS fetch needs neither a persisted checkout token nor an SSH key.
+  git(
+    [
+      "fetch",
+      "--no-tags",
+      "--depth=1",
+      `https://github.com/${repository}.git`,
+      sha,
+    ],
+    directory,
+  );
   git(["checkout", "--detach", "FETCH_HEAD"], directory);
   assert.equal(
     git(["rev-parse", "HEAD"], directory),

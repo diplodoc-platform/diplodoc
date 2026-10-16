@@ -50,7 +50,13 @@ test("external caller selects only its mapped submodule and full event SHA", () 
   assert.deepEqual(
     calls.find(({ args }) => args[0] === "fetch"),
     {
-      args: ["fetch", "--no-tags", "--depth=1", "origin", sha],
+      args: [
+        "fetch",
+        "--no-tags",
+        "--depth=1",
+        `https://github.com/${repository}.git`,
+        sha,
+      ],
       cwd: "/workspace/extensions/tabs",
     },
   );
@@ -179,6 +185,14 @@ test("real git fetch selects exact candidate bytes instead of the moving branch 
       "-qm",
       "baseline",
     );
+    const localGit = (args, cwd) => {
+      // Exercise real Git without making this fixture contact GitHub.
+      const localArgs =
+        args[0] === "fetch"
+          ? [...args.slice(0, 3), origin, ...args.slice(4)]
+          : args;
+      return git(cwd, ...localArgs);
+    };
     const proof = bindCandidate(
       {
         ...baseEnv,
@@ -186,6 +200,7 @@ test("real git fetch selects exact candidate bytes instead of the moving branch 
         E2E_EXPECTED_SHA: candidateSha,
       },
       root,
+      localGit,
     );
     assert.equal(proof.candidate.sha, candidateSha);
     assert.equal(
