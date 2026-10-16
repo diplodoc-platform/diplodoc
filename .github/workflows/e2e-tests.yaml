@@ -1,5 +1,8 @@
 name: E2E Tests
 
+permissions:
+  contents: read
+
 # E2E Test Runner for Diplodoc Metapackage
 #
 # This workflow orchestrates full end-to-end testing of the Diplodoc metapackage:
@@ -18,6 +21,12 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    paths:
+      - ".github/workflows/e2e-tests.yaml"
+      - "scripts/e2e-candidate.js"
+      - "scripts/e2e-candidate.test.js"
+      - "scripts/e2e-artifacts.test.js"
 
   # Allow manual trigger with parameters
   workflow_dispatch:
@@ -29,6 +38,16 @@ on:
         default: ""
       trigger_id:
         description: "Unique identifier for this trigger (for tracking)"
+        required: false
+        type: string
+        default: ""
+      candidate_repository:
+        description: "Registered submodule repository, e.g. diplodoc-platform/tabs-extension"
+        required: false
+        type: string
+        default: ""
+      candidate_sha:
+        description: "Full candidate commit SHA; requires candidate_repository"
         required: false
         type: string
         default: ""
@@ -46,6 +65,16 @@ on:
         required: false
         type: string
         default: ""
+      candidate_repository:
+        description: "Registered submodule repository, e.g. diplodoc-platform/tabs-extension"
+        required: false
+        type: string
+        default: ""
+      candidate_sha:
+        description: "Full candidate commit SHA; requires candidate_repository"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   e2e-tests:
@@ -57,9 +86,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          repository: diplodoc-platform/diplodoc
+          ref: ${{ github.repository == 'diplodoc-platform/diplodoc' && github.sha || 'master' }}
           fetch-depth: 0
           submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -72,6 +103,9 @@ jobs:
           [ "$(printf '%s\n' "11.5.1" "$(npm -v)" | sort -V | head -n1)" = "11.5.1" ] || npm install -g npm@11.5.1
         shell: bash
 
+      - name: Test candidate binding and report contract
+        run: node --test scripts/e2e-candidate.test.js scripts/e2e-artifacts.test.js
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
@@ -83,9 +117,28 @@ jobs:
 
       - name: Override active branch
         if: inputs.submodules_override != ''
+        env:
+          SUBMODULES_OVERRIDE: ${{ inputs.submodules_override }}
         run: |
-          echo "All submodules will attempt to checkout branch ${{ inputs.submodules_override }}"
-          npm run git:apply -- "${{ inputs.submodules_override }}"
+          npm run git:apply -- "$SUBMODULES_OVERRIDE"
+
+      - name: Bind exact candidate and record source identity
+        id: candidate
+        env:
+          E2E_CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
+          E2E_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          E2E_SUBMODULES_OVERRIDE: ${{ inputs.submodules_override }}
+          E2E_CALLER_REPOSITORY: ${{ github.repository }}
+          E2E_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/e2e-candidate.js
+
+      - name: Upload source identity
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-source
+          path: e2e-source.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Setup node_modules
         run: |
