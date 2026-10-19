@@ -51,7 +51,11 @@ jobs:
           git submodule update --init --recursive --remote --force
 
       - name: Install js-yaml
-        run: npm install js-yaml@4 --no-save
+        id: yaml-tools
+        run: |
+          yaml_tools_dir="$(mktemp -d "$RUNNER_TEMP/diplodoc-yaml.XXXXXX")"
+          npm install --prefix "$yaml_tools_dir" --no-save --package-lock=false --workspaces=false --ignore-scripts js-yaml@4
+          echo "node-path=$yaml_tools_dir/node_modules" >> "$GITHUB_OUTPUT"
 
       # Regenerate the committed dependency graph from the freshly-updated
       # submodule package.json files. deps-graph.json is the single source of
@@ -61,6 +65,8 @@ jobs:
       # submodules are present — keeps deps-graph.json in sync with the actual
       # submodule set/pins on every change.
       - name: Regenerate deps-graph.json
+        env:
+          NODE_PATH: ${{ steps.yaml-tools.outputs.node-path }}
         run: npm run deps-graph
 
       - name: Check if there are changes

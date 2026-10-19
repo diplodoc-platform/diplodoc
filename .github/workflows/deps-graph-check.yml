@@ -64,7 +64,13 @@ jobs:
           cache: ''
 
       - name: Install js-yaml
-        run: npm install js-yaml@4 --no-save
+        id: yaml-tools
+        run: |
+          yaml_tools_dir="$(mktemp -d "$RUNNER_TEMP/diplodoc-yaml.XXXXXX")"
+          npm install --prefix "$yaml_tools_dir" --no-save --package-lock=false --workspaces=false --ignore-scripts js-yaml@4
+          echo "node-path=$yaml_tools_dir/node_modules" >> "$GITHUB_OUTPUT"
 
       - name: Check deps-graph.json
+        env:
+          NODE_PATH: ${{ steps.yaml-tools.outputs.node-path }}
         run: npm run deps-graph:check
