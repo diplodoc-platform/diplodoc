@@ -137,6 +137,12 @@ npm run watch
 
 ## Dependency Management
 
+### Workspace-only TypeScript peer compatibility
+
+The root explicitly resolves `i18next` and `react-i18next` and mirrors the components package's narrow TypeScript overrides. Their published TypeScript peer range is still `^5`; the override is a local development compatibility exception for our TypeScript 6 toolchain, not an upstream compatibility guarantee. Keep the components runtime version cap intact and validate consumer types when changing it.
+
+After submodule dependency changes, update the root lock and validate a clean `npm ci`, not only an incremental `npm install`. Check actual resolutions: an old lock can retain `@typescript/typescript6` aliases or omit a required shared package despite a successful install. The regression tests live in `scripts/submodule-tooling.test.js`.
+
 ### ⚠️ CRITICAL: Updating @diplodoc/* Packages in Submodules
 
 **CRITICAL PROCEDURE**: When updating `@diplodoc/*` packages (like `@diplodoc/infra`, `@diplodoc/tsconfig`) in a submodule while working in metapackage mode, **ALWAYS** use this two-step procedure:
