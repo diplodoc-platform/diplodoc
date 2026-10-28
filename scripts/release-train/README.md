@@ -8,7 +8,10 @@ change that spans several packages reaches npm as one consistent set.
 
 For every participating package the train waits for CI, merges the feature PR,
 waits for the release-please PR and the npm publish, and only then lets the
-packages that depend on it start.
+packages that depend on it start. `vsc` sets `wait_for_npm: false` in
+`release-train.yml`: CI and feature/release PR merges still run, but npm polling
+and propagation of its version to downstream packages are skipped. Its npm cell
+shows `not awaited`; this does not verify publication to another registry.
 
 ## Running a train
 

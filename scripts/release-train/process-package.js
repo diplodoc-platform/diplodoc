@@ -63,7 +63,12 @@ export async function processPackage(ctx, entry, deps = defaultDeps) {
   }
 
   await ensureReleased(ctx, entry, deps);
-  await ensurePublished(ctx, entry, deps);
+
+  if (entry.wait_for_npm === false) {
+    console.log(`[${repo}] npm publication wait disabled by release-train.yml`);
+  } else {
+    await ensurePublished(ctx, entry, deps);
+  }
 
   ctx.updatePackage(repo, { status: 'done', finishedAt: ctx.now() });
   ctx.persist();

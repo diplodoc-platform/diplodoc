@@ -137,3 +137,14 @@ test('mergePlanWithRestoredState without restored state is a plain init', () => 
   const merged = mergePlanWithRestoredState(samplePlan(), null);
   assert.deepEqual(merged.packages.map((p) => p.status), ['queued', 'queued']);
 });
+
+test('resume takes the npm wait policy from the fresh plan', () => {
+  const plan = { trainId: 'rt-1', packages: [{ repo: 'vsc', npm: '@diplodoc/vsc', wait_for_npm: false }] };
+  const restored = { packages: [{ repo: 'vsc', status: 'failed', waitForNpm: true, pendingVersion: '1.0.0' }] };
+  const state = mergePlanWithRestoredState(plan, restored);
+  assert.equal(state.packages[0].waitForNpm, false);
+  assert.equal(state.packages[0].pendingVersion, '1.0.0');
+
+  const roundTrip = restoreTrainState(serializeTrainState({ trainId: 'rt-1', state }));
+  assert.equal(roundTrip.packages[0].waitForNpm, false);
+});

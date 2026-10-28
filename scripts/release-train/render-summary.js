@@ -59,6 +59,7 @@ export function fmtFeaturePr(pr, readiness) {
 
 /** npm cell: the published version, or the release PR's version as pending. */
 export function fmtNpmVersion(pkg) {
+  if (pkg.waitForNpm === false) return 'not awaited';
   if (pkg.npmVersion) return pkg.npmVersion;
   if (pkg.pendingVersion) return `${pkg.pendingVersion} (pending)`;
   return '—';

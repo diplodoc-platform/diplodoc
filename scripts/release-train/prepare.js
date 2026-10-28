@@ -236,6 +236,7 @@ function addParticipant({ repo, featurePr, source }) {
   const entry = {
     repo,
     npm: repoCfg.npm,
+    wait_for_npm: repoCfg.wait_for_npm,
     featurePr: featurePr || null,
     merge_method: repoCfg.merge_method,
     auto_approve_release: repoCfg.auto_approve_release,

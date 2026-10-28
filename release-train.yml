@@ -118,6 +118,7 @@ repos:
     npm: '@diplodoc/yfmlint'
   vsc:
     npm: '@diplodoc/vsc'
+    wait_for_npm: false
   ajv:
     npm: '@diplodoc/ajv'
 
