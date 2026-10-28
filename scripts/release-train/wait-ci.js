@@ -15,9 +15,24 @@ const SKIP_CHECK_RE = /^(auto-approve|release-please|dependabot|update dependenc
 
 const FAILED_CONCLUSIONS = new Set(['failure', 'cancelled', 'timed_out', 'action_required']);
 
+// This native GitHub service check is configuration bookkeeping, not package CI.
+// Match its App identity as well as its name; similarly named workflow jobs
+// and failed configuration checks must still block the train.
+export function isDependabotConfigCheck(run) {
+  return (
+    /^\.github\/dependabot\.ya?ml$/.test(run.name || '') &&
+    run.app?.id === 29110 &&
+    run.app?.slug === 'dependabot'
+  );
+}
+
 export function classifyChecks(checkRuns) {
   const relevant = (checkRuns.check_runs || []).filter(
-    (r) => r.name && !SKIP_CHECK_RE.test(r.name),
+    (r) => r.name && !SKIP_CHECK_RE.test(r.name) && !(
+      isDependabotConfigCheck(r) && (
+        r.status !== 'completed' || ['success', 'skipped', 'neutral'].includes(r.conclusion)
+      )
+    ),
   );
   if (relevant.length === 0) {
     return { state: 'pending', failing: null };
