@@ -147,13 +147,18 @@ export function getPr(owner, repo, number, token) {
   return ghJson(['pr', 'view', String(number), '--repo', `${owner}/${repo}`], token, 'prView');
 }
 
-export function mergePr(owner, repo, number, method, token) {
-  ghRaw(['pr', 'merge', String(number), '--repo', `${owner}/${repo}`, `--${method}`], token);
+export function mergePr(owner, repo, number, method, token, expectedHead) {
+  const args = ['pr', 'merge', String(number), '--repo', `${owner}/${repo}`, `--${method}`];
+  if (expectedHead) args.push('--match-head-commit', expectedHead);
+  ghRaw(args, token);
 }
 
-export function enableAutoMerge(owner, repo, number, method, token) {
+export function enableAutoMerge(owner, repo, number, method, token, expectedHead) {
+  const args = ['pr', 'merge', String(number), '--repo', `${owner}/${repo}`, '--auto', `--${method}`];
+  if (expectedHead) args.push('--match-head-commit', expectedHead);
+
   try {
-    ghRaw(['pr', 'merge', String(number), '--repo', `${owner}/${repo}`, '--auto', `--${method}`], token);
+    ghRaw(args, token);
     return true;
   } catch (err) {
     console.warn(`::warning::Enable auto-merge failed for ${owner}/${repo}#${number}: ${err.message}`);

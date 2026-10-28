@@ -76,7 +76,15 @@ several workflows (Quality across three operating systems, coverage, security,
 lockfile, and repo-specific e2e or visual tests) roll up into a single value.
 Checks belonging to bots and to the release machinery itself (`auto-approve`,
 `release-please`, `publish`, `dependabot`, …) are excluded, since they are not
-what the train is waiting for.
+what the train is waiting for. The native `.github/dependabot.yml` (or `.yaml`)
+check is identified by the Dependabot App, not its name alone: pending config
+bookkeeping is ignored, but configuration failures still block the train.
+
+Release PR merge attempts are retried within the existing timeout after CI is
+green. If only native Dependabot config bookkeeping leaves GitHub's merge state
+`UNSTABLE`, the train requests a normal protected merge instead of auto-merge.
+Both requests match the checked head SHA; branch protection and external commit
+statuses remain enforced. No administrator bypass is used.
 
 - ✅ — every relevant check finished successfully
 - ⏳ `pending` — checks are still running and none has failed

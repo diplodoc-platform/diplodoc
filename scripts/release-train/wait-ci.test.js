@@ -71,3 +71,25 @@ test('releaseVersionFromTitle extracts the pending version', () => {
   assert.equal(releaseVersionFromTitle('no version here'), null);
   assert.equal(releaseVersionFromTitle(null), null);
 });
+
+test('native Dependabot config bookkeeping does not replace or block package CI', () => {
+  const config = {
+    ...run('.github/dependabot.yml', 'queued'),
+    app: { id: 29110, slug: 'dependabot' },
+  };
+  const green = run('Quality', 'completed', 'success');
+
+  for (const name of ['.github/dependabot.yml', '.github/dependabot.yaml']) {
+    assert.equal(classifyChecks({ check_runs: [green, { ...config, name }] }).state, 'success');
+  }
+  assert.equal(classifyChecks({ check_runs: [config] }).state, 'pending');
+  assert.equal(classifyChecks({ check_runs: [{ ...config, status: 'completed', conclusion: 'success' }] }).state, 'pending');
+
+  for (const app of [undefined, { id: 15368, slug: 'github-actions' }, { id: 29110, slug: 'other' }]) {
+    assert.equal(classifyChecks({ check_runs: [green, { ...config, app }] }).state, 'pending');
+  }
+  for (const conclusion of ['failure', 'cancelled', 'timed_out', 'action_required']) {
+    assert.equal(classifyChecks({ check_runs: [green, { ...config, status: 'completed', conclusion }] }).state, 'failure');
+  }
+  assert.equal(classifyChecks({ check_runs: [green, { ...config, name: 'Internal Check' }] }).state, 'pending');
+});
