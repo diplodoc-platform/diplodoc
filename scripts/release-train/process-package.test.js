@@ -236,3 +236,53 @@ test('no accumulated versions means no bump commit', async () => {
     ['waitCi', 'mergePr', 'waitRelease'],
   );
 });
+
+test('vsc keeps CI and release PR gates but skips npm probes and version propagation', async () => {
+  const entry = { ...ENTRY, repo: 'vsc', npm: '@diplodoc/vsc', wait_for_npm: false };
+  for (const resumed of [false, true]) {
+    const pkg = createPackageState(entry);
+    if (resumed) {
+      pkg.status = 'failed';
+      pkg.releasePr = { number: 9, url: 'https://example.test/pr/9' };
+    }
+    const ctx = makeCtx({ pkg });
+    const { deps, calls } = makeDeps({
+      getPr: () => ({ state: resumed ? 'MERGED' : 'OPEN' }),
+      readPackageVersionFromRepo: never('readPackageVersionFromRepo'),
+      waitForNpmPackage: never('waitForNpmPackage'),
+    });
+
+    await processPackage(ctx, entry, deps);
+
+    assert.equal(pkg.status, 'done');
+    assert.equal(pkg.npmVersion, null);
+    assert.equal(pkg.waitForNpm, false);
+    assert.deepEqual(ctx.publishedByNpm, {});
+    assert.deepEqual(calls.map(([name]) => name), resumed ? [] : ['waitCi', 'mergePr', 'waitRelease']);
+  }
+});
+
+test('npm publication waiting remains required unless explicitly disabled', async () => {
+  const ctx = makeCtx();
+  const { deps } = makeDeps({ waitForNpmPackage: async () => { throw new Error('npm unavailable'); } });
+
+  await assert.rejects(processPackage(ctx, ENTRY, deps), /npm unavailable/);
+  assert.notEqual(ctx.findPackage('cli').status, 'done');
+  assert.deepEqual(ctx.publishedByNpm, {});
+});
+
+test('npm opt-out does not bypass failed CI or release PR gates', async () => {
+  const entry = { ...ENTRY, repo: 'vsc', npm: '@diplodoc/vsc', wait_for_npm: false };
+  for (const gate of ['waitForCiGreen', 'waitForReleasePleaseMerge']) {
+    const pkg = createPackageState(entry);
+    const ctx = makeCtx({ pkg });
+    const { deps } = makeDeps({
+      [gate]: async () => { throw new Error('gate failed'); },
+      waitForNpmPackage: never('waitForNpmPackage'),
+    });
+
+    await assert.rejects(processPackage(ctx, entry, deps), /gate failed/);
+    assert.notEqual(pkg.status, 'done');
+    assert.deepEqual(ctx.publishedByNpm, {});
+  }
+});

@@ -28,6 +28,7 @@ export function loadConfig(configPath = join(ROOT, 'release-train.yml')) {
       slug,
       npm: repoCfg.npm || node?.npm,
       path: node?.path,
+      wait_for_npm: repoCfg.wait_for_npm !== false,
       auto_approve_release:
         repoCfg.auto_approve_release ?? defaults.auto_approve_release ?? true,
       auto_merge_feature:

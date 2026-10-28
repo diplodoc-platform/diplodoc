@@ -74,3 +74,8 @@ test('renderSummaryTable shows early CI failures with remaining check count', ()
   });
   assert.match(table, /❌ \[Quality \/ linux\]\(https:\/\/example\.test\/check\) \(2 still running\)/);
 });
+
+test('npm wait opt-out is explicit instead of showing a perpetual pending version', () => {
+  assert.equal(fmtNpmVersion({ waitForNpm: false, pendingVersion: '1.2.3' }), 'not awaited');
+  assert.equal(fmtNpmVersion({ waitForNpm: true, pendingVersion: '1.2.3' }), '1.2.3 (pending)');
+});

@@ -13,6 +13,7 @@ export function createPackageState(entry) {
   return {
     repo: entry.repo,
     npm: entry.npm,
+    waitForNpm: entry.wait_for_npm !== false,
     status: 'queued',
     featurePr: entry.featurePr || null,
     releasePr: null,
