@@ -58,6 +58,7 @@ const SECTIONS = {
       { path: 'extensions/html', repo: 'html-extension', npm: '@diplodoc/html-extension', coverage: 'sonar' },
       { path: 'extensions/latex', repo: 'latex-extension', npm: '@diplodoc/latex-extension', coverage: 'sonar' },
       { path: 'extensions/mermaid', repo: 'mermaid-extension', npm: '@diplodoc/mermaid-extension', coverage: 'sonar' },
+      { path: 'extensions/notes', repo: 'notes-extension', npm: '@diplodoc/notes-extension', coverage: '-' },
       { path: 'extensions/openapi', repo: 'openapi-extension', npm: '@diplodoc/openapi-extension', coverage: 'sonar' },
       { path: 'extensions/page-constructor', repo: 'page-constructor-extension', npm: '@diplodoc/page-constructor-extension', coverage: 'sonar' },
       { path: 'extensions/quote-link', repo: 'quote-link-extension', npm: '@diplodoc/quote-link-extension', coverage: 'sonar' },
