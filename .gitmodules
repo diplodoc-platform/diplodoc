@@ -55,6 +55,9 @@
 [submodule "extensions/mermaid"]
 	path = extensions/mermaid
 	url = git@github.com:diplodoc-platform/mermaid-extension.git
+[submodule "extensions/notes"]
+	path = extensions/notes
+	url = git@github.com:diplodoc-platform/notes-extension.git
 [submodule "extensions/openapi"]
 	path = extensions/openapi
 	url = git@github.com:diplodoc-platform/openapi-extension.git
