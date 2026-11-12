@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T05:48:04.819Z",
+  "generatedAt": "2026-11-12T12:02:20.857Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -84,6 +84,12 @@
       "shortId": "mermaid-extension",
       "repo": "mermaid-extension",
       "path": "extensions/mermaid"
+    },
+    {
+      "npm": "@diplodoc/notes-extension",
+      "shortId": "notes-extension",
+      "repo": "notes-extension",
+      "path": "extensions/notes"
     },
     {
       "npm": "@diplodoc/openapi-extension",
@@ -363,6 +369,13 @@
       "type": "dev"
     },
     {
+      "from": "@diplodoc/notes-extension",
+      "to": "@diplodoc/directive",
+      "fromShort": "notes-extension",
+      "toShort": "directive",
+      "type": "prod"
+    },
+    {
       "from": "@diplodoc/openapi-extension",
       "to": "@diplodoc/liquid",
       "fromShort": "openapi-extension",
@@ -567,6 +580,7 @@
     "latex-extension",
     "liquid",
     "mermaid-extension",
+    "notes-extension",
     "openapi-extension",
     "sentenizer",
     "utils",

@@ -139,6 +139,10 @@ repos:
     npm: '@diplodoc/latex-extension'
   mermaid-extension:
     npm: '@diplodoc/mermaid-extension'
+  notes-extension:
+    npm: '@diplodoc/notes-extension'
+    auto_approve_release: false
+    auto_merge_feature: false
   openapi-extension:
     npm: '@diplodoc/openapi-extension'
   page-constructor-extension:
