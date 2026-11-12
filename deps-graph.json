@@ -86,6 +86,12 @@
       "path": "extensions/mermaid"
     },
     {
+      "npm": "@diplodoc/notes-extension",
+      "shortId": "notes-extension",
+      "repo": "notes-extension",
+      "path": "extensions/notes"
+    },
+    {
       "npm": "@diplodoc/openapi-extension",
       "shortId": "openapi-extension",
       "repo": "openapi-extension",
@@ -369,6 +375,13 @@
       "type": "dev"
     },
     {
+      "from": "@diplodoc/notes-extension",
+      "to": "@diplodoc/directive",
+      "fromShort": "notes-extension",
+      "toShort": "directive",
+      "type": "prod"
+    },
+    {
       "from": "@diplodoc/openapi-extension",
       "to": "@diplodoc/liquid",
       "fromShort": "openapi-extension",
@@ -580,6 +593,7 @@
     "latex-extension",
     "liquid",
     "mermaid-extension",
+    "notes-extension",
     "openapi-extension",
     "screencaster",
     "sentenizer",
