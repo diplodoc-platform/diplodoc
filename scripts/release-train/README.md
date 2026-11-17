@@ -172,3 +172,71 @@ Local dry run:
 ```bash
 GH_TOKEN=$(gh auth token) node scripts/release-train/prepare.js --prs cli#123 --dry-run --no-issue --output plan.json
 ```
+
+## Preview and start from a human feature PR
+
+Once the optional GitHub App controls are deployed and enabled, the neutral
+**Release Train** check offers **Preview train**. GitHub limits button labels to
+20 characters, so this is the short label for Preview Release Train.
+
+An explicit section takes precedence over branch discovery:
+
+```markdown
+## Release train
+- diplodoc-platform/utils#123
+- https://github.com/diplodoc-platform/components/pull/456
+```
+
+Only this section is interpreted. Unrelated links elsewhere in the description
+are ignored; an empty/malformed section is an error and never falls back to branch
+search. Without the section, discovery searches the registered release targets for
+open PRs with the exact same organization-owned source branch. The originating PR
+is always included. Conflicting PRs in one repository, drafts, bots, release PRs,
+forks, foreign repositories and non-master targets stop the control request.
+
+Preview resolves the complete group and runs the existing dependency-graph planner
+in dry-run mode, without creating a tracking issue, merging or publishing packages.
+Its check lists every PR and SHA and links to the plan. **Start Release Train** uses
+that snapshot for at most one hour; changed description, membership, source SHA or
+release configuration requires another preview. The operator must be an active
+member of the configured release-train team and have current write access to the
+metapackage and every source repository.
+
+Start passes the group to the existing train, including CI, reviews, dependency
+ordering, release-please and publication waits. Frozen source heads remain bound
+through prepare, durable resume state, dependency bumps and `--match-head-commit`.
+Only an exact dependency bump made by this train can advance an authorized head.
+An independent push or snapshot update stops the controlled merge; it does not
+silently authorize new code. Such a stopped train requires explicit human recovery: review the new heads and
+start a regular manual train for the remaining open PRs when appropriate. Do not
+delete the saved SHA guard from RT-STATE.
+
+All button-started trains (and resumes with their `rt-pr-` IDs) share one concurrency
+group with `queue: max`; previews run independently. A queued control older than
+one hour expires before execution and needs a fresh preview/start when the queue
+is free. This is a failed authorization, never an implicit release. This prevents two button-started groups from
+updating the same package concurrently. Ordinary manually dispatched trains retain
+their existing policy: do not run one concurrently over a participating source PR.
+An exact group is claimed once before prepare. After an early failure or uncertain
+response, inspect the linked workflow and tracking issue; do not repeatedly click
+Start. If prepare failed before creating resumable RT-STATE, a maintainer must
+review the state and explicitly start a regular manual train with the intended PRs.
+No claim is automatically deleted or expired to authorize another release.
+
+The App handler holds its existing credentials privately. Public workflows read a
+short-lived App check receipt containing the exact operator, source, button and
+action; they never trust an arbitrary username or PR description as authorization.
+Before authorization succeeds the request check links to the workflow listing;
+after authorization it links to the exact run. A failed/lost private dispatch can
+leave only a receipt and a Temporal failure: inspect both before retrying.
+
+Rollout is separate: merge both compatible PRs, deploy the Temporal worker before
+docs-api, then set `RELEASE_TRAIN_PR_CONTROLS_ENABLED=true` in both services and as
+an organization/repository Actions **variable** visible to `diplodoc`. Repository
+variables override organization variables. Missing/false values leave this new
+route disabled. The existing App needs check writes, workflow dispatch, team
+membership and collaborator-permission reads across the registered repositories;
+its webhook must deliver pull_request lifecycle and check_run.requested_action.
+No new secrets, schedules, distribution or automatic launch is enabled by this PR.
+
+The queue behavior follows [GitHub Actions concurrency](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency).

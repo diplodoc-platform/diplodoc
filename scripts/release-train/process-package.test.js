@@ -286,3 +286,85 @@ test('npm opt-out does not bypass failed CI or release PR gates', async () => {
     assert.deepEqual(ctx.publishedByNpm, {});
   }
 });
+
+test('PR control rejects a changed source head before bump, CI or merge', async () => {
+  const entry = { ...ENTRY, featurePr: { ...ENTRY.featurePr, expectedHead: 'a'.repeat(40) } };
+  const ctx = makeCtx({ pkg: createPackageState(entry) });
+  const { deps, calls } = makeDeps({
+    getPr: () => ({ state: 'OPEN', headRefOid: 'b'.repeat(40) }),
+  });
+  await assert.rejects(
+    processPackage(ctx, entry, deps),
+    /differs from the approved release preview/,
+  );
+  assert.deepEqual(calls, []);
+});
+
+test('PR control binds the merge to its preview SHA', async () => {
+  const entry = { ...ENTRY, featurePr: { ...ENTRY.featurePr, expectedHead: 'a'.repeat(40) } };
+  const ctx = makeCtx({ pkg: createPackageState(entry) });
+  const { deps, calls } = makeDeps({
+    getPr: () => ({ state: 'OPEN', headRefOid: 'a'.repeat(40) }),
+  });
+  await processPackage(ctx, entry, deps);
+  assert.equal(calls.find(([name]) => name === 'mergePr')[1][5], 'a'.repeat(40));
+});
+
+test('PR control rejects a push arriving after CI but before the merge', async () => {
+  const entry = { ...ENTRY, featurePr: { ...ENTRY.featurePr, expectedHead: 'a'.repeat(40) } };
+  const ctx = makeCtx({ pkg: createPackageState(entry) });
+  let head = 'a'.repeat(40);
+  const { deps, calls } = makeDeps({
+    getPr: () => ({ state: 'OPEN', headRefOid: head }),
+    waitForCiGreen: async () => {
+      head = 'b'.repeat(40);
+      return { ci: { state: 'success' }, snapshots: { state: 'none' } };
+    },
+  });
+  await assert.rejects(
+    processPackage(ctx, entry, deps),
+    /differs from the approved release preview/,
+  );
+  assert.ok(!calls.some(([name]) => name === 'mergePr'));
+});
+
+test('only an exact train-owned dependency bump can advance a controlled head', async () => {
+  const entry = { ...ENTRY, featurePr: { ...ENTRY.featurePr, expectedHead: 'a'.repeat(40) } };
+  const ctx = makeCtx({
+    pkg: createPackageState(entry),
+    publishedByNpm: { '@diplodoc/utils': '1.0.1' },
+  });
+  let head = 'a'.repeat(40);
+  const { deps, calls } = makeDeps({
+    getPr: () => ({ state: 'OPEN', headRefOid: head }),
+    bumpDownstreamDeps: ({ targets }) => {
+      assert.equal(targets[0].featurePr.expectedHead, head);
+      head = 'b'.repeat(40);
+      return [{ repo: 'cli', bumped: true, head }];
+    },
+  });
+  await processPackage(ctx, entry, deps);
+  assert.equal(ctx.findPackage('cli').featurePr.expectedHead, head);
+  assert.equal(calls.find(([name]) => name === 'mergePr')[1][5], head);
+});
+
+test('controlled protected merges never arm an unbounded auto-merge for a future head', async () => {
+  const entry = { ...ENTRY, featurePr: { ...ENTRY.featurePr, expectedHead: 'a'.repeat(40) } };
+  const ctx = makeCtx({ pkg: createPackageState(entry) });
+  let head = 'a'.repeat(40);
+  const { deps, calls } = makeDeps({
+    getPr: () => ({ state: 'OPEN', headRefOid: head }),
+    mergePr: () => {
+      throw new Error('review required');
+    },
+    enableAutoMerge: never('enableAutoMerge'),
+    waitMs: async () => {
+      head = 'b'.repeat(40);
+    },
+  });
+  await assert.rejects(
+    processPackage(ctx, entry, deps),
+    /differs from the approved release preview/,
+  );
+  assert.ok(!calls.some(([name]) => name === 'autoMerge'));
+});

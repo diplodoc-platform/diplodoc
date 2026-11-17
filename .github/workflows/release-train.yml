@@ -23,6 +23,18 @@ on:
         description: 'How many packages to process at once (default from release-train.yml, currently 3)'
         required: false
         type: string
+      control_repo:
+        description: 'GitHub App control: source repository (leave empty for manual runs)'
+        required: false
+        type: string
+      control_pr:
+        description: 'GitHub App control: source PR number'
+        required: false
+        type: string
+      control_check_id:
+        description: 'GitHub App control: signed operator request check'
+        required: false
+        type: string
       dry_run:
         description: 'Plan only, no merges'
         required: false
@@ -34,10 +46,12 @@ permissions:
 
 # One run per train. A resume uses the same train_id, so it queues behind the
 # run it is replacing instead of racing it; a fresh run is unique per workflow
-# run number.
+# run number. Button-started groups and their resumes are serialized together
+# to prevent overlapping groups from bumping the same source PR; previews remain independent.
 concurrency:
-  group: release-train-${{ inputs.train_id || format('run-{0}', github.run_number) }}
+  group: release-train-${{ (startsWith(inputs.train_id, 'rt-pr-') || (inputs.control_check_id && !inputs.dry_run)) && 'pr-controls' || inputs.train_id || format('run-{0}', github.run_number) }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   prepare:
@@ -71,19 +85,37 @@ jobs:
           private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
           owner: diplodoc-platform
 
+      - name: Authorize PR control
+        id: control
+        if: inputs.control_check_id != '' || inputs.control_repo != '' || inputs.control_pr != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          RELEASE_TRAIN_PR_CONTROLS_ENABLED: ${{ vars.RELEASE_TRAIN_PR_CONTROLS_ENABLED || 'false' }}
+          CONTROL_REPO: ${{ inputs.control_repo }}
+          CONTROL_PR: ${{ inputs.control_pr }}
+          CONTROL_CHECK_ID: ${{ inputs.control_check_id }}
+          TRAIN_ID: ${{ inputs.train_id }}
+          EXTRA_PRS: ${{ inputs.prs }}
+          EXTRA_BRANCH: ${{ inputs.branch_name }}
+          EXTRA_PACKAGES: ${{ inputs.packages }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: node scripts/release-train/pr-controls.js authorize
+
       - name: Build release plan
         id: prepare
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          TRAIN_ID: ${{ inputs.train_id }}
-          PRS: ${{ inputs.prs }}
+          TRAIN_ID: ${{ steps.control.outputs.train_id || inputs.train_id }}
+          PRS: ${{ steps.control.outputs.prs || inputs.prs }}
           BRANCH_NAME: ${{ inputs.branch_name }}
           PACKAGES: ${{ inputs.packages }}
           CONCURRENCY: ${{ inputs.concurrency }}
           DRY_RUN: ${{ inputs.dry_run }}
+          IS_PR_CONTROL: ${{ steps.control.outcome == 'success' }}
         run: |
           set -euo pipefail
           ARGS=(--output plan.json)
+          if [[ "$IS_PR_CONTROL" == "true" ]]; then ARGS+=(--control control.json); fi
           if [[ -n "${TRAIN_ID:-}" ]]; then
             ARGS+=(--train-id "$TRAIN_ID")
           fi
@@ -101,8 +133,15 @@ jobs:
           fi
           if [[ "$DRY_RUN" == "true" ]]; then
             ARGS+=(--dry-run)
+            if [[ "$IS_PR_CONTROL" == "true" ]]; then ARGS+=(--no-issue); fi
           fi
           node scripts/release-train/prepare.js "${ARGS[@]}"
+
+      - name: Publish PR preview
+        if: steps.control.outcome == 'success' && inputs.dry_run
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: node scripts/release-train/pr-controls.js preview
 
       - name: Verify plan.json
         id: plan_check

@@ -81,6 +81,12 @@ export function bumpDownstreamDeps({
       // remote-tracking ref and branch off that instead.
       git(dir, ['fetch', '--depth', '1', 'origin', `+refs/heads/${branch}:refs/remotes/origin/${branch}`], authEnv);
       git(dir, ['checkout', '-B', branch, `refs/remotes/origin/${branch}`], authEnv);
+      if (featurePr.expectedHead) {
+        const initialHead = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: dir, encoding: 'utf8'}).trim();
+        if (featurePr.expectedHead !== initialHead) {
+          throw new Error('Feature head changed before the controlled dependency bump');
+        }
+      }
 
       const pkgPath = join(dir, 'package.json');
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
@@ -145,7 +151,10 @@ export function bumpDownstreamDeps({
       ]);
       git(dir, ['push', 'origin', branch], authEnv);
 
-      results.push({ repo, bumped: true, deps: publishedVersions });
+      const head = featurePr.expectedHead
+        ? execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim()
+        : undefined;
+      results.push({ repo, bumped: true, deps: publishedVersions, ...(featurePr.expectedHead ? { head } : {}) });
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

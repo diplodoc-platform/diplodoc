@@ -164,7 +164,15 @@ function safeVersion(value) {
 function safePr(pr) {
   const number = safeNumber(pr?.number);
   if (!number) return null;
-  return { number, url: safeUrl(pr.url), headRefName: safeRef(pr.headRefName) };
+  if (pr.expectedHead !== undefined && !/^[a-f0-9]{40}$/.test(pr.expectedHead)) {
+    throw new Error('Invalid controlled source SHA in release state');
+  }
+  return {
+    number,
+    url: safeUrl(pr.url),
+    headRefName: safeRef(pr.headRefName),
+    ...(pr.expectedHead !== undefined ? { expectedHead: pr.expectedHead } : {}),
+  };
 }
 
 /** Unknown statuses fall back to `queued`: redoing work is safe, skipping is not. */

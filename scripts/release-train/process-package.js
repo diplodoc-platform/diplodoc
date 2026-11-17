@@ -48,6 +48,7 @@ export async function processPackage(ctx, entry, deps = defaultDeps) {
   ctx.updatePackage(repo, { startedAt: pkg?.startedAt || ctx.now() });
 
   const feature = deps.getPr(ctx.org, repo, prNumber, ctx.token);
+  requireExpectedHead(pkg?.featurePr, feature);
   if (feature.state === 'CLOSED') {
     throw new Error(`Feature PR ${ctx.org}/${repo}#${prNumber} was closed without merge`);
   }
@@ -101,6 +102,14 @@ function ensureBumped(ctx, entry, deps) {
   });
 
   if (results[0]?.bumped) {
+    if (pkg.featurePr.expectedHead) {
+      if (!/^[a-f0-9]{40}$/.test(results[0].head || '')) {
+        throw new Error('Missing exact train-owned bump head');
+      }
+      ctx.updatePackage(entry.repo, {
+        featurePr: { ...pkg.featurePr, expectedHead: results[0].head },
+      });
+    }
     ctx.updatePackage(entry.repo, { bumpedDeps: { ...ctx.publishedByNpm } });
     ctx.persist();
   }
@@ -126,14 +135,20 @@ const MERGE_BLOCKED_RE =
 async function mergeFeaturePr(ctx, entry, prNumber, deps) {
   const repo = entry.repo;
   const method = entry.merge_method || 'rebase';
+  const expected = ctx.findPackage(repo)?.featurePr;
+  if (expected?.expectedHead) {
+    requireExpectedHead(expected, deps.getPr(ctx.org, repo, prNumber, ctx.token));
+  }
 
   try {
-    deps.mergePr(ctx.org, repo, prNumber, method, ctx.token);
+    deps.mergePr(ctx.org, repo, prNumber, method, ctx.token, expected?.expectedHead);
     return;
   } catch (err) {
     if (!MERGE_BLOCKED_RE.test(err.message)) throw err;
 
-    const armed = deps.enableAutoMerge(ctx.org, repo, prNumber, method, ctx.token);
+    const armed = expected?.expectedHead
+      ? false
+      : deps.enableAutoMerge(ctx.org, repo, prNumber, method, ctx.token);
     await waitForHumanMerge(ctx, entry, prNumber, {
       reason: firstLine(err.message),
       autoMerge: armed,
@@ -187,6 +202,7 @@ async function waitForHumanMerge(ctx, entry, prNumber, { reason, autoMerge, deps
     await deps.waitMs(pollS * 1000);
 
     const pr = deps.getPr(ctx.org, repo, prNumber, ctx.token);
+    requireExpectedHead(ctx.findPackage(repo)?.featurePr, pr);
     if (pr.state === 'MERGED') {
       console.log(`[${repo}] feature PR #${prNumber} merged during the grace period`);
       ctx.updatePackage(repo, { status: 'merging', needsHuman: null });
@@ -199,7 +215,10 @@ async function waitForHumanMerge(ctx, entry, prNumber, { reason, autoMerge, deps
 
     if (!autoMerge) {
       try {
-        deps.mergePr(ctx.org, repo, prNumber, entry.merge_method || 'rebase', ctx.token);
+        deps.mergePr(
+          ctx.org, repo, prNumber, entry.merge_method || 'rebase', ctx.token,
+          ctx.findPackage(repo)?.featurePr?.expectedHead,
+        );
         ctx.updatePackage(repo, { status: 'merging', needsHuman: null });
         ctx.persist();
         return;
@@ -306,4 +325,10 @@ async function ensurePublished(ctx, entry, deps) {
   ctx.publishedByNpm[entry.npm] = npmVersion;
   ctx.updatePackage(repo, { status: 'released', npmVersion });
   ctx.persist();
+}
+
+function requireExpectedHead(featurePr, current) {
+  if (featurePr?.expectedHead && featurePr.expectedHead !== current.headRefOid) {
+    throw new Error('Feature head differs from the approved release preview or exact train-owned bump');
+  }
 }
