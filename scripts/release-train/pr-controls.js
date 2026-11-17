@@ -31,6 +31,7 @@ export function humanFeature(pr, owner = OWNER, repo, knownBots = []) {
     pr.head?.repo?.full_name === `${owner}/${repo}` &&
     SHA.test(pr.head.sha) &&
     !pr.head.ref.startsWith('release-please--') &&
+    !pr.head.ref.startsWith('codex/dependency-candidate-') &&
     !pr.labels?.some((label) => String(label.name).startsWith('autorelease:'))
   );
 }
