@@ -191,7 +191,7 @@ Only this section is interpreted. Unrelated links elsewhere in the description
 are ignored; an empty/malformed section is an error and never falls back to branch
 search. Without the section, discovery searches the registered release targets for
 open PRs with the exact same organization-owned source branch. The originating PR
-is always included. Conflicting PRs in one repository, drafts, bots, release PRs,
+is always included. Conflicting PRs in one repository, drafts, bots, release PRs, temporary dependency candidates,
 forks, foreign repositories and non-master targets stop the control request.
 
 Preview resolves the complete group and runs the existing dependency-graph planner

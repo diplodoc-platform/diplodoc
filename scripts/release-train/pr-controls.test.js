@@ -156,6 +156,7 @@ for (const change of [
   'bot',
   'fork',
   'release',
+  'candidate',
   'draft',
   'permissions',
   'team',
@@ -174,6 +175,7 @@ for (const change of [
     if (change === 'bot') f.prs.utils.user.type = 'Bot';
     if (change === 'fork') f.prs.tabs.head.repo.full_name = 'outsider/tabs';
     if (change === 'release') f.prs.tabs.head.ref = 'release-please--branches--master';
+    if (change === 'candidate') f.prs.tabs.head.ref = 'codex/dependency-candidate-'+'a'.repeat(16);
     if (change === 'draft') f.prs.tabs.draft = true;
     if (change === 'permissions') f.state.denied = 'tabs';
     if (change === 'team') f.state.member = false;
