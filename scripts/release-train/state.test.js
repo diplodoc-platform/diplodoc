@@ -148,3 +148,13 @@ test('resume takes the npm wait policy from the fresh plan', () => {
   const roundTrip = restoreTrainState(serializeTrainState({ trainId: 'rt-1', state }));
   assert.equal(roundTrip.packages[0].waitForNpm, false);
 });
+
+test('controlled source head survives durable serialization and resume, malformed heads fail closed', () => {
+  const plan = samplePlan();
+  plan.packages[0].featurePr.expectedHead = 'a'.repeat(40);
+  const state = initState(plan);
+  const serialized = serializeTrainState({ trainId: plan.trainId, state });
+  assert.equal(restoreTrainState(serialized).packages[0].featurePr.expectedHead, 'a'.repeat(40));
+  serialized.state.packages[0].featurePr.expectedHead = 'invalid';
+  assert.throws(() => restoreTrainState(serialized), /Invalid controlled source SHA/);
+});

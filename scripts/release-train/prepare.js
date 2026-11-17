@@ -15,7 +15,7 @@
  * Writes plan.json to cwd and the first report to the tracking issue.
  */
 
-import { appendFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { topoSortSubset } from '../deps-graph.js';
 import { loadConfig, trainContext } from './config.js';
@@ -49,6 +49,7 @@ import {
 const { values, positionals } = parseArgs({
   options: {
     'train-id': { type: 'string' },
+    control: { type: 'string' },
     prs: { type: 'string' },
     branch: { type: 'string', short: 'b' },
     packages: { type: 'string', short: 'p' },
@@ -67,6 +68,8 @@ if (!token) {
 }
 
 const config = loadConfig();
+const control = values.control ? JSON.parse(readFileSync(values.control, 'utf8')) : null;
+const controlHeads = new Map((control?.scope?.participants || []).map((pr) => [pr.repo, pr]));
 const graph = config.graph;
 const dryRun = values['dry-run'];
 const useIssue = !values['no-issue'];
@@ -126,9 +129,12 @@ let restored = null;
 
 if (useIssue) {
   try {
-    issue = ensureTrainIssue({ owner: issueOwner, repo: issueRepo, trainId, token });
+    issue = ensureTrainIssue({ owner: issueOwner, repo: issueRepo, trainId, token, reopen: !control });
   } catch (err) {
     fail(`Could not create or find tracking issue in ${issueOwner}/${issueRepo}: ${err.message}`);
+  }
+  if (control && !issue.created) {
+    fail('A new PR-controlled train cannot restore existing tracking state; inspect and resume it explicitly');
   }
   restored = restoreTrainState(parseTrainState(issue.body));
   console.log(
@@ -297,9 +303,18 @@ if (values.prs) {
       }
     }
 
+    const expected = controlHeads.get(ref.repo);
+    if (control && (!expected || expected.number !== pr.number || expected.sha !== pr.headRefOid)) {
+      fail(`Preview head changed for ${ref.repo}#${pr.number}`);
+    }
     addParticipant({
       repo: ref.repo,
-      featurePr: { number: pr.number, url: pr.url, headRefName: pr.headRefName },
+      featurePr: {
+        number: pr.number,
+        url: pr.url,
+        headRefName: pr.headRefName,
+        ...(expected ? { expectedHead: expected.sha } : {}),
+      },
       source: 'prs',
     });
   }
@@ -336,6 +351,10 @@ if (branchName) {
       fail(`No open PR for ${org}/${repo} on branch ${branchName}`);
     }
   }
+}
+
+if (control && participants.size !== controlHeads.size) {
+  fail('Controlled plan differs from the preview participants');
 }
 
 if (participants.size === 0) {
