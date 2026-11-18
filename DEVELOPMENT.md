@@ -48,6 +48,54 @@ Once running, you can:
 - **`npm run reset`** - Clean and reset everything
 - **`npm run deps`** - Install dependencies only
 
+## Reproduce the public browser check
+
+The [E2E Tests workflow](.github/workflows/e2e-tests.yaml) runs on pull requests
+and on pushes to `master`, including the commits that update package pins.
+It also supports manual and reusable runs. The metapackage PR run tests the
+GitHub merge commit. Each run uploads `e2e-source.json` with the metapackage
+commit and any exact candidate override. The accompanying `e2e-submodules.txt`
+records the checked-out commits for CLI, client, components, Transform, testpack,
+and the other submodules. An override can advance those commits beyond the
+metapackage pins.
+
+Use a fresh checkout. Set `METAPACKAGE_SHA` to the value from `e2e-source.json`
+before running these commands:
+
+```sh
+git clone https://github.com/diplodoc-platform/diplodoc.git
+cd diplodoc
+git fetch --no-tags origin "$METAPACKAGE_SHA"
+git checkout --detach FETCH_HEAD
+git -c 'url.https://github.com/.insteadOf=git@github.com:' submodule update --init --recursive
+```
+
+For a run with a candidate or branch override, check out the commit listed for
+each changed submodule in `e2e-submodules.txt` before installing dependencies.
+
+```sh
+npm install
+npm run reset -- -u -q
+npx playwright install chromium
+npm run build
+npm install @diplodoc/cli --ignore-scripts
+npm run reset -- -u -q
+CI=true npm run test
+```
+
+On Linux without the browser system libraries, use
+`npx playwright install --with-deps chromium` in the setup above.
+
+The workflow uploads `test-results` when Playwright completes successfully or
+fails. Locally, open `devops/testpack/.playwright/html/index.html` or inspect
+`.playwright/json/results.json` and `.playwright/result/` in the testpack
+directory. After building, use `npm exec --workspace=@diplodoc/testpack --
+playwright test --grep '<test title>'` to rerun a particular case.
+
+These runs cover the public `@diplodoc/testpack` corpus. Migration compatibility
+and coverage across viewer targets require the shared migration scenarios and
+their separate coverage report.
+
 ## Project Structure
 
 This is a monorepo with the following structure:
