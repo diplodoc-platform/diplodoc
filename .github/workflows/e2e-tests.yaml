@@ -14,6 +14,25 @@ on:
     branches:
       - master
   pull_request:
+    paths:
+      - ".github/workflows/e2e-tests.yaml"
+      - ".gitmodules"
+      - ".npmrc"
+      - "nx.json"
+      - "package.json"
+      - "package-lock.json"
+      - "packages/**"
+      - "extensions/**"
+      - "devops/infra"
+      - "devops/package-template"
+      - "devops/testpack"
+      - "scripts/e2e-candidate.js"
+      - "scripts/e2e-candidate.test.js"
+      - "scripts/e2e-artifacts.test.js"
+      - "scripts/git-apply.sh"
+      - "scripts/git-apply-submodule.sh"
+      - "scripts/nx.js"
+      - "scripts/reset.js"
 
   # Allow manual trigger with parameters
   workflow_dispatch:
@@ -119,16 +138,11 @@ jobs:
           E2E_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: node scripts/e2e-candidate.js
 
-      - name: Record checked-out submodules
-        run: git submodule status --recursive > e2e-submodules.txt
-
       - name: Upload source identity
         uses: actions/upload-artifact@v4
         with:
           name: e2e-source
-          path: |
-            e2e-source.json
-            e2e-submodules.txt
+          path: e2e-source.json
           if-no-files-found: error
           retention-days: 7
 
