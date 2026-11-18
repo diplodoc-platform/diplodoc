@@ -24,13 +24,10 @@ on:
       - "packages/**"
       - "extensions/**"
       - "devops/infra"
-      - "devops/package-template"
       - "devops/testpack"
       - "scripts/e2e-candidate.js"
       - "scripts/e2e-candidate.test.js"
       - "scripts/e2e-artifacts.test.js"
-      - "scripts/git-apply.sh"
-      - "scripts/git-apply-submodule.sh"
       - "scripts/nx.js"
       - "scripts/reset.js"
 
