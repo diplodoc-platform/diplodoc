@@ -51,13 +51,11 @@ Once running, you can:
 ## Reproduce the public browser check
 
 The [E2E Tests workflow](.github/workflows/e2e-tests.yaml) runs on pull requests
-and on pushes to `master`, including the commits that update package pins.
-It also supports manual and reusable runs. The metapackage PR run tests the
-GitHub merge commit. Each run uploads `e2e-source.json` with the metapackage
-commit and any exact candidate override. The accompanying `e2e-submodules.txt`
-records the checked-out commits for CLI, client, components, Transform, testpack,
-and the other submodules. An override can advance those commits beyond the
-metapackage pins.
+that change package, extension or testpack revisions, or modify the E2E setup.
+It also runs on pushes to `master` and supports manual and reusable runs. The
+metapackage PR run tests the GitHub merge commit. Each run uploads
+`e2e-source.json` with the metapackage commit and any exact candidate override.
+The metapackage commit records the default submodule pins.
 
 Use a fresh checkout. Set `METAPACKAGE_SHA` to the value from `e2e-source.json`
 before running these commands:
@@ -70,8 +68,9 @@ git checkout --detach FETCH_HEAD
 git -c 'url.https://github.com/.insteadOf=git@github.com:' submodule update --init --recursive
 ```
 
-For a run with a candidate or branch override, check out the commit listed for
-each changed submodule in `e2e-submodules.txt` before installing dependencies.
+For an exact candidate run, fetch and check out the `candidate.sha` from
+`e2e-source.json` in `candidate.path` before installing dependencies. A manual
+branch override uses the current tips of the selected branches when it runs.
 
 ```sh
 npm install
