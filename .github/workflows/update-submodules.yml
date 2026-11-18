@@ -5,7 +5,7 @@ on:
     branches:
       - master
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '30 21 * * *' # 00:30 Europe/Moscow.
   workflow_dispatch:
 
 jobs:
@@ -16,6 +16,9 @@ jobs:
     # and workflow_dispatch are unaffected; human pushes still run.
     if: github.event_name != 'push' || !contains(github.actor, '[bot]')
     runs-on: ubuntu-latest
+    concurrency:
+      group: update-submodules-${{ github.ref }}
+      queue: max
     permissions:
       contents: write
 
@@ -31,6 +34,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
+          # Waiters in the queue must start from the latest branch tip.
+          ref: ${{ github.ref }}
           submodules: recursive
           token: ${{ steps.app-token.outputs.token }}
 
