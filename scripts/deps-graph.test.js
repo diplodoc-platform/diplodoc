@@ -35,3 +35,18 @@ test('vsc included via release-train.yml npm alias', () => {
   assert.ok(vsc, 'expected vsc node from release-train.yml');
   assert.equal(vsc.npm, '@diplodoc/vsc');
 });
+
+test('Tabs waits for Directive and Utils as runtime dependencies', () => {
+  const graph = buildDepsGraph();
+  const tabs = graph.topoOrder.indexOf('tabs-extension');
+  assert.ok(tabs >= 0);
+
+  for (const dependency of ['directive', 'utils']) {
+    const edges = graph.edges.filter(
+      (edge) => edge.fromShort === 'tabs-extension' && edge.toShort === dependency,
+    );
+    assert.deepEqual(edges.map((edge) => edge.type), ['prod']);
+    const upstream = graph.topoOrder.indexOf(dependency);
+    assert.ok(upstream >= 0 && upstream < tabs, `${dependency} should precede Tabs`);
+  }
+});

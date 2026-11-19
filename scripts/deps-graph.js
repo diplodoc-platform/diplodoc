@@ -117,12 +117,26 @@ export function loadReleaseTrainRepoMaps(path = join(ROOT, 'release-train.yml'))
   const cfg = loadReleaseTrainConfig(path);
   const repoToNpm = new Map();
   const npmToRepo = new Map();
+  const plannedRuntimeDependencies = new Map();
   for (const [slug, repoCfg] of Object.entries(cfg?.repos || {})) {
+    const planned = repoCfg?.planned_runtime_dependencies;
+    if (planned !== undefined) {
+      const invalid =
+        !repoCfg.npm ||
+        !Array.isArray(planned) ||
+        planned.some((dependency) => typeof dependency !== 'string' || !dependency.startsWith('@diplodoc/'));
+      if (invalid) {
+        throw new Error(
+          `${slug}.planned_runtime_dependencies requires an npm name and a list of @diplodoc/* packages`,
+        );
+      }
+      plannedRuntimeDependencies.set(repoCfg.npm, new Set(planned));
+    }
     if (!repoCfg?.npm) continue;
     repoToNpm.set(slug, repoCfg.npm);
     npmToRepo.set(repoCfg.npm, slug);
   }
-  return { repoToNpm, npmToRepo };
+  return { repoToNpm, npmToRepo, plannedRuntimeDependencies };
 }
 
 function resolvePackageIdentity(relPath, pkg, gitmodules, releaseTrain) {
@@ -168,6 +182,14 @@ export function buildDepsGraph(options = {}) {
     });
   }
 
+  for (const [npm, dependencies] of releaseTrain.plannedRuntimeDependencies) {
+    for (const dependency of dependencies) {
+      if (npm === dependency || !npmToNode.has(npm) || !npmToNode.has(dependency)) {
+        throw new Error(`Invalid planned runtime dependency: ${npm} → ${dependency}`);
+      }
+    }
+  }
+
   const edges = [];
   for (const relPath of dirs) {
     let pkg;
@@ -182,7 +204,11 @@ export function buildDepsGraph(options = {}) {
     const fromShort = shortId(fromNpm);
     if (!includeHidden && isHiddenNode(fromShort)) continue;
 
-    for (const depNpm of collectDiplodocDeps(pkg)) {
+    const planned = releaseTrain.plannedRuntimeDependencies.get(fromNpm);
+    const dependencies = collectDiplodocDeps(pkg);
+    for (const dependency of planned || []) dependencies.add(dependency);
+
+    for (const depNpm of dependencies) {
       if (!npmToNode.has(depNpm)) continue;
       const toShort = shortId(depNpm);
       if (!includeHidden && isHiddenNode(toShort)) continue;
@@ -191,7 +217,7 @@ export function buildDepsGraph(options = {}) {
         to: depNpm,
         fromShort,
         toShort,
-        type: edgeType(pkg, depNpm),
+        type: planned?.has(depNpm) ? 'prod' : edgeType(pkg, depNpm),
       });
     }
   }

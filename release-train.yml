@@ -149,6 +149,11 @@ repos:
     npm: '@diplodoc/search-extension'
   tabs-extension:
     npm: '@diplodoc/tabs-extension'
+    # Tabs 4 needs these before the stable gitlink can declare them as runtime dependencies.
+    # Remove after the gitlink includes https://github.com/diplodoc-platform/tabs-extension/pull/179.
+    planned_runtime_dependencies:
+      - '@diplodoc/directive'
+      - '@diplodoc/utils'
 
   # === devops (publishable) ===
   testpack:

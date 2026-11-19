@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-19T02:41:50.398Z",
+  "generatedAt": "2026-11-19T11:58:54.575Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -413,10 +413,17 @@
     },
     {
       "from": "@diplodoc/tabs-extension",
+      "to": "@diplodoc/directive",
+      "fromShort": "tabs-extension",
+      "toShort": "directive",
+      "type": "prod"
+    },
+    {
+      "from": "@diplodoc/tabs-extension",
       "to": "@diplodoc/utils",
       "fromShort": "tabs-extension",
       "toShort": "utils",
-      "type": "dev"
+      "type": "prod"
     },
     {
       "from": "@diplodoc/testpack",
