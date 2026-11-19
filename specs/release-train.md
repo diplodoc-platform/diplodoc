@@ -36,6 +36,7 @@ Pattern reference: [`devops/infra/.github/workflows/distribute-infra.yml`](../de
 - `defaults.close_issue_on_success`: `true`
 - `defaults.target_branch`: branch feature PRs must target (`master`)
 - `repos.<slug>`: `auto_approve_release`, `auto_merge_feature` (per-repo)
+- `repos.<slug>.planned_runtime_dependencies`: runtime npm package names needed by a feature PR before the corresponding submodule pin can be updated. The graph generator adds each dependency or promotes its existing edge to `prod`. Remove the entry and regenerate the graph once the pinned manifest declares the same runtime dependencies.
 - `capabilities.update_snapshots`: repo → workflow path (e.g. `cli` → `update-snapshots.yml`)
 - `capabilities.update_lockfile`: default on for bump-downstream commits
 - `commands.aliases` / `commands.actions`: accepted issue-comment commands
