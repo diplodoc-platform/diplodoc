@@ -48,3 +48,22 @@ test('a repeat inventory skips existing open or closed requests by immutable Git
   }
   assert.deepEqual(pendingCandidates(items, lookup), []);
 });
+
+test('an explicit manual retry recreates only selected closed, unmerged requests', () => {
+  const items = ['closed', 'open', 'merged', 'unselected'].map((name, index) => ({
+    id: index + 1,
+    slug: 'diplodoc-platform/' + name,
+  }));
+  const closed = { state: 'closed', merged_at: null, head: { sha: 'old-head' } };
+  const history = new Map([
+    [candidateBranch(1), [closed]],
+    [candidateBranch(2), [closed, { state: 'open' }]],
+    [candidateBranch(3), [{ ...closed, merged_at: '2026-11-20T12:00:00Z' }]],
+    [candidateBranch(4), [closed]],
+  ]);
+  const retry = new Set(items.slice(0, 3).map(({ slug }) => slug));
+
+  assert.deepEqual(pendingCandidates(items, (branch) => history.get(branch), retry), [
+    { ...items[0], retryHead: 'old-head' },
+  ]);
+});
