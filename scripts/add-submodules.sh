@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
-# Create a backup of .gitmodules
-cp .gitmodules .gitmodules.tmp
+set -eo pipefail
 
 # File with list of repositories in format:
-# [+|-] [name] [URL] [path]
+# [+|-] [name] [path] [URL]
 CONFIG_FILE="submodules.conf"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
@@ -27,12 +26,12 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     [[ "$line" =~ ^# || -z "$line" ]] && continue
 
     # Split line into components
-    read -r action name path repo <<< "$line"
+    read -r action name path repo extra <<< "$line"
 
     # Check required parameters
-    if [[ -z "$repo" || -z "$path" ]]; then
+    if [[ -z "$repo" || -z "$path" || -n "$extra" || ( "$action" != '+' && "$action" != '-' ) ]]; then
         echo "Error: Invalid entry - $line" >&2
-        FAILED_SUBMODULES+=("$repo")
+        FAILED_SUBMODULES+=("$line")
         continue
     fi
 
@@ -43,10 +42,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             continue
         fi
 
-        # Form the command
-        cmd="git submodule add $repo $path"
-        echo "Executing: $cmd"
-        if eval "$cmd"; then
+        if git submodule add -- "$repo" "$path"; then
             echo "✅ Successfully added: $repo"
             ADDED_SUBMODULES+=("$repo")
         else
@@ -54,15 +50,13 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             FAILED_SUBMODULES+=("$repo")
         fi
     elif [[ "$action" == "-" ]]; then
-        # Here you can add logic for removing submodule
         if submodule_exists "$path"; then
-            cmd="git submodule deinit $path && git rm $path"
-            echo "Executing: $cmd"
-            if eval "$cmd"; then
+            if git submodule deinit -- "$path" && git rm -- "$path"; then
                 echo "✅ Successfully removed: $path"
                 REMOVED_SUBMODULES+=("$path")
             else
                 echo "❌ Failed to remove: $path" >&2
+                FAILED_SUBMODULES+=("$path")
             fi
         else
             echo "Submodule $path does not exist, nothing to remove."
@@ -90,10 +84,11 @@ if [ "${#REMOVED_SUBMODULES[@]}" -gt 0 ]; then
 fi
 
 if [ "${#FAILED_SUBMODULES[@]}" -gt 0 ]; then
-  echo 'Failed to add submodules:'
+  echo 'Failed submodule operations:'
   printf '\e[33m%s\e[0m\n' "${FAILED_SUBMODULES[@]}"
 fi
 
-rm .gitmodules.tmp
 cp .gitmodules.sorted .gitmodules
 rm .gitmodules.sorted
+
+[[ "${#FAILED_SUBMODULES[@]}" -eq 0 ]]
