@@ -18,6 +18,7 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 | [packages/components](https://github.com/diplodoc-platform/components) | [![version](https://img.shields.io/npm/v/@diplodoc/components)](https://github.com/diplodoc-platform/components/releases) | [![tests](https://github.com/diplodoc-platform/components/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/components/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/components/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/components/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/components/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/components/actions/workflows/security.yml) | - | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Fcomponents%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
 | [packages/directive](https://github.com/diplodoc-platform/directive) | [![version](https://img.shields.io/npm/v/@diplodoc/directive)](https://github.com/diplodoc-platform/directive/releases) | [![tests](https://github.com/diplodoc-platform/directive/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/directive/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/directive/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/directive/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/directive/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/directive/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_directive&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_directive) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Fdirective%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
 | [packages/liquid](https://github.com/diplodoc-platform/liquid) | [![version](https://img.shields.io/npm/v/@diplodoc/liquid)](https://github.com/diplodoc-platform/liquid/releases) | [![tests](https://github.com/diplodoc-platform/liquid/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/liquid/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/liquid/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/liquid/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/liquid/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/liquid/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_liquid&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_liquid) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Fliquid%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
+| [packages/screencaster](https://github.com/diplodoc-platform/screencaster) | [![version](https://img.shields.io/npm/v/@diplodoc/screencaster)](https://github.com/diplodoc-platform/screencaster/releases) | [![tests](https://github.com/diplodoc-platform/screencaster/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/screencaster/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/screencaster/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/screencaster/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/screencaster/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/screencaster/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_screencaster&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_screencaster) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Fscreencaster%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
 | [packages/sentenizer](https://github.com/diplodoc-platform/sentenizer) | [![version](https://img.shields.io/npm/v/@diplodoc/sentenizer)](https://github.com/diplodoc-platform/sentenizer/releases) | [![tests](https://github.com/diplodoc-platform/sentenizer/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/sentenizer/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/sentenizer/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/sentenizer/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/sentenizer/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/sentenizer/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_sentenizer&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_sentenizer) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Fsentenizer%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
 | [packages/transform](https://github.com/diplodoc-platform/transform) | [![version](https://img.shields.io/npm/v/@diplodoc/transform)](https://github.com/diplodoc-platform/transform/releases) | [![tests](https://github.com/diplodoc-platform/transform/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/transform/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/transform/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/transform/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/transform/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/transform/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_transform&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_transform) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Ftransform%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
 | [packages/translation](https://github.com/diplodoc-platform/translation) | [![version](https://img.shields.io/npm/v/@diplodoc/translation)](https://github.com/diplodoc-platform/translation/releases) | [![tests](https://github.com/diplodoc-platform/translation/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/translation/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/translation/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/translation/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/translation/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/translation/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_translation&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_translation) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Ftranslation%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
@@ -100,6 +101,7 @@ flowchart LR
   transform["transform"]
   translation["translation"]
   utils["utils"]
+  vsc["vsc"]
   yfmlint["yfmlint"]
   algolia-extension -.-> cli
   algolia-extension --> search-extension
@@ -123,6 +125,7 @@ flowchart LR
   client -.-> page-constructor-extension
   client -.-> tabs-extension
   client -.-> transform
+  components -.-> transform
   cut-extension --> directive
   cut-extension --> utils
   file-extension --> directive
@@ -136,15 +139,27 @@ flowchart LR
   quote-link-extension --> utils
   search-extension -.-> client
   search-extension -.-> components
-  tabs-extension -.-> utils
-  testpack --> cli
+  tabs-extension --> directive
+  tabs-extension --> utils
+  testpack -.-> cli
+  testpack -.-> folding-headings-extension
+  testpack -.-> quote-link-extension
   transform --> cut-extension
+  transform --> directive
   transform --> file-extension
   transform --> tabs-extension
   transform --> utils
+  translation --> ajv
   translation --> directive
   translation --> sentenizer
   translation --> transform
+  vsc --> ajv
+  vsc --> html-extension
+  vsc --> latex-extension
+  vsc --> mermaid-extension
+  vsc --> transform
+  vsc --> utils
+  vsc --> yfmlint
   yfmlint -.-> transform
   click ajv href "https://github.com/diplodoc-platform/ajv"
   click algolia-extension href "https://github.com/diplodoc-platform/algolia-extension"
@@ -170,6 +185,7 @@ flowchart LR
   click transform href "https://github.com/diplodoc-platform/transform"
   click translation href "https://github.com/diplodoc-platform/translation"
   click utils href "https://github.com/diplodoc-platform/utils"
+  click vsc href "https://github.com/diplodoc-platform/vsc"
   click yfmlint href "https://github.com/diplodoc-platform/yfmlint"
 ```
 

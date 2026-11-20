@@ -37,6 +37,7 @@ const SECTIONS = {
       { path: 'packages/components', repo: 'components', npm: '@diplodoc/components' },
       { path: 'packages/directive', repo: 'directive', npm: '@diplodoc/directive', coverage: 'sonar' },
       { path: 'packages/liquid', repo: 'liquid', npm: '@diplodoc/liquid', coverage: 'sonar' },
+      { path: 'packages/screencaster', repo: 'screencaster', npm: '@diplodoc/screencaster', coverage: 'sonar' },
       { path: 'packages/sentenizer', repo: 'sentenizer', npm: '@diplodoc/sentenizer', coverage: 'sonar' },
       { path: 'packages/transform', repo: 'transform', npm: '@diplodoc/transform', coverage: 'sonar' },
       { path: 'packages/translation', repo: 'translation', npm: '@diplodoc/translation', coverage: 'sonar' },
