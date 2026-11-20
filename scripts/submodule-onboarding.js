@@ -240,13 +240,19 @@ function main() {
 
   if (event) return resolveComment(base, baseBranch, candidates, modules, event);
   const selected = candidates.filter(({ slug }) => !values.candidate || slug === OWNER + '/' + values.candidate);
+  const failures = [];
   for (const candidate of pendingCandidates(selected, pullRequests)) {
     if (values['dry-run']) {
       console.log('Would open %s for %s → %s', candidate.path ? 'a PR' : 'a draft PR', candidate.slug, candidate.path || 'placement required');
-    } else {
+      continue;
+    }
+    try {
       create(base, baseBranch, candidate, modules);
+    } catch (error) {
+      failures.push(new Error('Could not onboard ' + candidate.slug, { cause: error }));
     }
   }
+  if (failures.length) throw new AggregateError(failures, 'One or more onboarding PRs could not be opened');
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
