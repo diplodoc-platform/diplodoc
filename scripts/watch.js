@@ -2,17 +2,11 @@
 
 import {$} from 'zx';
 import {log} from 'zx/core'
-import {roots} from './nx.js';
 import {Transform} from 'node:stream';
 
 const PROJECT = '@diplodoc/testpack';
 
-const ROOTS = await roots();
-
-// Unlink non local diplodoc packages
-for (const root of ROOTS) {
-    await $`rm -rf ${root}/node_modules/@diplodoc`;
-}
+await $`npm run reset -- -u -q`;
 
 $.stdio = ["inherit", "pipe", "pipe"];
 $.log = (entry) => {

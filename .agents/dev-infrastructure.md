@@ -139,10 +139,10 @@ The `watch.js` script provides a comprehensive development environment:
 
 ### What It Does
 
-1. **Unlinks packages**: Removes `node_modules/@diplodoc` from all workspace roots (except root)
-   - Removes pre-built artifacts from npm that would interfere with local changes
-   - Root `node_modules` contains source code from submodules (not installed from npm)
-   - Non-root `node_modules` may contain pre-built artifacts that need to be removed
+1. **Prepares workspace dependencies**: Runs quick reset to remove standalone
+   `@diplodoc` entries absent from the root lockfile
+   - Keeps nested dependencies npm resolved for the workspace
+   - Adds an adjacent Infra link where a workspace has no local Infra entry
 2. **Builds testpack**: Builds `@diplodoc/testpack` and all dependencies
 3. **Builds documentation**: Builds testpack docs
 4. **Starts server**: Serves docs on http://localhost:3001
