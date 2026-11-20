@@ -106,3 +106,6 @@
 [submodule "packages/yfmlint"]
 	path = packages/yfmlint
 	url = git@github.com:diplodoc-platform/yfmlint.git
+[submodule "packages/screencaster"]
+	path = packages/screencaster
+	url = git@github.com:diplodoc-platform/screencaster.git
