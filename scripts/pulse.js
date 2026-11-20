@@ -14,6 +14,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildDepsGraph, renderMermaid, shortId } from './deps-graph.js';
+import { readGitmodules } from './submodule-discovery.js';
 
 const ORG = 'diplodoc-platform';
 const BRANCH = 'master';
@@ -240,6 +241,19 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 `;
 
 const sectionNames = Object.keys(SECTIONS);
+for (const { path, slug } of readGitmodules()) {
+  const [section, name] = path.split('/');
+  if (!slug?.startsWith(ORG + '/') || !sectionNames.includes(section) || !name) continue;
+  const rows = SECTIONS[section].rows;
+  if (rows.some((row) => row.path === path)) continue;
+  const repo = slug.split('/')[1];
+  if (section === 'actions') {
+    rows.push({ path, repo });
+  } else {
+    const pkg = JSON.parse(readFileSync(join(path, 'package.json'), 'utf8'));
+    rows.push({ path, repo, npm: pkg.name });
+  }
+}
 const body = sectionNames
   .map((name, i) => renderSection(name, SECTIONS[name], i === sectionNames.length - 1))
   .join('\n');
