@@ -106,3 +106,6 @@
 [submodule "packages/yfmlint"]
 	path = packages/yfmlint
 	url = git@github.com:diplodoc-platform/yfmlint.git
+[submodule "skills"]
+	path = skills
+	url = git@github.com:diplodoc-platform/skills.git
