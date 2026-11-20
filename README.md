@@ -59,9 +59,10 @@ For development setup and contribution guidelines, see [DEVELOPMENT.md](DEVELOPM
 
 ## Adding/removing subrepositories in the monorepo
 
-To add/remove subrepositories in the monorepo, use the scripts `script/check-submodules.sh` and `script/add-submodules.sh`.
-1. Run the script: `script/check-submodules.sh`. It will update the `submodules.conf` file. If necessary, manually make corrections in the `submodules.conf` file by specifying the correct path.
-2. Run the script: `script/add-submodules.sh`. It will add/remove subrepositories according to the `submodules.conf` file.
-3. Push the result to the repository.
+The **Discover Submodules** workflow reports missing public repositories and suggested paths daily and on demand. To run the same check locally, authenticate the GitHub CLI and run `npm run check-submodules`. Add `-- --include-private` to review private candidates locally.
 
-As a result, you should see new subrepositories in the list of subrepositories on GitHub, and your `.gitmodules` file will be updated (and it will already be sorted)
+Add a repository name or GitHub URL to `.gitmodules-ignore` to omit it from discovery. Use `#` for comments.
+
+1. Run `npm run check-submodules -- --write-plan` to generate the proposed additions in `submodules.conf`. Review the paths and adjust them if needed. For an intentional removal, add a `-` row manually.
+2. Run `npm run add-submodules` to apply the reviewed plan.
+3. For npm workspaces, update the root lockfile, release-train configuration and dependency graph. Verify the diff and submit a pull request.
