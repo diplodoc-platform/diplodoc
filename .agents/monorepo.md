@@ -116,7 +116,7 @@ npm run watch
 ```
 
 **What it does**:
-1. Unlinks non-local `@diplodoc` packages from all workspace roots
+1. Removes standalone `@diplodoc` leftovers while keeping dependencies from the root lockfile
 2. Builds `@diplodoc/testpack` and dependencies
 3. Builds testpack documentation
 4. Serves documentation on http://localhost:3001
@@ -369,7 +369,8 @@ npm run reset
 **What it does**:
 - Removes all `node_modules` (metapackage and all packages)
 - Reinstalls dependencies
-- Unlinks `@diplodoc` packages from workspace roots
+- Removes nested `@diplodoc` entries absent from the root lockfile
+- Keeps npm's nested resolutions and adds the adjacent Infra link where needed
 - Prepares clean state
 
 **Flags**:
@@ -380,7 +381,7 @@ npm run reset
 
 ```bash
 npm run reset --quick
-# Only unlinks packages, doesn't remove node_modules
+# Cleans up workspace links without reinstalling packages
 ```
 
 ## Bootstrap Process
