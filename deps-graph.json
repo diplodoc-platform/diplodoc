@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-20T14:04:25.610Z",
+  "generatedAt": "2026-11-20T14:22:57.062Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -102,6 +102,12 @@
       "shortId": "quote-link-extension",
       "repo": "quote-link-extension",
       "path": "extensions/quote-link"
+    },
+    {
+      "npm": "@diplodoc/screencaster",
+      "shortId": "screencaster",
+      "repo": "screencaster",
+      "path": "packages/screencaster"
     },
     {
       "npm": "@diplodoc/search-extension",
@@ -575,6 +581,7 @@
     "liquid",
     "mermaid-extension",
     "openapi-extension",
+    "screencaster",
     "sentenizer",
     "utils",
     "cut-extension",
