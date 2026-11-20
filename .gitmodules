@@ -109,3 +109,6 @@
 [submodule "packages/screencaster"]
 	path = packages/screencaster
 	url = git@github.com:diplodoc-platform/screencaster.git
+[submodule "skills"]
+	path = skills
+	url = git@github.com:diplodoc-platform/skills.git
