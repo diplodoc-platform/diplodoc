@@ -52,17 +52,25 @@ export function parsePlacementComment(body) {
   return /^\/submodule-path +([a-z\d][a-z\d_.-]*(?:\/[a-z\d][a-z\d_.-]*)?)\s*$/.exec(body)?.[1];
 }
 
-export function pendingCandidates(candidates, lookup) {
-  return candidates.filter((candidate) => {
+export function pendingCandidates(candidates, lookup, retryClosed = new Set()) {
+  return candidates.flatMap((candidate) => {
     const previous = lookup(candidateBranch(candidate.id));
-    if (!previous.length) return true;
-    console.log('Existing PR for %s: %s (%s)', candidate.slug, previous[0].html_url, previous[0].state);
-    return false;
+    if (!previous.length) return [candidate];
+
+    const blocking = previous.find((pr) => pr.state === 'open' || pr.merged_at);
+    const last = blocking ?? previous[0];
+    if (!blocking && retryClosed.has(candidate.slug) && last.state === 'closed') {
+      return [{ ...candidate, retryHead: last.head.sha }];
+    }
+
+    console.log('Existing PR for %s: %s (%s)', candidate.slug, last.html_url, last.state);
+    return [];
   });
 }
 
 function pullRequests(branch) {
-  return github(API + '/pulls?state=all&head=' + encodeURIComponent(OWNER + ':' + branch));
+  return github('--paginate', '--slurp', API + '/pulls?state=all&per_page=100&head=' +
+    encodeURIComponent(OWNER + ':' + branch)).flat();
 }
 
 function runNode(cwd, script, ...args) {
@@ -177,19 +185,18 @@ function description(candidate, path, sha) {
 
 function create(base, baseBranch, candidate, modules) {
   const branch = candidateBranch(candidate.id);
-  const remote = git(ROOT, 'ls-remote', '--heads', REMOTE, 'refs/heads/' + branch);
+  const remote = git(ROOT, 'ls-remote', '--heads', REMOTE, 'refs/heads/' + branch).split('\t')[0];
   let sha;
   let path = candidate.path;
-  if (remote) {
-    const commit = remote.split('\t')[0];
-    const existing = github(API + '/commits/' + commit);
+  if (remote && remote !== candidate.retryHead) {
+    const existing = github(API + '/commits/' + remote);
     if (existing.commit.message !== 'chore: onboard ' + candidate.slug) {
       throw new Error('Automation branch belongs to another change: ' + branch);
     }
     if (existing.files.some(({ filename }) => filename === marker(candidate.id))) path = undefined;
   } else {
     const prepared = prepareCommit(base, candidate, path, modules);
-    push(branch, prepared.commit);
+    push(branch, prepared.commit, remote);
     sha = prepared.sha;
   }
 
@@ -223,7 +230,12 @@ function resolveComment(base, baseBranch, candidates, modules, event) {
 
 function main() {
   const { values } = parseArgs({
-    options: { candidate: { type: 'string' }, 'event-file': { type: 'string' }, 'dry-run': { type: 'boolean' } },
+    options: {
+      candidate: { type: 'string' },
+      'event-file': { type: 'string' },
+      'dry-run': { type: 'boolean' },
+      'retry-closed': { type: 'string' },
+    },
   });
   const event = values['event-file'] ? JSON.parse(readFileSync(values['event-file'], 'utf8')) : null;
   if (event && values['dry-run']) throw new Error('Choose either a comment event or a dry run');
@@ -239,11 +251,18 @@ function main() {
   const candidates = [...additions, ...manual.filter(({ slug }) => publicSlugs.has(slug)).map((candidate) => ({ ...candidate, path: undefined }))];
 
   if (event) return resolveComment(base, baseBranch, candidates, modules, event);
-  const selected = candidates.filter(({ slug }) => !values.candidate || slug === OWNER + '/' + values.candidate);
+  const retryClosed = new Set((values['retry-closed'] ?? '').split(',')
+    .map((name) => name.trim().toLowerCase()).filter(Boolean).map((name) => OWNER + '/' + name));
+  const selected = candidates.filter(({ slug }) =>
+    (!values.candidate || slug === OWNER + '/' + values.candidate) && (!retryClosed.size || retryClosed.has(slug)));
+  for (const slug of retryClosed) {
+    if (!selected.some((candidate) => candidate.slug === slug)) throw new Error('Not an onboarding candidate: ' + slug);
+  }
   const failures = [];
-  for (const candidate of pendingCandidates(selected, pullRequests)) {
+  for (const candidate of pendingCandidates(selected, pullRequests, retryClosed)) {
     if (values['dry-run']) {
-      console.log('Would open %s for %s → %s', candidate.path ? 'a PR' : 'a draft PR', candidate.slug, candidate.path || 'placement required');
+      const action = candidate.retryHead ? 'recreate' : 'open';
+      console.log('Would %s %s for %s → %s', action, candidate.path ? 'a PR' : 'a draft PR', candidate.slug, candidate.path || 'placement required');
       continue;
     }
     try {

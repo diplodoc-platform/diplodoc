@@ -4,16 +4,13 @@ on:
   schedule:
     - cron: '17 6 * * *'
   workflow_dispatch:
+    inputs:
+      retry_closed:
+        description: Comma-separated repository names whose closed onboarding PRs should be recreated
+        type: string
+        required: false
   issue_comment:
     types: [created]
-  pull_request:
-    paths:
-      - '.github/workflows/discover-submodules.yml'
-      - '.github/submodule-requests/**'
-      - '.gitmodules-ignore'
-      - 'scripts/check-submodules.sh'
-      - 'scripts/submodule-*.js'
-      - 'scripts/pulse.js'
 
 permissions:
   contents: read
@@ -30,13 +27,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION || '24' }}
-
-      - name: Require a placement before merge
-        run: |
-          if [[ -n "$(git ls-files '.github/submodule-requests/*')" ]]; then
-            echo '::error::A maintainer must choose the destination with /submodule-path on this draft.'
-            exit 1
-          fi
 
       - name: Test discovery and onboarding rules
         run: node --test scripts/submodule-discovery.test.js scripts/submodule-onboarding.test.js
@@ -94,9 +84,12 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          RETRY_CLOSED: ${{ inputs.retry_closed || '' }}
         run: |
           if [[ "$GITHUB_EVENT_NAME" == 'issue_comment' ]]; then
             node scripts/submodule-onboarding.js --event-file "$GITHUB_EVENT_PATH" | tee -a "$GITHUB_STEP_SUMMARY"
+          elif [[ "$GITHUB_EVENT_NAME" == 'workflow_dispatch' && -n "$RETRY_CLOSED" ]]; then
+            node scripts/submodule-onboarding.js --retry-closed "$RETRY_CLOSED" | tee -a "$GITHUB_STEP_SUMMARY"
           else
             node scripts/submodule-onboarding.js | tee -a "$GITHUB_STEP_SUMMARY"
           fi

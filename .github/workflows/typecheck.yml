@@ -44,6 +44,13 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Require submodule placement
+        run: |
+          if [[ -n "$(git ls-files '.github/submodule-requests/*')" ]]; then
+            echo '::error::A maintainer must choose the destination with /submodule-path on this draft.'
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
