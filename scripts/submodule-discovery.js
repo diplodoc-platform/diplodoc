@@ -26,7 +26,7 @@ export function parseIgnore(contents) {
   return ignored;
 }
 
-function readGitmodules() {
+export function readGitmodules() {
   const modules = new Map();
   const config = execFileSync('git', [
     'config', '--file', '.gitmodules', '--null', '--get-regexp', '^submodule\\..*\\.(path|url)$',
@@ -87,7 +87,7 @@ export function discover(repos, modules, ignored, inspect, pathExists = existsSy
     else if (repo.fork || repo.is_template) reason = 'Fork or template';
     else if (repo.size === 0) reason = 'Repository has no indexed content';
 
-    decisions.push({ slug, ...(reason ? { reason } : suggestPath(name, inspect(repo))) });
+    decisions.push({ slug, id: repo.id, branch: repo.default_branch, ...(reason ? { reason } : suggestPath(name, inspect(repo))) });
   }
 
   const counts = new Map();
@@ -109,16 +109,16 @@ export function discover(repos, modules, ignored, inspect, pathExists = existsSy
   return { additions, manual, inactive, absent };
 }
 
-function github(...args) {
+export function github(...args) {
   return JSON.parse(execFileSync('gh', ['api', '--hostname', 'github.com', ...args], {
     encoding: 'utf8',
     maxBuffer: 20 * 1024 * 1024,
   }));
 }
 
-function inspect(repo) {
+export function inspect(repo, ref = repo.default_branch) {
   const base = 'repos/' + repo.full_name + '/git/';
-  const tree = github(base + 'trees/' + encodeURIComponent(repo.default_branch));
+  const tree = github(base + 'trees/' + encodeURIComponent(ref));
   if (tree.truncated || !Array.isArray(tree.tree)) {
     throw new Error('Incomplete repository tree: ' + repo.full_name);
   }
@@ -149,6 +149,20 @@ function printReport({ additions, manual, inactive, absent }, count) {
   }
 }
 
+export function inventory(includePrivate = false) {
+  const visibility = includePrivate ? 'all' : 'public';
+  const pages = github('--paginate', '--slurp', 'orgs/' + OWNER + '/repos?type=' + visibility + '&per_page=100');
+  if (!Array.isArray(pages) || !pages.length || !pages.every(Array.isArray) || !pages[0].length) {
+    throw new Error('GitHub returned an empty or invalid repository inventory');
+  }
+
+  return pages.flat();
+}
+
+export function scan(repos) {
+  return discover(repos, readGitmodules(), parseIgnore(readFileSync('.gitmodules-ignore', 'utf8')), inspect);
+}
+
 function main() {
   const { values } = parseArgs({
     options: {
@@ -156,14 +170,8 @@ function main() {
       'write-plan': { type: 'boolean' },
     },
   });
-  const visibility = values['include-private'] ? 'all' : 'public';
-  const pages = github('--paginate', '--slurp', 'orgs/' + OWNER + '/repos?type=' + visibility + '&per_page=100');
-  if (!Array.isArray(pages) || !pages.length || !pages.every(Array.isArray) || !pages[0].length) {
-    throw new Error('GitHub returned an empty or invalid repository inventory');
-  }
-
-  const repos = pages.flat();
-  const result = discover(repos, readGitmodules(), parseIgnore(readFileSync('.gitmodules-ignore', 'utf8')), inspect);
+  const repos = inventory(values['include-private']);
+  const result = scan(repos);
   printReport(result, repos.length);
 
   if (values['write-plan']) {

@@ -59,7 +59,11 @@ For development setup and contribution guidelines, see [DEVELOPMENT.md](DEVELOPM
 
 ## Adding/removing subrepositories in the monorepo
 
-The **Discover Submodules** workflow reports missing public repositories and suggested paths daily and on demand. To run the same check locally, authenticate the GitHub CLI and run `npm run check-submodules`. Add `-- --include-private` to review private candidates locally.
+The **Discover Submodules** workflow finds missing public repositories daily and on demand. It opens one pull request per GitHub repository. For an uncertain placement, it opens a draft and waits for a maintainer to comment `/submodule-path packages/example`. The workflow applies the chosen path to that draft. Review the resulting diff and mark the draft ready when the checks pass.
+
+Closing an onboarding pull request stops scheduled runs from reopening it. To take the repository up again, reopen its original pull request. A GitHub repository rename keeps the same onboarding identity.
+
+To run discovery locally, authenticate the GitHub CLI and run `npm run check-submodules`. Add `-- --include-private` to review private candidates locally.
 
 Add a repository name or GitHub URL to `.gitmodules-ignore` to omit it from discovery. Use `#` for comments.
 
