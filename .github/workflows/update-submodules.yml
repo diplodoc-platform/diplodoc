@@ -74,6 +74,14 @@ jobs:
           NODE_PATH: ${{ steps.yaml-tools.outputs.node-path }}
         run: npm run deps-graph
 
+      - name: Regenerate and verify the workspace lockfile
+        run: |
+          if git diff --quiet --ignore-submodules=dirty -- devops extensions packages; then
+            exit 0
+          fi
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+
       - name: Check if there are changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
@@ -88,7 +96,6 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Push changes
-        if: always()
         run: |
           if [ -n "$(git log -1 --pretty=%B | grep 'chore: update submodules')" ]; then
             git push origin HEAD:${{ github.ref_name }}
