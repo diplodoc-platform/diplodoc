@@ -38,6 +38,24 @@ for (const [filename, job, command] of [
   });
 }
 
+test('Update Submodules verifies the workspace lock before committing new pins', () => {
+  const workflow = loadYaml(
+    new URL('../.github/workflows/update-submodules.yml', import.meta.url),
+  );
+  const steps = workflow.jobs['update-submodules'].steps;
+  const index = (name) => steps.findIndex((step) => step.name === name);
+  const update = index('Update submodules to remote HEAD');
+  const lock = index('Regenerate and verify the workspace lockfile');
+  const commit = index('Check if there are changes');
+  const push = index('Push changes');
+
+  assert.ok(update >= 0 && update < lock && lock < commit && commit < push);
+  assert.match(steps[lock].run, /git diff --quiet --ignore-submodules=dirty/);
+  assert.match(steps[lock].run, /npm install --package-lock-only --ignore-scripts/);
+  assert.match(steps[lock].run, /npm ci --ignore-scripts/);
+  assert.equal(steps[push].if, undefined, 'lockfile failure must block the push');
+});
+
 test('workspace i18next peers use the declared root TypeScript like standalone components', () => {
   const manifest = JSON.parse(
     readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
