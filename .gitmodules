@@ -115,3 +115,6 @@
 [submodule "skills"]
 	path = skills
 	url = git@github.com:diplodoc-platform/skills.git
+[submodule "extensions/calc"]
+	path = extensions/calc
+	url = git@github.com:diplodoc-platform/calc-extension.git

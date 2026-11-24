@@ -46,6 +46,7 @@ Workflows: [tests](.github/workflows/tests.yml) · [release](.github/workflows/r
 | [extensions/quote-link](https://github.com/diplodoc-platform/quote-link-extension) | [![version](https://img.shields.io/npm/v/@diplodoc/quote-link-extension)](https://github.com/diplodoc-platform/quote-link-extension/releases) | [![tests](https://github.com/diplodoc-platform/quote-link-extension/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/quote-link-extension/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/quote-link-extension/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/quote-link-extension/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/quote-link-extension/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/quote-link-extension/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_quote-link-extension&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_quote-link-extension) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Fquote-link-extension%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
 | [extensions/search](https://github.com/diplodoc-platform/search-extension) | [![version](https://img.shields.io/npm/v/@diplodoc/search-extension)](https://github.com/diplodoc-platform/search-extension/releases) | [![tests](https://github.com/diplodoc-platform/search-extension/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/search-extension/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/search-extension/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/search-extension/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/search-extension/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/search-extension/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_search-extension&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_search-extension) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Fsearch-extension%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
 | [extensions/tabs](https://github.com/diplodoc-platform/tabs-extension) | [![version](https://img.shields.io/npm/v/@diplodoc/tabs-extension)](https://github.com/diplodoc-platform/tabs-extension/releases) | [![tests](https://github.com/diplodoc-platform/tabs-extension/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/tabs-extension/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/tabs-extension/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/tabs-extension/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/tabs-extension/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/tabs-extension/actions/workflows/security.yml) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_tabs-extension&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_tabs-extension) | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Ftabs-extension%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
+| [extensions/calc](https://github.com/diplodoc-platform/calc-extension) | [![version](https://img.shields.io/npm/v/@diplodoc/calc-extension)](https://github.com/diplodoc-platform/calc-extension/releases) | [![tests](https://github.com/diplodoc-platform/calc-extension/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/calc-extension/actions/workflows/tests.yml) | [![release](https://github.com/diplodoc-platform/calc-extension/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/diplodoc-platform/calc-extension/actions/workflows/release.yml) | [![security](https://github.com/diplodoc-platform/calc-extension/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/diplodoc-platform/calc-extension/actions/workflows/security.yml) | - | [![lint](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdiplodoc-platform%2Fcalc-extension%2Fmaster%2Fpackage-lock.json&query=%24%5B%27packages%27%5D%5B%27node_modules%2F%40diplodoc%2Finfra%27%5D.version&label=infra&prefix=v)](https://github.com/diplodoc-platform/lint/releases) |
 ---
 
 ## devops
@@ -80,6 +81,7 @@ Generated from `package.json` dependencies (`scripts/deps-graph.js` → `deps-gr
 flowchart LR
   ajv["ajv"]
   algolia-extension["algolia-extension"]
+  calc-extension["calc-extension"]
   cli["cli"]
   client["client"]
   color-extension["color-extension"]
@@ -107,6 +109,7 @@ flowchart LR
   yfmlint["yfmlint"]
   algolia-extension -.-> cli
   algolia-extension --> search-extension
+  calc-extension -.-> cli
   cli --> ajv
   cli --> client
   cli --> color-extension
@@ -166,6 +169,7 @@ flowchart LR
   yfmlint -.-> transform
   click ajv href "https://github.com/diplodoc-platform/ajv"
   click algolia-extension href "https://github.com/diplodoc-platform/algolia-extension"
+  click calc-extension href "https://github.com/diplodoc-platform/calc-extension"
   click cli href "https://github.com/diplodoc-platform/cli"
   click client href "https://github.com/diplodoc-platform/client"
   click color-extension href "https://github.com/diplodoc-platform/color-extension"
