@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-24T06:29:45.920Z",
+  "generatedAt": "2026-11-24T17:42:43.663Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -12,6 +12,12 @@
       "shortId": "algolia-extension",
       "repo": "algolia-extension",
       "path": "extensions/algolia"
+    },
+    {
+      "npm": "@diplodoc/calc-extension",
+      "shortId": "calc-extension",
+      "repo": "calc-extension",
+      "path": "extensions/calc"
     },
     {
       "npm": "@diplodoc/cli",
@@ -184,6 +190,13 @@
       "fromShort": "algolia-extension",
       "toShort": "search-extension",
       "type": "prod"
+    },
+    {
+      "from": "@diplodoc/calc-extension",
+      "to": "@diplodoc/cli",
+      "fromShort": "calc-extension",
+      "toShort": "cli",
+      "type": "dev"
     },
     {
       "from": "@diplodoc/cli",
@@ -612,6 +625,7 @@
     "yfmlint",
     "cli",
     "algolia-extension",
+    "calc-extension",
     "testpack",
     "vsc"
   ]

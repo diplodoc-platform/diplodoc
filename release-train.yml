@@ -160,6 +160,8 @@ repos:
     planned_runtime_dependencies:
       - '@diplodoc/directive'
       - '@diplodoc/utils'
+  calc-extension:
+    npm: '@diplodoc/calc-extension'
 
   # === devops (publishable) ===
   testpack:
