@@ -100,6 +100,10 @@ repos:
     auto_merge_feature: false
   transform:
     npm: '@diplodoc/transform'
+    # Transform 5 needs Notes before the stable gitlink declares it as a runtime dependency.
+    # Remove after the gitlink includes the Transform 5 release.
+    planned_runtime_dependencies:
+      - '@diplodoc/notes-extension'
   components:
     npm: '@diplodoc/components'
   client:
