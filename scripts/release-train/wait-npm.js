@@ -1,31 +1,36 @@
 import { execFileSync } from 'node:child_process';
 import { pollUntil } from './poll.js';
 
-export async function waitForNpmPackage(npmName, version, timeoutMin = 15) {
-  const npmVersion = version.replace(/^v/, '');
-  const intervalS = 10;
+const defaultWaitDeps = { execFileSync, pollUntil };
 
-  return pollUntil({
+export async function waitForNpmPackage(npmName, version, timeoutMin = 15, deps = defaultWaitDeps) {
+  const npmVersion = version.replace(/^v/, '');
+  const packageSpec = `${npmName}@${npmVersion}`;
+
+  return deps.pollUntil({
     timeoutMin,
-    intervalS,
+    intervalS: 10,
     check: (attempt) => {
-      let found;
       try {
-        found = execFileSync('npm', ['view', `${npmName}@${npmVersion}`, 'version'], {
-          encoding: 'utf8',
-          stdio: ['pipe', 'pipe', 'pipe'],
-        }).trim();
+        // The version can appear in registry metadata before its archive can
+        // be downloaded. A dry pack fetches the archive without running scripts.
+        const output = deps.execFileSync(
+          'npm',
+          ['pack', packageSpec, '--dry-run', '--ignore-scripts', '--prefer-online', '--fetch-retries=0', '--json'],
+          { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], timeout: 20000 },
+        );
+        const [archive] = JSON.parse(output);
+        if (archive?.name === npmName && archive.version === npmVersion) {
+          console.log(`::notice title=npm verified::${packageSpec} archive available after ${attempt} attempt(s).`);
+          return npmVersion;
+        }
       } catch {
-        found = null; // not published yet
+        // npm's metadata and archive endpoints can become available independently.
       }
-      if (found === npmVersion) {
-        console.log(`::notice title=npm verified::${npmName}@${npmVersion} available after ${attempt} attempt(s).`);
-        return npmVersion;
-      }
-      console.log(`npm wait ${attempt}: ${npmName}@${npmVersion} not ready…`);
+      console.log(`npm wait ${attempt}: ${packageSpec} archive not ready…`);
       return null;
     },
-    onTimeout: () => new Error(`${npmName}@${npmVersion} not on npm within ${timeoutMin} minutes`),
+    onTimeout: () => new Error(`${packageSpec} archive not on npm within ${timeoutMin} minutes`),
   });
 }
 
