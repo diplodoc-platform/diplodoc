@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T15:16:49.683Z",
+  "generatedAt": "2026-11-27T03:43:09.207Z",
   "nodes": [
     {
       "npm": "@diplodoc/ajv",
@@ -358,7 +358,7 @@
       "to": "@diplodoc/utils",
       "fromShort": "folding-headings-extension",
       "toShort": "utils",
-      "type": "dev"
+      "type": "prod"
     },
     {
       "from": "@diplodoc/html-extension",
